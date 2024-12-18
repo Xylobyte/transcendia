@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    draw_rect_lib::run()
+    transcendia_lib::run()
 }

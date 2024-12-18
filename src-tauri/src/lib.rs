@@ -1,20 +1,25 @@
-use tauri::window::Color;
-use tauri::{Position, WebviewWindow, WebviewWindowBuilder};
+mod windows;
+mod config;
+
+use crate::config::{Config, ConfigState};
+use crate::windows::{create_config_window, create_overlay_window};
+use std::sync::Mutex;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let window =
-                WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
-                    .accept_first_mouse(true)
-                    .always_on_top(true)
-                    .background_color(Color(0, 0, 0, 0))
-                    .decorations(false)
-                    .disable_drag_drop_handler()
-                    .transparent(true)
-                    .maximized(true)
-                    .build()?;
+            let app = app.handle();
+
+            let config = Config::load(app);
+            app.manage(ConfigState(Mutex::new(config.clone())));
+
+            if let Some(region) = config.region {
+                create_overlay_window(app, &region)?;
+            } else {
+                create_config_window(app)?;
+            }
 
             Ok(())
         })
