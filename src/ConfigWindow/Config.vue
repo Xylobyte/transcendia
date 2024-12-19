@@ -22,6 +22,20 @@ onMounted(async () => {
     document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
+const saveConfig = async () => {
+    try {
+        await invoke<void>("set_config", {newConfig: config.value});
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+const changeMonitor = (monitor: string) => {
+    if (!config.value) return;
+    config.value.monitor = monitors.value.findIndex(m => m.name === monitor) || 0;
+    saveConfig();
+};
+
 const onSelect = async () => {
     await invoke("select_region");
     await currWindow.close();
@@ -45,8 +59,9 @@ const onClose = async () => {
             <h2>Monitor</h2>
             <CustomSelect
                 v-if="monitors.length > 0"
-                :default-item="monitors[0].name || '0'"
+                :default-item="monitors[config?.monitor || 0].name || '0'"
                 :items="monitors.map((m, i) => ({value: m.name || i.toString(), label: `Screen ${i}`}))"
+                @item-change="changeMonitor"
             />
         </div>
 

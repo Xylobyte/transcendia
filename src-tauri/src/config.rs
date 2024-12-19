@@ -26,11 +26,15 @@ pub struct Region {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub region: Option<Region>,
+    pub monitor: i8,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Self { region: None }
+        Self {
+            region: None,
+            monitor: 0,
+        }
     }
 }
 

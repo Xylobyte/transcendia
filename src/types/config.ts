@@ -6,5 +6,6 @@ export type Region = {
 }
 
 export type Config = {
-    region?: Region
+    region?: Region,
+    monitor: number
 }

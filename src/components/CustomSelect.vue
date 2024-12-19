@@ -5,13 +5,13 @@ defineProps<{
 }>();
 
 defineEmits<{
-    itemChange: (value: string) => void;
+    itemChange: [value: string];
 }>();
 </script>
 
 <template>
     <div class="select">
-        <select @change="">
+        <select @change="e => $emit('itemChange', (e.target as HTMLSelectElement).value)">
             <option
                 v-for="item in $props.items"
                 :key="item.value"
