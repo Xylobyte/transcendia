@@ -37,7 +37,7 @@ const changeMonitor = (monitor: string) => {
 };
 
 const onSelect = async () => {
-    await invoke("select_region");
+    await invoke("select_region", {monitor: config.value?.monitor || 0});
     await currWindow.close();
 };
 

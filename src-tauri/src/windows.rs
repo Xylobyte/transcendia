@@ -1,8 +1,11 @@
 use crate::config::Region;
 use tauri::webview::Color;
-use tauri::{AppHandle, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, PhysicalPosition, WebviewWindow, WebviewWindowBuilder};
 
-pub fn create_select_region_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Error> {
+pub fn create_select_region_window(
+    app: &AppHandle,
+    monitor: i8,
+) -> Result<WebviewWindow, tauri::Error> {
     let window =
         WebviewWindowBuilder::new(app, "select", tauri::WebviewUrl::App("select.html".into()))
             .title("Transcendia - Select a region")
@@ -14,9 +17,17 @@ pub fn create_select_region_window(app: &AppHandle) -> Result<WebviewWindow, tau
             .decorations(false)
             .disable_drag_drop_handler()
             .transparent(true)
-            .maximized(true)
             .resizable(false)
+            .visible(false)
             .build()?;
+
+    let monitors = window.available_monitors()?;
+    if monitors.len() > monitor as usize {
+        let monitor = monitors.get(monitor as usize).unwrap();
+        window.set_position(*monitor.position())?;
+        window.set_size(*monitor.size())?;
+    }
+    window.show()?;
 
     Ok(window)
 }
@@ -36,6 +47,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
 pub fn create_overlay_window(
     app: &AppHandle,
     region: &Region,
+    monitor: i8,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(
         app,
@@ -50,10 +62,19 @@ pub fn create_overlay_window(
         .decorations(false)
         //.transparent(true)
         .resizable(false)
-        .position(region.x, region.y)
-        .inner_size(region.w, region.h)
+        .visible(false)
         .build()?;
-    window.set_ignore_cursor_events(true)?;
+
+    let monitors = window.available_monitors()?;
+    if monitors.len() > monitor as usize {
+        let monitor = monitors.get(monitor as usize).unwrap();
+        window.set_position(PhysicalPosition {
+            x: monitor.position().x + region.x,
+            y: monitor.position().y + region.y,
+        })?;
+        window.set_size(*monitor.size())?;
+    }
+    window.show()?;
 
     Ok(window)
 }

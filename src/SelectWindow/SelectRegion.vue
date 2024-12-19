@@ -4,7 +4,10 @@ import {invoke} from "@tauri-apps/api/core";
 import {Config, Region} from "../types/config.ts";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 
-onMounted(() => {
+const config = ref<Config>();
+
+onMounted(async () => {
+    config.value = await invoke<Config>("get_config");
     document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
@@ -23,6 +26,7 @@ const stopDraw = async () => {
     try {
         await invoke<void>("set_config", {
             newConfig: {
+                ...config.value,
                 region: {
                     x: startPos.value[0],
                     y: startPos.value[1],

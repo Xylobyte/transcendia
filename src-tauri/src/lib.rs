@@ -29,7 +29,7 @@ pub fn run() {
             app.manage(ConfigState(Mutex::new(config.clone())));
 
             if let Some(region) = config.region {
-                create_overlay_window(&app, &region)?;
+                create_overlay_window(&app, &region, config.monitor)?;
             } else {
                 create_config_window(&app)?;
             }
