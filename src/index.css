@@ -15,6 +15,12 @@
     font: inherit;
 }
 
+*:not(input, textarea, div[contenteditable="true"]) {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+}
+
 body {
     width: 100vw;
     height: 100vh;

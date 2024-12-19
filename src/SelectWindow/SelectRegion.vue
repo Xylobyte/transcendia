@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
+import {invoke} from "@tauri-apps/api/core";
+import {Config, Region} from "../types/config.ts";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+
+onMounted(() => {
+    document.addEventListener('contextmenu', event => event.preventDefault());
+});
 
 const drawRegion = ref(false);
 const startPos = ref([0, 0]);
@@ -10,8 +17,26 @@ const startDraw = (evt: MouseEvent) => {
     startPos.value = [evt.clientX, evt.clientY];
 };
 
-const stopDraw = () => {
+const stopDraw = async () => {
     drawRegion.value = false;
+
+    try {
+        await invoke<void>("set_config", {
+            newConfig: {
+                region: {
+                    x: startPos.value[0],
+                    y: startPos.value[1],
+                    w: endPos.value[0] - startPos.value[0],
+                    h: endPos.value[1] - startPos.value[1],
+                } as Region
+            } as Config
+        });
+        await invoke<void>("finish_select_region");
+        await getCurrentWebviewWindow().close();
+    } catch (e) {
+        console.error(e);
+    }
+
     startPos.value = [0, 0];
     endPos.value = [0, 0];
 };

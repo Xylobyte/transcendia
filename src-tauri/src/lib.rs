@@ -5,7 +5,7 @@ mod events;
 mod systray;
 mod windows;
 
-use crate::commands::{get_config, select_region, set_config};
+use crate::commands::{finish_select_region, get_config, select_region, set_config};
 use crate::config::{Config, ConfigState};
 use crate::systray::create_systray;
 use crate::windows::{create_config_window, create_overlay_window};
@@ -17,13 +17,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
-        .setup(|_app| {
+        .setup(|app| {
             #[cfg(target_os = "macos")]
-            _app.set_activation_policy(ActivationPolicy::Accessory);
+            app.set_activation_policy(ActivationPolicy::Accessory);
 
-            create_systray(_app)?;
+            create_systray(app)?;
 
-            let app = _app.handle();
+            let app = app.handle();
 
             let config = Config::load(&app);
             app.manage(ConfigState(Mutex::new(config.clone())));
@@ -36,7 +36,12 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(generate_handler![get_config, set_config, select_region])
+        .invoke_handler(generate_handler![
+            get_config,
+            set_config,
+            select_region,
+            finish_select_region
+        ])
         .run(generate_context!())
         .expect("Error while running Transcendia");
 }

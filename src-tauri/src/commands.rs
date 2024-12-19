@@ -1,6 +1,6 @@
 use crate::config::{Config, ConfigState};
 use crate::errors::TranscendiaError;
-use crate::windows::create_select_region_window;
+use crate::windows::{create_config_window, create_overlay_window, create_select_region_window};
 use tauri::AppHandle;
 
 #[tauri::command]
@@ -20,6 +20,8 @@ pub async fn set_config(
 ) -> Result<(), TranscendiaError> {
     new_config.save(&app_handle);
 
+    println!("Saved config to {:?}", &new_config);
+
     let mut config = config
         .0
         .lock()
@@ -32,5 +34,23 @@ pub async fn set_config(
 #[tauri::command]
 pub async fn select_region(app_handle: AppHandle) -> Result<(), tauri::Error> {
     create_select_region_window(&app_handle)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn finish_select_region(
+    app_handle: AppHandle,
+    config: tauri::State<'_, ConfigState>,
+) -> Result<(), tauri::Error> {
+    create_config_window(&app_handle)?;
+
+    let config = config
+        .0
+        .lock()
+        .expect("Cannot read config");
+    if let Some(region) = &config.region {
+        create_overlay_window(&app_handle, region)?;
+    }
+
     Ok(())
 }

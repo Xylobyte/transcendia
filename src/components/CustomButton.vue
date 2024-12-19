@@ -20,7 +20,6 @@ defineProps<{
 button {
     display: flex;
     align-items: center;
-    cursor: pointer;
     outline: none;
     border-radius: 6px;
     background: transparent;

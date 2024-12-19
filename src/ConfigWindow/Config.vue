@@ -7,14 +7,19 @@ import {exit} from "@tauri-apps/plugin-process";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {emit} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
+import CustomSelect from "../components/CustomSelect.vue";
+import {availableMonitors, Monitor} from "@tauri-apps/api/window";
 
 const currWindow = getCurrentWebviewWindow();
 
+const monitors = ref<Monitor[]>([]);
 const config = ref<Config>();
 
 onMounted(async () => {
     await emit(Events.OnOffConfigTrayItem, false);
     config.value = await invoke<Config>("get_config");
+    monitors.value = await availableMonitors();
+    document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 const onSelect = async () => {
@@ -35,6 +40,15 @@ const onClose = async () => {
 <template>
     <main ref="main">
         <h1>Configuration</h1>
+
+        <div class="screen">
+            <h2>Monitor</h2>
+            <CustomSelect
+                v-if="monitors.length > 0"
+                :default-item="monitors[0].name || '0'"
+                :items="monitors.map((m, i) => ({value: m.name || i.toString(), label: `Screen ${i}`}))"
+            />
+        </div>
 
         <div class="region-select">
             <div class="head">
@@ -65,7 +79,7 @@ main {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    gap: 40px;
+    gap: 30px;
     width: 100%;
     height: 100%;
 }
@@ -88,7 +102,7 @@ h2 {
     gap: 15px;
 }
 
-.region-select .head {
+.region-select .head, .screen {
     display: flex;
     justify-content: space-between;
     align-items: center;
