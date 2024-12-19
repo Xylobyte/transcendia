@@ -37,7 +37,6 @@ impl Default for Config {
 impl Config {
     pub fn load(app: &AppHandle) -> Self {
         let config_path = get_config_path(app);
-        println!("loading config: {}", config_path.display());
 
         let config = if !config_path.exists() {
             let parent = config_path.parent().unwrap();

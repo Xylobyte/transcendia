@@ -1,25 +1,9 @@
-<script setup lang="ts">
-import {onMounted, onUnmounted, ref} from "vue";
+<script lang="ts" setup>
+import {ref} from "vue";
 
 const drawRegion = ref(false);
 const startPos = ref([0, 0]);
 const endPos = ref([0, 0]);
-const main = ref<HTMLDivElement>();
-
-onMounted(() => {
-    if (!main.value) return;
-
-    main.value.addEventListener("mousedown", startDraw);
-    main.value.addEventListener("mouseup", stopDraw);
-    main.value.addEventListener("mousemove", drawUpdate);
-});
-
-onUnmounted(() => {
-    if (!main.value) return;
-
-    main.value.removeEventListener("mousedown", startDraw);
-    main.value.removeEventListener("mouseup", stopDraw);
-});
 
 const startDraw = (evt: MouseEvent) => {
     drawRegion.value = true;
@@ -40,7 +24,7 @@ const drawUpdate = (evt: MouseEvent) => {
 </script>
 
 <template>
-    <main ref="main">
+    <main @mousedown="startDraw" @mousemove="drawUpdate" @mouseup="stopDraw">
         <div class="info">
             <span>Select a capture region on the screen</span>
         </div>
@@ -48,23 +32,12 @@ const drawUpdate = (evt: MouseEvent) => {
         <div
             v-if="drawRegion"
             :style="{left: `${startPos[0]}px`, top: `${startPos[1]}px`, width: `${endPos[0]-startPos[0]}px`, height: `${endPos[1]-startPos[1]}px`}"
-            class="rect"></div>
+            class="rect"
+        ></div>
     </main>
 </template>
 
-<style>
-html {
-    background: transparent;
-}
-
-body {
-    background: rgba(0, 0, 0, 0);
-    width: 100vw;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-}
-
+<style scoped>
 main {
     width: 100%;
     height: 100%;
@@ -87,7 +60,6 @@ main {
     text-shadow: black 0 0 10px;
     font-weight: bold;
     font-size: 2vw;
-    font-family: sans-serif;
     user-select: none;
     -webkit-user-select: none;
 }
@@ -98,5 +70,15 @@ main {
     background: rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.2);
     position: fixed;
+}
+</style>
+
+<style>
+html {
+    background: transparent;
+}
+
+body {
+    background: transparent;
 }
 </style>

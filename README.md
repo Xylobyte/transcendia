@@ -1,3 +1,3 @@
 # Transcendia
 
-An app to translate in reeltime a section of your screen
+An app to translate in realtime a section of your screen
