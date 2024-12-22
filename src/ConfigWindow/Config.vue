@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {invoke} from "@tauri-apps/api/core";
 import {Config} from "../types/config.ts";
 import CustomButton from "../components/CustomButton.vue";
@@ -9,22 +9,31 @@ import {emit} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {availableMonitors, Monitor} from "@tauri-apps/api/window";
+import CustomColorSelect from "../components/CustomColorSelect.vue";
 
 const currWindow = getCurrentWebviewWindow();
 
 const monitors = ref<Monitor[]>([]);
 const config = ref<Config>();
+const canSave = ref(false);
 
 onMounted(async () => {
     await emit(Events.OnOffConfigTrayItem, false);
     config.value = await invoke<Config>("get_config");
     monitors.value = await availableMonitors();
-    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    //document.addEventListener('contextmenu', event => event.preventDefault());
+});
+
+watch(() => [config.value?.text_color, config.value?.text_align], (curr, prev) => {
+    if (prev.every(v => !v)) return;
+    canSave.value = true;
 });
 
 const saveConfig = async () => {
     try {
         await invoke<void>("set_config", {newConfig: config.value});
+        canSave.value = false;
     } catch (e) {
         console.error(e);
     }
@@ -37,8 +46,12 @@ const changeMonitor = (monitor: string) => {
 };
 
 const onSelect = async () => {
-    await invoke("select_region", {monitor: config.value?.monitor || 0});
-    await currWindow.close();
+    try {
+        await invoke("select_region", {monitor: config.value?.monitor || 0});
+        await currWindow.close();
+    } catch (e) {
+        console.error(e);
+    }
 };
 
 const onClose = async () => {
@@ -52,14 +65,14 @@ const onClose = async () => {
 </script>
 
 <template>
-    <main ref="main">
+    <main v-if="config" ref="main">
         <h1>Configuration</h1>
 
         <div class="screen">
             <h2>Monitor</h2>
             <CustomSelect
                 v-if="monitors.length > 0"
-                :default-item="monitors[config?.monitor || 0].name || '0'"
+                :default-item="monitors[config.monitor || 0].name || '0'"
                 :items="monitors.map((m, i) => ({value: m.name || i.toString(), label: `Screen ${i}`}))"
                 @item-change="changeMonitor"
             />
@@ -81,9 +94,17 @@ const onClose = async () => {
             </div>
         </div>
 
+        <div class="text-color">
+            <h2>Text color</h2>
+            <CustomColorSelect v-model="config.text_color"/>
+        </div>
+
         <div class="action">
+            <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig">
+                Save
+            </CustomButton>
             <CustomButton :is-primary="true" title="Close" @click="onClose">
-                {{ config?.region ? "Close" : "Quit" }}
+                {{ config.region ? "Close" : "Quit" }}
             </CustomButton>
         </div>
     </main>
@@ -117,7 +138,7 @@ h2 {
     gap: 15px;
 }
 
-.region-select .head, .screen {
+.region-select .head, .screen, .text-color {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -129,6 +150,8 @@ h2 {
 }
 
 .action {
+    display: flex;
+    gap: 10px;
     position: absolute;
     bottom: 20px;
     right: 20px;

@@ -8,7 +8,17 @@ const config = ref<Config>();
 
 onMounted(async () => {
     config.value = await invoke<Config>("get_config");
+
     document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', async event => {
+        console.log(`${event.key}`);
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            await invoke<void>("finish_select_region");
+            await getCurrentWebviewWindow().close();
+        }
+    });
 });
 
 const drawRegion = ref(false);
@@ -56,6 +66,7 @@ const drawUpdate = (evt: MouseEvent) => {
     <main @mousedown="startDraw" @mousemove="drawUpdate" @mouseup="stopDraw">
         <div class="info">
             <span>Select a capture region on the screen</span>
+            <span>(Esc to cancel)</span>
         </div>
 
         <div
@@ -75,6 +86,8 @@ main {
 
 .info {
     display: flex;
+    flex-direction: column;
+    gap: 15px;
     justify-content: center;
     align-items: center;
     width: 100%;
@@ -91,6 +104,10 @@ main {
     font-size: 2vw;
     user-select: none;
     -webkit-user-select: none;
+}
+
+.info span:last-child {
+    font-size: 1.5em;
 }
 
 .rect {

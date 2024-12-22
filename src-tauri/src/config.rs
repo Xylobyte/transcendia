@@ -27,6 +27,8 @@ pub struct Region {
 pub struct Config {
     pub region: Option<Region>,
     pub monitor: i8,
+    pub text_color: String,
+    pub text_align: String,
 }
 
 impl Default for Config {
@@ -34,6 +36,8 @@ impl Default for Config {
         Self {
             region: None,
             monitor: 0,
+            text_align: "center:center".to_string(),
+            text_color: "#FFFFFF".to_string(),
         }
     }
 }

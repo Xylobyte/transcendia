@@ -1,6 +1,8 @@
 use crate::config::Region;
 use tauri::webview::Color;
-use tauri::{AppHandle, PhysicalPosition, WebviewWindow, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, WebviewWindow, WebviewWindowBuilder,
+};
 
 pub fn create_select_region_window(
     app: &AppHandle,
@@ -24,8 +26,9 @@ pub fn create_select_region_window(
     let monitors = window.available_monitors()?;
     if monitors.len() > monitor as usize {
         let monitor = monitors.get(monitor as usize).unwrap();
-        window.set_position(*monitor.position())?;
-        window.set_size(*monitor.size())?;
+        let scale = monitor.scale_factor();
+        window.set_position(monitor.position().to_logical::<f64>(scale))?;
+        window.set_size(monitor.size().to_logical::<f64>(scale))?;
     }
     window.show()?;
 
@@ -36,6 +39,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
     let window =
         WebviewWindowBuilder::new(app, "config", tauri::WebviewUrl::App("config.html".into()))
             .title("Transcendia - Configuration")
+            .accept_first_mouse(true)
             .always_on_top(true)
             .inner_size(400f64, 600f64)
             .resizable(false)
@@ -58,23 +62,34 @@ pub fn create_overlay_window(
         .always_on_top(true)
         .visible_on_all_workspaces(true)
         .shadow(false)
-        .background_color(Color(0, 0, 0, 1))
+        .background_color(Color(0, 0, 0, 0))
         .decorations(false)
-        //.transparent(true)
+        .transparent(true)
         .resizable(false)
         .visible(false)
         .build()?;
+    window.set_ignore_cursor_events(true)?;
 
-    let monitors = window.available_monitors()?;
-    if monitors.len() > monitor as usize {
-        let monitor = monitors.get(monitor as usize).unwrap();
-        window.set_position(PhysicalPosition {
-            x: monitor.position().x + region.x,
-            y: monitor.position().y + region.y,
-        })?;
-        window.set_size(*monitor.size())?;
-    }
+    edit_overlay(&window, &region, monitor)?;
     window.show()?;
 
     Ok(window)
+}
+
+pub fn edit_overlay(window: &WebviewWindow, region: &Region, monitor: i8) -> Result<(), tauri::Error> {
+    let monitors = window.available_monitors()?;
+    if monitors.len() > monitor as usize {
+        let monitor = monitors.get(monitor as usize).unwrap();
+        let logical_position = monitor.position().to_logical::<i32>(monitor.scale_factor());
+        window.set_position(LogicalPosition {
+            x: logical_position.x + region.x,
+            y: logical_position.y + region.y,
+        })?;
+        window.set_size(LogicalSize {
+            width: region.w,
+            height: region.h,
+        })?;
+    }
+
+    Ok(())
 }

@@ -2,6 +2,8 @@
     --primary: #3c99ff;
     --on-primary: #000000;
     --background: #202020;
+
+    overscroll-behavior: none;
 }
 
 * {
