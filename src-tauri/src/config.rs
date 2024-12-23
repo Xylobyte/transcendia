@@ -29,6 +29,7 @@ pub struct Config {
     pub monitor: i8,
     pub text_color: String,
     pub text_align: String,
+    pub background_color: String,
 }
 
 impl Default for Config {
@@ -38,6 +39,7 @@ impl Default for Config {
             monitor: 0,
             text_align: "center:center".to_string(),
             text_color: "#FFFFFF".to_string(),
+            background_color: "#00000010".to_string(),
         }
     }
 }

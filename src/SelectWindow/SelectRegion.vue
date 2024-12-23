@@ -3,6 +3,7 @@ import {onMounted, ref} from "vue";
 import {invoke} from "@tauri-apps/api/core";
 import {Config, Region} from "../types/config.ts";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {register, unregisterAll} from "@tauri-apps/plugin-global-shortcut";
 
 const config = ref<Config>();
 
@@ -10,15 +11,16 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
 
     document.addEventListener('contextmenu', event => event.preventDefault());
-    window.addEventListener('keydown', async event => {
-        console.log(`${event.key}`);
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            event.stopPropagation();
-            await invoke<void>("finish_select_region");
-            await getCurrentWebviewWindow().close();
-        }
-    });
+    try {
+        await register("Esc", async (event) => {
+            if (event.state === 'Released') {
+                await invoke<void>("finish_select_region");
+                await getCurrentWebviewWindow().close();
+            }
+        });
+    } catch (error) {
+        console.error(error);
+    }
 });
 
 const drawRegion = ref(false);
@@ -49,6 +51,7 @@ const stopDraw = async () => {
                 } as Config
             });
             await invoke<void>("finish_select_region");
+            await unregisterAll();
             await getCurrentWebviewWindow().close();
         } catch (e) {
             console.error(e);
@@ -70,7 +73,6 @@ const drawUpdate = (evt: MouseEvent) => {
     <main @mousedown="startDraw" @mousemove="drawUpdate" @mouseup="stopDraw">
         <div class="info">
             <span>Select a capture region on the screen</span>
-            <span>(Esc to cancel)</span>
         </div>
 
         <div

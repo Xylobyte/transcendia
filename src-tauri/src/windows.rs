@@ -9,7 +9,7 @@ pub fn create_select_region_window(
     let window =
         WebviewWindowBuilder::new(app, "select", tauri::WebviewUrl::App("select.html".into()))
             .title("Transcendia - Select a region")
-            //.accept_first_mouse(true)
+            .accept_first_mouse(true)
             .always_on_top(true)
             .visible_on_all_workspaces(true)
             .shadow(false)
@@ -58,16 +58,16 @@ pub fn create_overlay_window(
         "overlay",
         tauri::WebviewUrl::App("overlay.html".into()),
     )
-    .title("Transcendia - Overlay")
-    .always_on_top(true)
-    .visible_on_all_workspaces(true)
-    .shadow(false)
-    .background_color(Color(0, 0, 0, 0))
-    .decorations(false)
-    .transparent(true)
-    .resizable(false)
-    .visible(false)
-    .build()?;
+        .title("Transcendia - Overlay")
+        .always_on_top(true)
+        .visible_on_all_workspaces(true)
+        .shadow(false)
+        .background_color(Color(0, 0, 0, 0))
+        .decorations(false)
+        .transparent(true)
+        .resizable(false)
+        .visible(false)
+        .build()?;
     window.set_ignore_cursor_events(true)?;
 
     edit_overlay(&window, &region, monitor)?;

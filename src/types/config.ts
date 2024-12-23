@@ -10,4 +10,5 @@ export type Config = {
     monitor: number,
     text_color: string,
     text_align: string,
+    background_color: string,
 }

@@ -22,7 +22,7 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
     monitors.value = await availableMonitors();
 
-    //document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 watch(() => [config.value?.text_color, config.value?.text_align], (curr, prev) => {
@@ -97,6 +97,11 @@ const onClose = async () => {
         <div class="text-color">
             <h2>Text color</h2>
             <CustomColorSelect v-model="config.text_color"/>
+        </div>
+
+        <div class="text-color">
+            <h2>Background color</h2>
+            <CustomColorSelect v-model="config.background_color"/>
         </div>
 
         <div class="action">
