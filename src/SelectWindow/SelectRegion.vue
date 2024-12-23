@@ -10,7 +10,7 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
 
     document.addEventListener('contextmenu', event => event.preventDefault());
-    document.addEventListener('keydown', async event => {
+    window.addEventListener('keydown', async event => {
         console.log(`${event.key}`);
         if (event.key === 'Escape') {
             event.preventDefault();
@@ -33,22 +33,26 @@ const startDraw = (evt: MouseEvent) => {
 const stopDraw = async () => {
     drawRegion.value = false;
 
-    try {
-        await invoke<void>("set_config", {
-            newConfig: {
-                ...config.value,
-                region: {
-                    x: startPos.value[0],
-                    y: startPos.value[1],
-                    w: endPos.value[0] - startPos.value[0],
-                    h: endPos.value[1] - startPos.value[1],
-                } as Region
-            } as Config
-        });
-        await invoke<void>("finish_select_region");
-        await getCurrentWebviewWindow().close();
-    } catch (e) {
-        console.error(e);
+    const width = endPos.value[0] - startPos.value[0];
+    const height = endPos.value[1] - startPos.value[1];
+    if (width > 50 && height > 50) {
+        try {
+            await invoke<void>("set_config", {
+                newConfig: {
+                    ...config.value,
+                    region: {
+                        x: startPos.value[0],
+                        y: startPos.value[1],
+                        w: width,
+                        h: height,
+                    } as Region
+                } as Config
+            });
+            await invoke<void>("finish_select_region");
+            await getCurrentWebviewWindow().close();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     startPos.value = [0, 0];
@@ -81,7 +85,11 @@ const drawUpdate = (evt: MouseEvent) => {
 main {
     width: 100%;
     height: 100%;
-    cursor: move;
+    cursor: crosshair !important;
+}
+
+main * {
+    cursor: inherit !important;
 }
 
 .info {
