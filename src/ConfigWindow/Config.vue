@@ -22,7 +22,7 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
     monitors.value = await availableMonitors();
 
-    //document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 watch(() => [

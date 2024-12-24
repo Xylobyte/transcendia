@@ -71,7 +71,7 @@ pub fn create_overlay_window(
         .resizable(false)
         .visible(false)
         .build()?;
-    window.set_ignore_cursor_events(true)?;
+    //window.set_ignore_cursor_events(true)?;
 
     edit_overlay(&window, &region, monitor, blur)?;
     window.show()?;
