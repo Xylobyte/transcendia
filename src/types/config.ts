@@ -9,6 +9,16 @@ export type Config = {
     region?: Region,
     monitor: number,
     text_color: string,
-    text_align: string,
+    text_align:
+        | 'T:L'
+        | 'T:C'
+        | 'T:R'
+        | 'C:L'
+        | 'C:C'
+        | 'C:R'
+        | 'B:L'
+        | 'B:C'
+        | 'B:R',
     background_color: string,
+    blur_background: boolean
 }

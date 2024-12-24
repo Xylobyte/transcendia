@@ -9,7 +9,7 @@ import {emit} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {availableMonitors, Monitor} from "@tauri-apps/api/window";
-import CustomColorSelect from "../components/CustomColorSelect.vue";
+import {ColorPicker} from "vue3-colorpicker";
 
 const currWindow = getCurrentWebviewWindow();
 
@@ -22,17 +22,26 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
     monitors.value = await availableMonitors();
 
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    //document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
-watch(() => [config.value?.text_color, config.value?.text_align], (curr, prev) => {
-    if (prev.every(v => !v)) return;
+watch(() => [
+    config.value?.text_color,
+    config.value?.text_align,
+    config.value?.background_color
+], (_curr, prev) => {
+    if (prev.every(v => v === undefined)) return;
     canSave.value = true;
 });
 
-const saveConfig = async () => {
+watch(() => config.value?.blur_background, (_curr, prev) => {
+    if (prev === undefined) return;
+    saveConfig();
+});
+
+const saveConfig = async (rOverlay: boolean = true) => {
     try {
-        await invoke<void>("set_config", {newConfig: config.value});
+        await invoke<void>("set_config", {newConfig: config.value, refreshWOverlay: rOverlay});
         canSave.value = false;
     } catch (e) {
         console.error(e);
@@ -96,16 +105,50 @@ const onClose = async () => {
 
         <div class="text-color">
             <h2>Text color</h2>
-            <CustomColorSelect v-model="config.text_color"/>
+            <ColorPicker
+                v-model:pure-color="config.text_color"
+                :z-index="20"
+                format="rgb"
+                lang="En"
+                picker-type="chrome"
+                theme="black"
+            />
+        </div>
+
+        <div class="text-align">
+            <h2>Text align</h2>
+            <div class="grid">
+                <span :class="{active: config.text_align === 'T:L'}" @click="config.text_align = 'T:L'">T:L</span>
+                <span :class="{active: config.text_align === 'T:C'}" @click="config.text_align = 'T:C'">T:C</span>
+                <span :class="{active: config.text_align === 'T:R'}" @click="config.text_align = 'T:R'">T:R</span>
+                <span :class="{active: config.text_align === 'C:L'}" @click="config.text_align = 'C:L'">C:L</span>
+                <span :class="{active: config.text_align === 'C:C'}" @click="config.text_align = 'C:C'">C:C</span>
+                <span :class="{active: config.text_align === 'C:R'}" @click="config.text_align = 'C:R'">C:R</span>
+                <span :class="{active: config.text_align === 'B:L'}" @click="config.text_align = 'B:L'">B:L</span>
+                <span :class="{active: config.text_align === 'B:C'}" @click="config.text_align = 'B:C'">B:C</span>
+                <span :class="{active: config.text_align === 'B:R'}" @click="config.text_align = 'B:R'">B:R</span>
+            </div>
+        </div>
+
+        <div class="text-color">
+            <h2>Background blur (Need restart)</h2>
+            <input id="blur" v-model="config.blur_background" name="blur" type="checkbox">
         </div>
 
         <div class="text-color">
             <h2>Background color</h2>
-            <CustomColorSelect v-model="config.background_color"/>
+            <ColorPicker
+                v-model:pure-color="config.background_color"
+                :z-index="20"
+                format="rgb"
+                lang="En"
+                picker-type="chrome"
+                theme="black"
+            />
         </div>
 
         <div class="action">
-            <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig">
+            <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig(false)">
                 Save
             </CustomButton>
             <CustomButton :is-primary="true" title="Close" @click="onClose">
@@ -143,7 +186,7 @@ h2 {
     gap: 15px;
 }
 
-.region-select .head, .screen, .text-color {
+.region-select .head, .screen, .text-color, .text-align {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -152,6 +195,29 @@ h2 {
 .region-select .info {
     display: flex;
     justify-content: space-between;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.grid span {
+    border: 1px solid rgb(232, 232, 232);
+    padding: 3px;
+    font-size: 0.8em;
+    border-radius: 3px;
+    text-align: center;
+}
+
+.grid span:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.grid span.active {
+    background: rgb(232, 232, 232);
+    color: black;
 }
 
 .action {

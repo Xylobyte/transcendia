@@ -15,7 +15,7 @@
 
 <style scoped>
 main {
-    border-radius: 10px;
+    border-radius: 30px;
     background: rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;

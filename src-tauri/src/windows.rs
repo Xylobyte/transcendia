@@ -1,4 +1,6 @@
 use crate::config::Region;
+use tauri::utils::config::WindowEffectsConfig;
+use tauri::utils::{WindowEffect, WindowEffectState};
 use tauri::webview::Color;
 use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewWindow, WebviewWindowBuilder};
 
@@ -52,6 +54,7 @@ pub fn create_overlay_window(
     app: &AppHandle,
     region: &Region,
     monitor: i8,
+    blur: bool,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(
         app,
@@ -70,7 +73,7 @@ pub fn create_overlay_window(
         .build()?;
     window.set_ignore_cursor_events(true)?;
 
-    edit_overlay(&window, &region, monitor)?;
+    edit_overlay(&window, &region, monitor, blur)?;
     window.show()?;
 
     Ok(window)
@@ -80,6 +83,7 @@ pub fn edit_overlay(
     window: &WebviewWindow,
     region: &Region,
     monitor: i8,
+    blur: bool,
 ) -> Result<(), tauri::Error> {
     let monitors = window.available_monitors()?;
     if monitors.len() > monitor as usize {
@@ -92,6 +96,15 @@ pub fn edit_overlay(
         window.set_size(LogicalSize {
             width: region.w,
             height: region.h,
+        })?;
+    }
+
+    if blur {
+        window.set_effects(WindowEffectsConfig {
+            effects: vec![WindowEffect::HudWindow],
+            state: Some(WindowEffectState::Active),
+            radius: Some(30f64),
+            color: None,
         })?;
     }
 
