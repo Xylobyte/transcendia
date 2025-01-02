@@ -10,10 +10,10 @@ const config = ref<Config>();
 let unlisten: UnlistenFn;
 
 onMounted(async () => {
-    await get_config();
+    await getConfig();
 
     unlisten = await listen(Events.RefreshOverlay, () => {
-        get_config();
+        getConfig();
     });
 });
 
@@ -32,19 +32,18 @@ const mainStyle = computed(() => {
     } as CSSProperties;
 });
 
-const get_config = async () => {
+const getConfig = async () => {
     config.value = await invoke<Config>("get_config");
 };
 </script>
 
 <template>
-    <main :style="{background: config?.background_color}">
+    <main :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content'}">
         <p :style="mainStyle">
             Ipsum aliqua eiusmod qui cillum veniam minim tempor culpa consectetur anim deserunt reprehenderit laboris
             cupidatat. Mollit excepteur dolor anim anim labore in in tempor minim. Dolor anim cupidatat labore do sit.
             Amet incididunt qui cillum magna nisi velit quis amet elit veniam aliquip aliquip fugiat sint. Anim quis et
-            pariatur ipsum esse laborum ipsum mollit dolore consequat fugiat non. Nostrud in veniam labore cupidatat in
-            amet laborum cillum dolore aute ad labore ad cillum consectetur.
+            pariatur ipsum esse laborum ipsum mollit dolore consequat fugiat non.
         </p>
     </main>
 </template>
@@ -70,5 +69,6 @@ html {
 body {
     display: flex;
     background: transparent;
+    align-items: center;
 }
 </style>
