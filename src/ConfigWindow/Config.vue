@@ -10,6 +10,7 @@ import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {availableMonitors, Monitor} from "@tauri-apps/api/window";
 import {ColorPicker} from "vue3-colorpicker";
+import CustomInput from "../components/CustomInput.vue";
 
 const currWindow = getCurrentWebviewWindow();
 
@@ -22,7 +23,7 @@ onMounted(async () => {
     config.value = await invoke<Config>("get_config");
     monitors.value = await availableMonitors();
 
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    // document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 watch(() => [
@@ -81,7 +82,7 @@ const onClose = async () => {
             <h2>Monitor</h2>
             <CustomSelect
                 v-if="monitors.length > 0"
-                :default-item="monitors[config.monitor || 0].name || '0'"
+                :default-item="monitors[config.monitor || 0]?.name || '0'"
                 :items="monitors.map((m, i) => ({value: m.name || i.toString(), label: `Screen ${i}`}))"
                 @item-change="changeMonitor"
             />
@@ -130,12 +131,12 @@ const onClose = async () => {
             </div>
         </div>
 
-        <div class="text-color">
+        <div class="window-blur">
             <h2>Background blur (Need restart)</h2>
             <input id="blur" v-model="config.blur_background" name="blur" type="checkbox">
         </div>
 
-        <div class="text-color">
+        <div class="bg-color">
             <h2>Background color</h2>
             <ColorPicker
                 v-model:pure-color="config.background_color"
@@ -145,6 +146,17 @@ const onClose = async () => {
                 picker-type="chrome"
                 theme="black"
             />
+        </div>
+
+        <div class="interval">
+            <h2>Capture interval</h2>
+            <div>
+                <CustomInput
+                    v-model="config.interval"
+                    type="number"
+                />
+                s
+            </div>
         </div>
 
         <div class="action">
@@ -186,7 +198,7 @@ h2 {
     gap: 15px;
 }
 
-.region-select .head, .screen, .text-color, .text-align {
+.region-select .head, .screen, .text-color, .text-align, .window-blur, .bg-color, .interval {
     display: flex;
     justify-content: space-between;
     align-items: center;

@@ -20,5 +20,6 @@ export type Config = {
         | 'B:C'
         | 'B:R',
     background_color: string,
-    blur_background: boolean
+    blur_background: boolean,
+    interval: number
 }

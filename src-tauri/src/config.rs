@@ -31,6 +31,7 @@ pub struct Config {
     pub text_align: String,
     pub background_color: String,
     pub blur_background: bool,
+    pub interval: i16,
 }
 
 impl Default for Config {
@@ -42,6 +43,7 @@ impl Default for Config {
             text_color: "#FFFFFF".to_string(),
             background_color: "#00000066".to_string(),
             blur_background: true,
+            interval: 1,
         }
     }
 }

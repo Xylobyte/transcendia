@@ -42,7 +42,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
             .title("Transcendia - Configuration")
             .accept_first_mouse(true)
             .always_on_top(true)
-            .inner_size(400f64, 600f64)
+            .inner_size(400f64, 650f64)
             .resizable(false)
             .build()?;
     window.set_focus()?;
@@ -71,7 +71,7 @@ pub fn create_overlay_window(
         .resizable(false)
         .visible(false)
         .build()?;
-    //window.set_ignore_cursor_events(true)?;
+    window.set_ignore_cursor_events(true)?;
 
     edit_overlay(&window, &region, monitor, blur)?;
     window.show()?;
