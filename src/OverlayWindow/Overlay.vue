@@ -6,19 +6,26 @@ import {listen, UnlistenFn} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
 
 const config = ref<Config>();
+const text = ref<string>("Loading...");
 
-let unlisten: UnlistenFn;
+let unlistenRefresh: UnlistenFn;
+let unlistenNewText: UnlistenFn;
 
 onMounted(async () => {
     await getConfig();
 
-    unlisten = await listen(Events.RefreshOverlay, () => {
+    unlistenRefresh = await listen(Events.RefreshOverlay, () => {
         getConfig();
+    });
+
+    unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
+        text.value = event.payload as string;
     });
 });
 
 onUnmounted(() => {
-    unlisten();
+    unlistenRefresh();
+    unlistenNewText();
 });
 
 const mainStyle = computed(() => {
@@ -39,12 +46,7 @@ const getConfig = async () => {
 
 <template>
     <main :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content'}">
-        <p :style="mainStyle">
-            Ipsum aliqua eiusmod qui cillum veniam minim tempor culpa consectetur anim deserunt reprehenderit laboris
-            cupidatat. Mollit excepteur dolor anim anim labore in in tempor minim. Dolor anim cupidatat labore do sit.
-            Amet incididunt qui cillum magna nisi velit quis amet elit veniam aliquip aliquip fugiat sint. Anim quis et
-            pariatur ipsum esse laborum ipsum mollit dolore consequat fugiat non.
-        </p>
+        <p :style="mainStyle">{{ text }}</p>
     </main>
 </template>
 
@@ -70,5 +72,6 @@ body {
     display: flex;
     background: transparent;
     align-items: center;
+    justify-content: center;
 }
 </style>

@@ -1,6 +1,7 @@
 pub enum Events {
     OnOffConfigTrayItem,
     RefreshOverlay,
+    NewTranslatedText,
 }
 
 impl Events {
@@ -8,6 +9,7 @@ impl Events {
         match self {
             Events::OnOffConfigTrayItem => "OnOffConfigTrayItem",
             Events::RefreshOverlay => "RefreshOverlay",
+            Events::NewTranslatedText => "NewTranslatedText",
         }
     }
 }

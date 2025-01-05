@@ -72,7 +72,7 @@ pub fn f_s_r(
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
     if let Some(region) = &config.region {
-        create_overlay_window(&app_handle, region, config.monitor, config.blur_background)?;
+        create_overlay_window(&app_handle, region, config.monitor, config.blur_background, config.interval)?;
     }
 
     create_config_window(&app_handle)?;

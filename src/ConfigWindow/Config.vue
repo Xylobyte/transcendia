@@ -29,7 +29,8 @@ onMounted(async () => {
 watch(() => [
     config.value?.text_color,
     config.value?.text_align,
-    config.value?.background_color
+    config.value?.background_color,
+    config.value?.interval
 ], (_curr, prev) => {
     if (prev.every(v => v === undefined)) return;
     canSave.value = true;
@@ -153,6 +154,7 @@ const onClose = async () => {
             <div>
                 <CustomInput
                     v-model="config.interval"
+                    :max="60"
                     type="number"
                 />
                 s

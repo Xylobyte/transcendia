@@ -26,12 +26,12 @@ pub struct Region {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub region: Option<Region>,
-    pub monitor: i8,
+    pub monitor: u8,
     pub text_color: String,
     pub text_align: String,
     pub background_color: String,
     pub blur_background: bool,
-    pub interval: i16,
+    pub interval: u8,
 }
 
 impl Default for Config {
