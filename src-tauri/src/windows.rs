@@ -1,5 +1,4 @@
 use crate::config::Region;
-use crate::translate_runtime::start_translate_runtime;
 use tauri::utils::config::WindowEffectsConfig;
 use tauri::utils::{WindowEffect, WindowEffectState};
 use tauri::webview::Color;
@@ -56,7 +55,6 @@ pub fn create_overlay_window(
     region: &Region,
     monitor: u8,
     blur: bool,
-    interval: u8,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(
         app,
@@ -77,8 +75,6 @@ pub fn create_overlay_window(
 
     edit_overlay(&window, &region, monitor, blur)?;
     window.show()?;
-
-    start_translate_runtime(&app, interval);
 
     Ok(window)
 }

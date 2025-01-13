@@ -3,14 +3,15 @@ mod config;
 mod errors;
 mod events;
 mod systray;
-mod windows;
 mod translate_runtime;
+mod windows;
 
 use crate::commands::{f_s_r, finish_select_region, get_config, select_region, set_config};
 use crate::config::{Config, ConfigState};
 use crate::systray::create_systray;
-use crate::translate_runtime::TranslateRuntime;
+use crate::translate_runtime::{start_translate_runtime, TranslateRuntime};
 use crate::windows::{create_config_window, create_overlay_window};
+use std::sync::atomic::{AtomicBool, AtomicU8};
 use std::sync::{Arc, Mutex};
 use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
@@ -29,12 +30,14 @@ pub fn run() {
                         let window = windows.values().find(|x| x.label() == "select");
                         if let Some(w) = window {
                             let state = _app.state::<ConfigState>();
-                            f_s_r(_app.clone(), state).expect("Failed reopen windows");
+                            let runtime = _app.state::<TranslateRuntime>();
+                            f_s_r(_app.clone(), state, runtime).expect("Failed reopen windows");
                             w.close().expect("Failed to close window");
                         }
                     }
                 })
-                .with_shortcut(close_shortcut).expect("Shortcut error")
+                .with_shortcut(close_shortcut)
+                .expect("Shortcut error")
                 .build(),
         )
         .plugin(tauri_plugin_process::init())
@@ -52,15 +55,18 @@ pub fn run() {
 
             let runtime = TranslateRuntime {
                 need_stop: Arc::new(Notify::default()),
-                is_running: Arc::new(Mutex::new(false)),
+                is_running: Arc::new(AtomicBool::from(false)),
+                interval: Arc::new(AtomicU8::new(config.interval)),
             };
-            app.manage(runtime);
 
             if let Some(region) = config.region {
-                create_overlay_window(&app, &region, config.monitor, config.blur_background, config.interval)?;
+                start_translate_runtime(&app, &runtime);
+                create_overlay_window(&app, &region, config.monitor, config.blur_background)?;
             } else {
                 create_config_window(&app)?;
             }
+
+            app.manage(runtime);
 
             Ok(())
         })
