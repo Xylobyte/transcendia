@@ -60,8 +60,8 @@ pub fn run() {
             };
 
             if let Some(region) = config.region {
-                start_translate_runtime(&app, &runtime);
-                create_overlay_window(&app, &region, config.monitor, config.blur_background)?;
+                start_translate_runtime(&app, &runtime, config.monitor.clone(), region.clone());
+                create_overlay_window(&app, &region, &config.monitor, config.blur_background)?;
             } else {
                 create_config_window(&app)?;
             }

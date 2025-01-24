@@ -52,13 +52,13 @@ const saveConfig = async (rOverlay: boolean = true) => {
 
 const changeMonitor = (monitor: string) => {
     if (!config.value) return;
-    config.value.monitor = monitors.value.findIndex(m => m.name === monitor) || 0;
+    config.value.monitor = monitor;
     saveConfig();
 };
 
 const onSelect = async () => {
     try {
-        await invoke("select_region", {monitor: config.value?.monitor || 0});
+        await invoke("select_region", {monitor: config.value?.monitor || monitors.value[0].name || ''});
         await currWindow.close();
     } catch (e) {
         console.error(e);
@@ -83,8 +83,8 @@ const onClose = async () => {
             <h2>Monitor</h2>
             <CustomSelect
                 v-if="monitors.length > 0"
-                :default-item="monitors[config.monitor || 0]?.name || '0'"
-                :items="monitors.map((m, i) => ({value: m.name || i.toString(), label: `Screen ${i}`}))"
+                :default-item="config.monitor || monitors[0].name || ''"
+                :items="monitors.map((m) => ({value: m.name || '', label: m.name ||'Monitor unnamed' }))"
                 @item-change="changeMonitor"
             />
         </div>

@@ -17,16 +17,16 @@ pub fn get_config_path(app_handle: &AppHandle) -> PathBuf {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Region {
-    pub x: i32,
-    pub y: i32,
-    pub w: i32,
-    pub h: i32,
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub region: Option<Region>,
-    pub monitor: u8,
+    pub monitor: String,
     pub text_color: String,
     pub text_align: String,
     pub background_color: String,
@@ -38,7 +38,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             region: None,
-            monitor: 0,
+            monitor: "".to_string(),
             text_align: "C:C".to_string(),
             text_color: "#FFFFFF".to_string(),
             background_color: "#00000066".to_string(),

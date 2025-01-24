@@ -1,7 +1,7 @@
 use crate::config::{Config, ConfigState};
 use crate::errors::TranscendiaError;
 use crate::events::Events;
-use crate::translate_runtime::{start_translate_runtime, TranslateRuntime};
+use crate::translate_runtime::{start_translate_runtime, stop_translate_runtime, TranslateRuntime};
 use crate::windows::{
     create_config_window, create_overlay_window, create_select_region_window, edit_overlay,
 };
@@ -39,7 +39,7 @@ pub async fn set_config(
         let windows = app_handle.webview_windows();
         let window = windows.values().find(|x| x.label() == "overlay");
         if let (Some(w), Some(r)) = (window, config.region.clone()) {
-            edit_overlay(w, &r, config.monitor, config.blur_background)
+            edit_overlay(w, &r, &config.monitor, config.blur_background)
                 .expect("Failed to edit overlay");
         }
     } else {
@@ -52,13 +52,18 @@ pub async fn set_config(
 }
 
 #[tauri::command]
-pub async fn select_region(app_handle: AppHandle, monitor: i8) -> Result<(), tauri::Error> {
-    create_select_region_window(&app_handle, monitor)?;
+pub async fn select_region(
+    app_handle: AppHandle,
+    runtime: tauri::State<'_, TranslateRuntime>,
+    monitor: String,
+) -> Result<(), tauri::Error> {
+    create_select_region_window(&app_handle, &monitor)?;
 
     let windows = app_handle.webview_windows();
     let window = windows.values().find(|x| x.label() == "overlay");
     if let Some(w) = window {
         w.close()?;
+        stop_translate_runtime(&runtime);
     }
 
     Ok(())
@@ -80,8 +85,13 @@ pub fn f_s_r(
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
     if let Some(region) = &config.region {
-        start_translate_runtime(&app_handle, &runtime);
-        create_overlay_window(&app_handle, region, config.monitor, config.blur_background)?;
+        start_translate_runtime(
+            &app_handle,
+            &runtime,
+            config.monitor.clone(),
+            region.clone(),
+        );
+        create_overlay_window(&app_handle, region, &config.monitor, config.blur_background)?;
     }
 
     create_config_window(&app_handle)?;

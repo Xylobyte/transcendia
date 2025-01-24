@@ -6,7 +6,7 @@ use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewWindow, WebviewWindo
 
 pub fn create_select_region_window(
     app: &AppHandle,
-    monitor: i8,
+    monitor: &String,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window =
         WebviewWindowBuilder::new(app, "select", tauri::WebviewUrl::App("select.html".into()))
@@ -24,12 +24,13 @@ pub fn create_select_region_window(
             .build()?;
 
     let monitors = window.available_monitors()?;
-    if monitors.len() > monitor as usize {
-        let monitor = monitors.get(monitor as usize).unwrap();
-        let scale = monitor.scale_factor();
-        window.set_position(monitor.position().to_logical::<f64>(scale))?;
-        window.set_size(monitor.size().to_logical::<f64>(scale))?;
-    }
+    let monitor = monitors
+        .iter()
+        .find(|m| m.name().unwrap() == monitor)
+        .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+    let scale = monitor.scale_factor();
+    window.set_position(monitor.position().to_logical::<f64>(scale))?;
+    window.set_size(monitor.size().to_logical::<f64>(scale))?;
     window.show()?;
     window.set_focus()?;
 
@@ -53,7 +54,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
 pub fn create_overlay_window(
     app: &AppHandle,
     region: &Region,
-    monitor: u8,
+    monitor: &String,
     blur: bool,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(
@@ -82,22 +83,24 @@ pub fn create_overlay_window(
 pub fn edit_overlay(
     window: &WebviewWindow,
     region: &Region,
-    monitor: u8,
+    monitor: &String,
     blur: bool,
 ) -> Result<(), tauri::Error> {
     let monitors = window.available_monitors()?;
-    if monitors.len() > monitor as usize {
-        let monitor = monitors.get(monitor as usize).unwrap();
-        let logical_position = monitor.position().to_logical::<i32>(monitor.scale_factor());
-        window.set_position(LogicalPosition {
-            x: logical_position.x + region.x,
-            y: logical_position.y + region.y,
-        })?;
-        window.set_size(LogicalSize {
-            width: region.w,
-            height: region.h,
-        })?;
-    }
+    let monitor = monitors
+        .iter()
+        .find(|m| m.name().unwrap() == monitor)
+        .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+    println!("Monitor: {:?}", monitor);
+    let logical_position = monitor.position().to_logical::<i32>(monitor.scale_factor());
+    window.set_position(LogicalPosition {
+        x: logical_position.x as u32 + region.x,
+        y: logical_position.y as u32 + region.y,
+    })?;
+    window.set_size(LogicalSize {
+        width: region.w,
+        height: region.h,
+    })?;
 
     if blur {
         window.set_effects(WindowEffectsConfig {
@@ -107,6 +110,8 @@ pub fn edit_overlay(
             color: None,
         })?;
     }
+
+    println!("End of edit overlay");
 
     Ok(())
 }
