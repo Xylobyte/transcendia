@@ -91,11 +91,10 @@ pub fn edit_overlay(
         .iter()
         .find(|m| m.name().unwrap() == monitor)
         .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
-    println!("Monitor: {:?}", monitor);
     let logical_position = monitor.position().to_logical::<i32>(monitor.scale_factor());
     window.set_position(LogicalPosition {
-        x: logical_position.x as u32 + region.x,
-        y: logical_position.y as u32 + region.y,
+        x: logical_position.x + region.x as i32,
+        y: logical_position.y + region.y as i32,
     })?;
     window.set_size(LogicalSize {
         width: region.w,
@@ -110,8 +109,6 @@ pub fn edit_overlay(
             color: None,
         })?;
     }
-
-    println!("End of edit overlay");
 
     Ok(())
 }
