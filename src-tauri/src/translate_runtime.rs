@@ -1,3 +1,4 @@
+extern crate objc;
 use crate::config::Region;
 use image::DynamicImage;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -5,6 +6,12 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Notify;
 use tokio::time::{sleep, Duration};
+
+#[cfg(target_os = "macos")]
+extern "C" {
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
+}
 
 pub struct TranslateRuntime {
     pub need_stop: Arc<Notify>,
@@ -26,6 +33,15 @@ pub fn start_translate_runtime(
         return;
     }
 
+    unsafe {
+        #[cfg(target_os = "macos")]
+        if !CGPreflightScreenCaptureAccess() {
+            println!("Request screen access...");
+            let result = CGRequestScreenCaptureAccess();
+            println!("Screen access: {}", result);
+        }
+    }
+
     tauri::async_runtime::spawn(async move {
         let cache_dir = app_handle.path().app_cache_dir().unwrap();
         let monitors = xcap::Monitor::all().unwrap();
@@ -34,18 +50,16 @@ pub fn start_translate_runtime(
             .find(|m| m.name() == monitor)
             .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
 
-        let capture = monitor.capture_image().expect("Screen capture failed");
-        let cropped_image =
-            DynamicImage::ImageRgba8(capture).crop_imm(region.x, region.y, region.w, region.h);
-        cropped_image.save("target/test.png").expect("Cannot save image");
-
         loop {
             tokio::select! {
                 _ = need_stop.notified() => {
                     break;
                 }
                 _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
-                    println!("Translate runtime running")
+                    println!("Translate runtime scheduling...");
+                    let capture = monitor.capture_image().expect("Screen capture failed");
+                    let cropped_image = DynamicImage::ImageRgba8(capture).crop_imm(region.x, region.y, region.w, region.h);
+                    cropped_image.save("target/test.png").expect("Cannot save image");
                 }
             }
         }

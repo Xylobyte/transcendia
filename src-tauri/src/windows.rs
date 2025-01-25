@@ -71,6 +71,7 @@ pub fn create_overlay_window(
         .transparent(true)
         .resizable(false)
         .visible(false)
+        .content_protected(true)
         .build()?;
     window.set_ignore_cursor_events(true)?;
 

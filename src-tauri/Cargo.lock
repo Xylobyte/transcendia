@@ -4186,6 +4186,7 @@ name = "transcendia"
 version = "0.1.0"
 dependencies = [
  "image",
+ "objc",
  "serde",
  "serde_json",
  "tauri",
