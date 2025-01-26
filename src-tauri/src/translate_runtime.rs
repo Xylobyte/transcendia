@@ -57,9 +57,7 @@ pub fn start_translate_runtime(
                 }
                 _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
                     println!("Translate runtime scheduling...");
-                    let capture = monitor.capture_image().expect("Screen capture failed");
-                    let cropped_image = DynamicImage::ImageRgba8(capture).crop_imm(region.x, region.y, region.w, region.h);
-                    cropped_image.save("target/test.png").expect("Cannot save image");
+                    take_and_process_screenshot(monitor, &region);
                 }
             }
         }
@@ -71,4 +69,10 @@ pub fn start_translate_runtime(
 pub fn stop_translate_runtime(data: &TranslateRuntime) {
     data.need_stop.notify_one();
     data.is_running.store(false, Ordering::Release);
+}
+
+pub fn take_and_process_screenshot(monitor: &xcap::Monitor, region: &Region) {
+    let capture = monitor.capture_image().expect("Screen capture failed");
+    let cropped_image = DynamicImage::ImageRgba8(capture).crop_imm(region.x, region.y, region.w, region.h);
+    cropped_image.save("target/test.png").expect("Cannot save image");
 }
