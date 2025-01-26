@@ -5,9 +5,11 @@ mod events;
 mod systray;
 mod translate_runtime;
 mod windows;
+mod ocr_models;
 
 use crate::commands::{f_s_r, finish_select_region, get_config, select_region, set_config};
 use crate::config::{Config, ConfigState};
+use crate::ocr_models::check_for_models;
 use crate::systray::create_systray;
 use crate::translate_runtime::{start_translate_runtime, TranslateRuntime};
 use crate::windows::{create_config_window, create_overlay_window};
@@ -59,11 +61,13 @@ pub fn run() {
                 interval: Arc::new(AtomicU8::new(config.interval)),
             };
 
-            if let Some(region) = config.region {
-                start_translate_runtime(&app, &runtime, config.monitor.clone(), region.clone());
-                create_overlay_window(&app, &region, &config.monitor, config.blur_background)?;
-            } else {
-                create_config_window(&app)?;
+            if check_for_models(&app) {
+                if let Some(region) = config.region {
+                    start_translate_runtime(&app, &runtime, config.monitor.clone(), region.clone());
+                    create_overlay_window(&app, &region, &config.monitor, config.blur_background)?;
+                } else {
+                    create_config_window(&app)?;
+                }
             }
 
             app.manage(runtime);

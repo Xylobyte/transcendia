@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
-pub const GLOBAL_CONFIG_FILE: &str = "global_config.json";
+const GLOBAL_CONFIG_FILE: &str = "global_config.json";
 
 pub fn get_config_path(app_handle: &AppHandle) -> PathBuf {
     let mut path = app_handle

@@ -2,14 +2,16 @@ use crate::config::Region;
 use tauri::utils::config::WindowEffectsConfig;
 use tauri::utils::{WindowEffect, WindowEffectState};
 use tauri::webview::Color;
-use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewWindow, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+};
 
 pub fn create_select_region_window(
     app: &AppHandle,
     monitor: &String,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window =
-        WebviewWindowBuilder::new(app, "select", tauri::WebviewUrl::App("select.html".into()))
+        WebviewWindowBuilder::new(app, "select", WebviewUrl::App("select.html".into()))
             .title("Transcendia - Select a region")
             .accept_first_mouse(true)
             .always_on_top(true)
@@ -38,12 +40,25 @@ pub fn create_select_region_window(
 }
 
 pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Error> {
+    let window = WebviewWindowBuilder::new(app, "config", WebviewUrl::App("config.html".into()))
+        .title("Transcendia - Configuration")
+        .accept_first_mouse(true)
+        .always_on_top(true)
+        .inner_size(400f64, 650f64)
+        .resizable(false)
+        .build()?;
+    window.set_focus()?;
+
+    Ok(window)
+}
+
+pub fn create_download_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Error> {
     let window =
-        WebviewWindowBuilder::new(app, "config", tauri::WebviewUrl::App("config.html".into()))
-            .title("Transcendia - Configuration")
-            .accept_first_mouse(true)
+        WebviewWindowBuilder::new(app, "downloader", WebviewUrl::App("models.html".into()))
+            .title("Transcendia - Downloader")
             .always_on_top(true)
-            .inner_size(400f64, 650f64)
+            .accept_first_mouse(true)
+            .inner_size(500f64, 200f64)
             .resizable(false)
             .build()?;
     window.set_focus()?;
@@ -57,11 +72,7 @@ pub fn create_overlay_window(
     monitor: &String,
     blur: bool,
 ) -> Result<WebviewWindow, tauri::Error> {
-    let window = WebviewWindowBuilder::new(
-        app,
-        "overlay",
-        tauri::WebviewUrl::App("overlay.html".into()),
-    )
+    let window = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay.html".into()))
         .title("Transcendia - Overlay")
         .always_on_top(true)
         .visible_on_all_workspaces(true)
