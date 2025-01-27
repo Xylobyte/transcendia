@@ -5,6 +5,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::cmp::min;
 use std::fs;
+use std::fs::remove_file;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -62,7 +63,9 @@ pub fn check_for_models(app: &AppHandle) -> bool {
 pub fn download_model(app: &AppHandle, path: PathBuf, url: &str) {
     let stop_notify = Arc::new(Notify::default());
     let stop_notify_clone = stop_notify.clone();
+    let path_clone = path.clone();
     let id = app.listen(Events::StopDownload.as_str(), move |event| {
+        let _ = remove_file(&path_clone);
         stop_notify.notify_one();
     });
 
@@ -83,7 +86,7 @@ pub fn download_model(app: &AppHandle, path: PathBuf, url: &str) {
             .expect(format!("Failed to GET from '{}'", url.clone()).as_str());
 
         let total_size = res.content_length().expect("Failed to get content length");
-        let mut file = File::create(path)
+        let mut file = File::create(&path)
             .await
             .expect("Failed to create the file!");
         let mut downloaded: u64 = 0;

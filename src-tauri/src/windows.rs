@@ -58,7 +58,7 @@ pub fn create_download_window(app: &AppHandle) -> Result<WebviewWindow, tauri::E
             .title("Transcendia - Downloader")
             .always_on_top(true)
             .accept_first_mouse(true)
-            .inner_size(500f64, 200f64)
+            .inner_size(500f64, 310f64)
             .resizable(false)
             .build()?;
     window.set_focus()?;

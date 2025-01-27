@@ -5,7 +5,8 @@
     "windows": [
         "select",
         "config",
-        "overlay"
+        "overlay",
+        "downloader"
     ],
     "permissions": [
         "core:default",
