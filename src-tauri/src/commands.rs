@@ -75,13 +75,14 @@ pub async fn finish_select_region(
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranslateRuntime>,
 ) -> Result<(), tauri::Error> {
-    f_s_r(app_handle, config, runtime)
+    f_s_r(app_handle, config, runtime, true)
 }
 
 pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranslateRuntime>,
+    create_config: bool,
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
     if let Some(region) = &config.region {
@@ -94,7 +95,26 @@ pub fn f_s_r(
         create_overlay_window(&app_handle, region, &config.monitor, config.blur_background)?;
     }
 
-    create_config_window(&app_handle)?;
+    if create_config {
+        create_config_window(&app_handle)?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn download_finish(
+    app_handle: AppHandle,
+    config: tauri::State<'_, ConfigState>,
+    runtime: tauri::State<'_, TranslateRuntime>,
+) -> Result<(), tauri::Error> {
+    f_s_r(app_handle.clone(), config, runtime, false)?;
+
+    let windows = app_handle.webview_windows();
+    let window = windows.values().find(|x| x.label() == "downloader");
+    if let Some(w) = window {
+        w.close()?;
+    }
 
     Ok(())
 }

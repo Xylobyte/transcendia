@@ -7,7 +7,7 @@ mod translate_runtime;
 mod windows;
 mod ocr_models;
 
-use crate::commands::{f_s_r, finish_select_region, get_config, select_region, set_config};
+use crate::commands::{download_finish, f_s_r, finish_select_region, get_config, select_region, set_config};
 use crate::config::{Config, ConfigState};
 use crate::ocr_models::check_for_models;
 use crate::systray::create_systray;
@@ -33,7 +33,7 @@ pub fn run() {
                         if let Some(w) = window {
                             let state = _app.state::<ConfigState>();
                             let runtime = _app.state::<TranslateRuntime>();
-                            f_s_r(_app.clone(), state, runtime).expect("Failed reopen windows");
+                            f_s_r(_app.clone(), state, runtime, true).expect("Failed reopen windows");
                             w.close().expect("Failed to close window");
                         }
                     }
@@ -78,7 +78,8 @@ pub fn run() {
             get_config,
             set_config,
             select_region,
-            finish_select_region
+            finish_select_region,
+            download_finish
         ])
         .run(generate_context!())
         .expect("Error while running Transcendia");

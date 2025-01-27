@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import {emit, listen, UnlistenFn} from "@tauri-apps/api/event";
-import {onMounted, onUnmounted, ref} from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 import {Events} from "../types/events.ts";
 import {DownloadProgress} from "../types/download.ts";
 import Progress from "../components/Progress.vue";
 import CustomButton from "../components/CustomButton.vue";
+import {invoke} from "@tauri-apps/api/core";
 
 const progressDetectionFile = ref<DownloadProgress>();
 const progressRecognitionFile = ref<DownloadProgress>();
@@ -22,6 +23,15 @@ onMounted(async () => {
 
 onUnmounted(() => {
     unlisten();
+});
+
+watch([progressDetectionFile, progressRecognitionFile], async () => {
+    if (
+        progressDetectionFile.value?.progress === progressDetectionFile.value?.total_size &&
+        progressRecognitionFile.value?.progress === progressRecognitionFile.value?.total_size
+    ) {
+        await invoke("download_finish");
+    }
 });
 
 const handleQuit = async () => {
