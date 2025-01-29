@@ -6,6 +6,9 @@ import {DownloadProgress} from "../types/download.ts";
 import Progress from "../components/Progress.vue";
 import CustomButton from "../components/CustomButton.vue";
 import {invoke} from "@tauri-apps/api/core";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+
+const currWindow = getCurrentWebviewWindow();
 
 const progressDetectionFile = ref<DownloadProgress>();
 const progressRecognitionFile = ref<DownloadProgress>();
@@ -31,6 +34,7 @@ watch([progressDetectionFile, progressRecognitionFile], async () => {
         progressRecognitionFile.value?.progress === progressRecognitionFile.value?.total_size
     ) {
         await invoke("download_finish");
+        await currWindow.close();
     }
 });
 

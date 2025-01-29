@@ -110,11 +110,5 @@ pub async fn download_finish(
 ) -> Result<(), tauri::Error> {
     f_s_r(app_handle.clone(), config, runtime, false)?;
 
-    let windows = app_handle.webview_windows();
-    let window = windows.values().find(|x| x.label() == "downloader");
-    if let Some(w) = window {
-        w.close()?;
-    }
-
     Ok(())
 }
