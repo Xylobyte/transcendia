@@ -21,11 +21,11 @@ struct DownloadData {
     total_size: u64,
 }
 
-const MODEL_FOLDER_NAME: &str = "models";
-const DETECTION_MODEL_NAME: &str = "text-detection.rten";
+pub const MODEL_FOLDER_NAME: &str = "models";
+pub const DETECTION_MODEL_NAME: &str = "text-detection.rten";
 const DETECTION_MODEL_URL: &str =
     "https://ocrs-models.s3-accelerate.amazonaws.com/text-detection.rten";
-const RECOGNITION_MODEL_NAME: &str = "text-recognition.rten";
+pub const RECOGNITION_MODEL_NAME: &str = "text-recognition.rten";
 const RECOGNITION_MODEL_URL: &str =
     "https://ocrs-models.s3-accelerate.amazonaws.com/text-recognition.rten";
 
@@ -64,7 +64,7 @@ pub fn download_model(app: &AppHandle, path: PathBuf, url: &str) {
     let stop_notify = Arc::new(Notify::default());
     let stop_notify_clone = stop_notify.clone();
     let path_clone = path.clone();
-    let id = app.listen(Events::StopDownload.as_str(), move |event| {
+    let id = app.listen(Events::StopDownload.as_str(), move |_| {
         let _ = remove_file(&path_clone);
         stop_notify.notify_one();
     });

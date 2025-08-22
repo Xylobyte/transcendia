@@ -61,6 +61,7 @@ main {
 
 p {
     width: 100%;
+    white-space: break-spaces;
 }
 </style>
 

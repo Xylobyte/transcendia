@@ -42,6 +42,7 @@ pub fn run() {
                 .expect("Shortcut error")
                 .build(),
         )
+        .plugin(tauri_plugin_macos_permissions::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
@@ -52,7 +53,7 @@ pub fn run() {
 
             let app = app.handle();
 
-            let config = Config::load(&app);
+            let config = Config::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
             let runtime = TranslateRuntime {
@@ -61,12 +62,12 @@ pub fn run() {
                 interval: Arc::new(AtomicU8::new(config.interval)),
             };
 
-            if check_for_models(&app) {
+            if check_for_models(app) {
                 if let Some(region) = config.region {
-                    start_translate_runtime(&app, &runtime, config.monitor.clone(), region.clone());
-                    create_overlay_window(&app, &region, &config.monitor, config.blur_background)?;
+                    start_translate_runtime(app, &runtime, config.monitor.clone(), region.clone());
+                    create_overlay_window(app, &region, &config.monitor, config.blur_background)?;
                 } else {
-                    create_config_window(&app)?;
+                    create_config_window(app)?;
                 }
             }
 
