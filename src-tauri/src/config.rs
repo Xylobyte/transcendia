@@ -26,9 +26,10 @@ pub struct Region {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub region: Option<Region>,
-    pub monitor: String,
+    pub monitor: u32,
     pub text_color: String,
     pub text_align: String,
+    pub text_size: u16,
     pub background_color: String,
     pub blur_background: bool,
     pub interval: u8,
@@ -38,9 +39,10 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             region: None,
-            monitor: "".to_string(),
+            monitor: 0,
             text_align: "C:C".to_string(),
             text_color: "#FFFFFF".to_string(),
+            text_size: 16,
             background_color: "#00000066".to_string(),
             blur_background: true,
             interval: 1,

@@ -46,7 +46,7 @@ const getConfig = async () => {
 
 <template>
     <main
-        :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content'}">
+        :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content', fontSize: config?.text_size + 'px'}">
         <p :style="mainStyle">{{ text }}</p>
     </main>
 </template>

@@ -7,7 +7,7 @@ export type Region = {
 
 export type Config = {
     region?: Region,
-    monitor: string,
+    monitor: number,
     text_color: string,
     text_align:
         | 'T:L'
@@ -19,6 +19,7 @@ export type Config = {
         | 'B:L'
         | 'B:C'
         | 'B:R',
+    text_size: number,
     background_color: string,
     blur_background: boolean,
     interval: number

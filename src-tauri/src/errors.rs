@@ -4,4 +4,5 @@ use serde::Serialize;
 pub enum TranscendiaError {
     CannotLoadConfig,
     CannotSaveConfig,
+    CannotGetMonitors,
 }

@@ -8,7 +8,7 @@ use tauri::{
 
 pub fn create_select_region_window(
     app: &AppHandle,
-    monitor: &String,
+    monitor: u32,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window =
         WebviewWindowBuilder::new(app, "select", WebviewUrl::App("select.html".into()))
@@ -25,14 +25,14 @@ pub fn create_select_region_window(
             .visible(false)
             .build()?;
 
-    let monitors = window.available_monitors()?;
+    let monitors = xcap::Monitor::all().expect("Could not retrieve monitors");
     let monitor = monitors
         .iter()
-        .find(|m| m.name().unwrap() == monitor)
+        .find(|m| m.id().unwrap() == monitor)
         .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
-    let scale = monitor.scale_factor();
-    window.set_position(monitor.position().to_logical::<f64>(scale))?;
-    window.set_size(monitor.size().to_logical::<f64>(scale))?;
+    let scale = monitor.scale_factor().unwrap();
+    window.set_position(LogicalPosition { x: monitor.x().unwrap() as f32 * scale, y: monitor.y().unwrap() as f32 * scale })?;
+    window.set_size(LogicalSize { width: monitor.width().unwrap() as f32, height: monitor.height().unwrap() as f32 })?;
     window.show()?;
     window.set_focus()?;
 
@@ -69,7 +69,7 @@ pub fn create_download_window(app: &AppHandle) -> Result<WebviewWindow, tauri::E
 pub fn create_overlay_window(
     app: &AppHandle,
     region: &Region,
-    monitor: &String,
+    monitor: u32,
     blur: bool,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay.html".into()))
@@ -95,18 +95,17 @@ pub fn create_overlay_window(
 pub fn edit_overlay(
     window: &WebviewWindow,
     region: &Region,
-    monitor: &String,
+    monitor: u32,
     blur: bool,
 ) -> Result<(), tauri::Error> {
-    let monitors = window.available_monitors()?;
+    let monitors = xcap::Monitor::all().expect("Could not retrieve monitors");
     let monitor = monitors
         .iter()
-        .find(|m| m.name().unwrap() == monitor)
+        .find(|m| m.id().unwrap() == monitor)
         .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
-    let logical_position = monitor.position().to_logical::<i32>(monitor.scale_factor());
     window.set_position(LogicalPosition {
-        x: logical_position.x + region.x as i32,
-        y: logical_position.y + region.y as i32,
+        x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap() + region.x as f32,
+        y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap() + region.y as f32,
     })?;
     window.set_size(LogicalSize {
         width: region.w,

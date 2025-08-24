@@ -20,7 +20,7 @@ pub struct TranslateRuntime {
 pub fn start_translate_runtime(
     app_handle: &AppHandle,
     data: &TranslateRuntime,
-    monitor: String,
+    monitor: u32,
     region: Region,
 ) {
     let app_handle = app_handle.clone();
@@ -40,9 +40,13 @@ pub fn start_translate_runtime(
         }
 
         let monitors = xcap::Monitor::all().unwrap();
+        println!("Available monitors:");
         let monitor = monitors
             .iter()
-            .find(|m| m.name().expect("Can't get monitor name") == monitor)
+            .find(|m| {
+                println!("M: {:?} for {}", m.id().unwrap(), monitor);
+                m.id().expect("Can't get monitor name") == monitor
+            })
             .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
 
         let models_folder = app_handle

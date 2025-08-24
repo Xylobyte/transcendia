@@ -36,5 +36,26 @@ tauri-plugin-macos-permissions = "2.3.0"
 [profile.dev.package.ocrs]
 opt-level = 3
 
+[profile.dev.package.rten]
+opt-level = 3
+
+[profile.dev.package.rten-base]
+opt-level = 3
+
+[profile.dev.package.rten-gemm]
+opt-level = 3
+
+[profile.dev.package.rten-simd]
+opt-level = 3
+
+[profile.dev.package.rten-tensor]
+opt-level = 3
+
+[profile.dev.package.rten-vecmath]
+opt-level = 3
+
+[profile.dev.package.rten-imageproc]
+opt-level = 3
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2.3"

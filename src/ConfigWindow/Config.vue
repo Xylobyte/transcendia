@@ -8,29 +8,29 @@ import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {emit} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
-import {availableMonitors, Monitor} from "@tauri-apps/api/window";
 import {ColorPicker} from "vue3-colorpicker";
 import CustomInput from "../components/CustomInput.vue";
 
 const currWindow = getCurrentWebviewWindow();
 
-const monitors = ref<Monitor[]>([]);
+const monitors = ref<{ name: string, id: number }[]>([]);
 const config = ref<Config>();
 const canSave = ref(false);
 
 onMounted(async () => {
     await emit(Events.OnOffConfigTrayItem, false);
     config.value = await invoke<Config>("get_config");
-    monitors.value = await availableMonitors();
+    monitors.value = await invoke("get_monitors");
 
-    // document.addEventListener('contextmenu', event => event.preventDefault());
+    //document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 watch(() => [
     config.value?.text_color,
     config.value?.text_align,
     config.value?.background_color,
-    config.value?.interval
+    config.value?.interval,
+    config.value?.text_size
 ], (_curr, prev) => {
     if (prev.every(v => v === undefined)) return;
     canSave.value = true;
@@ -52,7 +52,7 @@ const saveConfig = async (rOverlay: boolean = true) => {
 
 const changeMonitor = (monitor: string) => {
     if (!config.value) return;
-    config.value.monitor = monitor;
+    config.value.monitor = parseInt(monitor);
     saveConfig();
 };
 
@@ -83,8 +83,8 @@ const onClose = async () => {
             <h2>Monitor</h2>
             <CustomSelect
                 v-if="monitors.length > 0"
-                :default-item="config.monitor || monitors[0].name || ''"
-                :items="monitors.map((m) => ({value: m.name || '', label: m.name ||'Monitor unnamed' }))"
+                :default-item="(config.monitor || monitors[0].id || 0).toString()"
+                :items="monitors.map((m) => ({value: m.id.toString(), label: m.name ||'Monitor unnamed' }))"
                 @item-change="changeMonitor"
             />
         </div>
@@ -115,6 +115,18 @@ const onClose = async () => {
                 picker-type="chrome"
                 theme="black"
             />
+        </div>
+
+        <div class="text-size">
+            <h2>Text size</h2>
+            <div>
+                <CustomInput
+                    v-model="config.text_size"
+                    :max="250"
+                    type="number"
+                />
+                px
+            </div>
         </div>
 
         <div class="text-align">
@@ -160,26 +172,27 @@ const onClose = async () => {
                 s
             </div>
         </div>
-
-        <div class="action">
-            <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig(false)">
-                Save
-            </CustomButton>
-            <CustomButton :is-primary="true" title="Close" @click="onClose">
-                {{ config.region ? "Close" : "Quit" }}
-            </CustomButton>
-        </div>
     </main>
+
+    <div class="action">
+        <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig(false)">
+            Save
+        </CustomButton>
+        <CustomButton :is-primary="true" title="Close" @click="onClose">
+            {{ config?.region ? "Close" : "Quit" }}
+        </CustomButton>
+    </div>
 </template>
 
 <style scoped>
 main {
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    gap: 30px;
+    padding: 10px;
+    gap: 10px;
     width: 100%;
     height: 100%;
+    overflow-y: scroll;
 }
 
 h1 {
@@ -188,9 +201,9 @@ h1 {
 }
 
 h2 {
-    font-size: 1.3rem;
+    font-size: 1rem;
     font-weight: normal;
-    color: rgb(232, 232, 232);
+    color: rgb(174, 174, 174);
     margin: 0;
 }
 
@@ -200,10 +213,20 @@ h2 {
     gap: 15px;
 }
 
-.region-select .head, .screen, .text-color, .text-align, .window-blur, .bg-color, .interval {
+.region-select .info {
+    color: rgb(174, 174, 174);
+}
+
+.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .region-select {
+    background: #191919;
+    padding: 10px;
+    border-radius: 10px;
 }
 
 .region-select .info {
@@ -218,7 +241,7 @@ h2 {
 }
 
 .grid span {
-    border: 1px solid rgb(232, 232, 232);
+    border: 1px solid rgb(174, 174, 174);
     padding: 3px;
     font-size: 0.8em;
     border-radius: 3px;
@@ -231,20 +254,22 @@ h2 {
 
 .grid span.active {
     background: rgb(232, 232, 232);
+    border-color: rgb(232, 232, 232);
     color: black;
 }
 
 .action {
     display: flex;
     gap: 10px;
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    padding: 10px;
+    justify-content: end;
 }
 </style>
 
 <style>
 body {
     background: var(--background);
+    display: flex;
+    flex-direction: column;
 }
 </style>
