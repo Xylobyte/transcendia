@@ -47,6 +47,7 @@ const getConfig = async () => {
 
 <template>
     <main
+        v-if="text"
         :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content'}">
         <p :style="mainStyle">{{ text }}</p>
     </main>
