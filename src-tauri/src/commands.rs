@@ -111,6 +111,7 @@ pub fn f_s_r(
             &runtime,
             config.monitor.clone(),
             region.clone(),
+            config.lang.clone(),
         );
         create_overlay_window(&app_handle, region, config.monitor, config.blur_background)?;
     }

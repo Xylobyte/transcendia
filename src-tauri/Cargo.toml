@@ -25,13 +25,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.47", features = ["macros", "time"] }
 tokio-macros = "2.5"
-xcap = "0.6"
+xcap = "0.7"
 image = "0.25"
 ocrs = "0.10"
 reqwest = { version = "0.12", features = ["stream"] }
 futures-util = "0.3"
 rten = "0.21"
 tauri-plugin-macos-permissions = "2.3.0"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2.3"
 
 [profile.dev.package.ocrs]
 opt-level = 3
@@ -56,6 +59,3 @@ opt-level = 3
 
 [profile.dev.package.rten-imageproc]
 opt-level = 3
-
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-global-shortcut = "2.3"

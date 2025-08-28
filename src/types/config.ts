@@ -22,5 +22,6 @@ export type Config = {
     text_size: number,
     background_color: string,
     blur_background: boolean,
-    interval: number
+    interval: number,
+    lang: string
 }

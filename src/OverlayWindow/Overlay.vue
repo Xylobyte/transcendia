@@ -35,7 +35,8 @@ const mainStyle = computed(() => {
     return {
         color: config.value?.text_color,
         textAlign: hAlign === "L" ? "left" : hAlign === "C" ? "center" : "right",
-        alignSelf: vAlign === "T" ? "start" : vAlign === "C" ? "center" : "end"
+        alignSelf: vAlign === "T" ? "start" : vAlign === "C" ? "center" : "end",
+        fontSize: config.value?.text_size + 'px'
     } as CSSProperties;
 });
 
@@ -46,7 +47,7 @@ const getConfig = async () => {
 
 <template>
     <main
-        :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content', fontSize: config?.text_size + 'px'}">
+        :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content'}">
         <p :style="mainStyle">{{ text }}</p>
     </main>
 </template>
@@ -56,7 +57,7 @@ main {
     border-radius: 30px;
     justify-content: center;
     display: flex;
-    padding: 20px;
+    padding: 10px 20px;
 }
 
 p {

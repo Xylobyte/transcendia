@@ -2,12 +2,15 @@ mod commands;
 mod config;
 mod errors;
 mod events;
+mod ocr_models;
 mod systray;
 mod translate_runtime;
 mod windows;
-mod ocr_models;
 
-use crate::commands::{download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region, set_config};
+use crate::commands::{
+    download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
+    set_config,
+};
 use crate::config::{Config, ConfigState};
 use crate::ocr_models::check_for_models;
 use crate::systray::create_systray;
@@ -33,7 +36,8 @@ pub fn run() {
                         if let Some(w) = window {
                             let state = _app.state::<ConfigState>();
                             let runtime = _app.state::<TranslateRuntime>();
-                            f_s_r(_app.clone(), state, runtime, true).expect("Failed reopen windows");
+                            f_s_r(_app.clone(), state, runtime, true)
+                                .expect("Failed reopen windows");
                             w.close().expect("Failed to close window");
                         }
                     }
@@ -64,7 +68,13 @@ pub fn run() {
 
             if check_for_models(app) {
                 if let Some(region) = config.region {
-                    start_translate_runtime(app, &runtime, config.monitor.clone(), region.clone());
+                    start_translate_runtime(
+                        app,
+                        &runtime,
+                        config.monitor.clone(),
+                        region.clone(),
+                        config.lang.clone(),
+                    );
                     create_overlay_window(app, &region, config.monitor, config.blur_background)?;
                 } else {
                     create_config_window(app)?;

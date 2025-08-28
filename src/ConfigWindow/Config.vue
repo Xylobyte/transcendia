@@ -10,6 +10,7 @@ import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {ColorPicker} from "vue3-colorpicker";
 import CustomInput from "../components/CustomInput.vue";
+import {languages} from "./languages.ts";
 
 const currWindow = getCurrentWebviewWindow();
 
@@ -56,6 +57,12 @@ const changeMonitor = (monitor: string) => {
     saveConfig();
 };
 
+const changeLang = (lang: string) => {
+    if (!config.value) return;
+    config.value.lang = lang;
+    saveConfig();
+};
+
 const onSelect = async () => {
     try {
         await invoke("select_region", {monitor: config.value?.monitor || monitors.value[0].name || ''});
@@ -78,6 +85,11 @@ const onClose = async () => {
 <template>
     <main v-if="config" ref="main">
         <h1>Configuration</h1>
+
+        <div class="lang">
+            <h2>Target language</h2>
+            <CustomSelect :default-item="config.lang" :items="languages" @item-change="changeLang"/>
+        </div>
 
         <div class="screen">
             <h2>Monitor</h2>
@@ -217,13 +229,13 @@ h2 {
     color: rgb(174, 174, 174);
 }
 
-.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval {
+.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .lang {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .region-select {
+.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .region-select, .lang {
     background: #191919;
     padding: 10px;
     border-radius: 10px;
