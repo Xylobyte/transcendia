@@ -83,11 +83,8 @@ pub fn start_translate_runtime(
                     break;
                 }
                 _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
-                    println!("Translate runtime scheduling...");
-
                     let mut text = take_and_process_screenshot(monitor, &region, &engine);
                     if text == old_text {
-                        println!("No changes in text");
                         continue;
                     } else {
                         old_text = text.clone();
@@ -96,8 +93,6 @@ pub fn start_translate_runtime(
                     translate_text(&mut text, &lang, &client).await;
 
                     app_handle.emit(Events::NewTranslatedText.as_str(), text).unwrap();
-
-                    println!("End of runtime scheduling !");
                 }
             }
         }
@@ -152,8 +147,6 @@ fn take_and_process_screenshot(
 }
 
 async fn translate_text(text: &mut String, target_lang: &String, client: &Client) {
-    println!("Translating text...");
-
     let mut url = Url::parse(
         format!(
             "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
@@ -166,7 +159,6 @@ async fn translate_text(text: &mut String, target_lang: &String, client: &Client
     let res = client.get(url).send().await;
 
     if let Ok(r) = res {
-        println!("URL: {}", r.url());
         let res_text = r.text().await.expect("Could not read response");
 
         let json = serde_json::from_str::<Value>(&res_text).expect("Could not parse json");
@@ -180,7 +172,7 @@ async fn translate_text(text: &mut String, target_lang: &String, client: &Client
                 (*text).push_str(value);
             }
         } else {
-            println!("Could not find translated text in response");
+            eprintln!("Could not find translated text in response");
         }
     }
 }
