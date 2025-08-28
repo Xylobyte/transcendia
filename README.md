@@ -5,10 +5,11 @@
 
 # Transcendia
 
-> **Real-time Screen Translation App**
+> **Real-time Screen Translation for Games, Videos, and More**
 
-Transcendia is a powerful desktop application that provides real-time translation of any selected region on your screen.
-Perfect for translating games, videos, documents, or any content displayed on your monitor.
+Transcendia is a lightweight desktop app that lets you instantly translate any text on your screen.  
+Just select a region, and translations appear in real time as an always-on-top overlay.  
+Perfect for games, streams, documents, or any on-screen content.
 
 ![Transcendia Demo](/screenshots/opus-translated-in-french.jpeg)
 
@@ -28,20 +29,13 @@ Perfect for translating games, videos, documents, or any content displayed on yo
 - **Multi-Language Support**: Translate to 17+ languages including major European languages
 - **Always-on-Top Overlay**: Translated text appears as a floating overlay window
 
-### System Integration
-
-- **System Tray Integration**: Minimize to system tray for background operation
-- **Global Keyboard Shortcuts**: Quick access with Ctrl+X to finish region selection
-- **macOS Permissions Handling**: Automatic screen recording permission requests
-- **Cross-Platform Ready**: Built with Tauri for Windows and Linux compatibility (coming soon)
-
 ### Performance
 
 - **Optimized OCR Engine**: Uses ONNX Runtime for fast and accurate text recognition
 - **Minimal Resource Usage**: Efficient background processing
 - **Smart Text Detection**: Only processes changed text to reduce API calls
 
-The app uses **~80 MB of RAM** and about **80% of a single CPU core**, so you can easily run it while playing games.
+The app typically uses ~80 MB of RAM and up to ~80% of a single CPU core, so it runs smoothly even while gaming.
 
 I'm working on even more optimizations for the next releases!
 
@@ -49,14 +43,14 @@ I'm working on even more optimizations for the next releases!
 
 ### macOS (Ready Now)
 
-1. Go to [Releases](https://github.com/YOUR_USERNAME/transcendia/releases)
+1. Go to [Releases](https://github.com/Xylobyte/transcendia/releases)
 2. Download the latest `Transcendia-v1.0.0-beta.1.dmg` file
 3. Open the DMG and drag Transcendia to your Applications folder
 4. Launch Transcendia from Applications
 
 ### Windows & Linux
 
-**Coming Soon!** Windows and Linux versions are almost ready and will be available in the next release.
+**Coming Soon!** Windows and Linux versions are almost ready and will be available in an upcoming release.
 
 ## 🛠️ Building from Source
 
