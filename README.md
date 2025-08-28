@@ -44,7 +44,7 @@ I'm working on even more optimizations for the next releases!
 ### macOS (Ready Now)
 
 1. Go to [Releases](https://github.com/Xylobyte/transcendia/releases)
-2. Download the latest `Transcendia-v1.0.0-beta.1.dmg` file
+2. Download the latest `Transcendia_1.0.0-beta.1_aarch64.dmg` file
 3. Open the DMG and drag Transcendia to your Applications folder
 4. Launch Transcendia from Applications
 
