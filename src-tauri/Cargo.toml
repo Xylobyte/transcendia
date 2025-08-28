@@ -1,6 +1,6 @@
 [package]
 name = "transcendia"
-version = "0.1.0"
+version = "1.0.0-beta.1"
 description = "An app to translate in realtime a section of your screen"
 authors = ["you"]
 edition = "2021"
