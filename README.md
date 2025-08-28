@@ -115,7 +115,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the project
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -123,7 +123,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-Or open an issue if you have a bug or need a new feature !
+### Icon
+
+If someone have skills in design, I need a new icon for the app !
+
+### Issues
+
+Open an issue if you have a bug or need a new feature !
 
 ## License
 
