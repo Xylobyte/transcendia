@@ -1,17 +1,27 @@
-![GitHub last commit](https://img.shields.io/github/last-commit/Xylobyte/transcendia)&nbsp;
-![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Xylobyte/transcendia)&nbsp;
-![GitHub License](https://img.shields.io/github/license/Xylobyte/transcendia)&nbsp;
-![GitHub Release](https://img.shields.io/github/v/release/Xylobyte/transcendia?include_prereleases)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Xylobyte/transcendia)](https://github.com/Xylobyte/transcendia/commits/main)
+[![GitHub Issues](https://img.shields.io/github/issues/Xylobyte/transcendia)](https://github.com/Xylobyte/transcendia/issues)
+[![GitHub License](https://img.shields.io/github/license/Xylobyte/transcendia)](LICENSE.txt)
+[![GitHub Release](https://img.shields.io/github/v/release/Xylobyte/transcendia?include_prereleases)](https://github.com/Xylobyte/transcendia/releases)
 
 # Transcendia
 
-> **Real-time Screen Translation for Games, Videos, and More**
+**Real-time Screen Translation for Games, Videos, and More**
 
-Transcendia is a lightweight desktop app that lets you instantly translate any text on your screen.  
-Just select a region, and translations appear in real time as an always-on-top overlay.  
-Perfect for games, streams, documents, or any on-screen content.
+Transcendia is a lightweight, privacy-focused desktop application that provides instant translation of any text visible
+on your screen. Simply select a region, and watch as translations appear in real-time through an always-on-top overlay
+window.
+
+**Perfect for:**
+
+- Gaming (Japanese RPGs, Korean MMOs, visual novels)
+- Streaming and video content
+- Document translation
+- Language learning
+- Accessibility support
 
 ![Transcendia Demo](/screenshots/opus-translated-in-french.jpeg)
+
+---
 
 ## Features
 
@@ -39,20 +49,28 @@ The app typically uses ~80 MB of RAM and up to ~80% of a single CPU core, so it 
 
 I'm working on even more optimizations for the next releases!
 
-## 🚀 Installation
+## Installation
 
-### macOS (Ready Now)
+### macOS (Available Now)
 
-1. Go to [Releases](https://github.com/Xylobyte/transcendia/releases)
-2. Download the latest `Transcendia_1.0.0-beta.1_aarch64.dmg` file
-3. Open the DMG and drag Transcendia to your Applications folder
-4. Launch Transcendia from Applications
+**Option 1: Download Pre-built Binary**
+
+1. Visit the [Releases](https://github.com/Xylobyte/transcendia/releases) page
+2. Download `Transcendia_1.0.0-beta.1_aarch64.dmg`
+3. Open the DMG file and drag Transcendia to your Applications folder
+4. Launch from Applications (you may need to allow the app in System Preferences > Security & Privacy)
+
+**System Requirements:**
+
+- macOS 11.0 (Big Sur) or later
+- Apple Silicon (M1/M2/M3) or Intel processor
+- ~100MB free disk space
 
 ### Windows & Linux
 
-**Coming Soon!** Windows and Linux versions are almost ready and will be available in an upcoming release.
+**Status:** In development. Windows and Linux versions will be available in the next major release.
 
-## 🛠️ Building from Source
+## Building from Source
 
 ### Prerequisites
 
@@ -64,7 +82,7 @@ I'm working on even more optimizations for the next releases!
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/transcendia.git
+   git clone https://github.com/Xylobyte/transcendia.git
    cd transcendia
    ```
 
@@ -93,7 +111,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 4. **Customize Appearance** - Adjust text size, color, position, and background settings
 5. **Start Translating** - The overlay will show real-time translations of detected text
 
-## 🔧 Configuration Options
+## Configuration Options
 
 | Setting              | Description                         | Options                                             |
 |----------------------|-------------------------------------|-----------------------------------------------------|
@@ -107,15 +125,19 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 | **Background Color** | Color of text background            | RGB color picker with transparency                  |
 | **Capture Interval** | How often to check for text changes | 1-60 seconds                                        |
 
-## 🔒 Privacy & Security
+## Privacy & Security
 
 - **Secure Translation**: Uses Google Translate API with secure HTTPS connections
 - **Screen Permissions**: Only captures the specific region you select
 - **Local OCR**: Text recognition is performed locally using optimized AI models
+- **No Data Storage**: No screenshots or text content is permanently stored
+- **Open Source**: Full source code available for security audit
 
-## 🤝 Contributing
+## Contributing
 
-### Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+**Getting Started:**
 
 1. Fork the project
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -123,13 +145,17 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-### Icon
+**Areas where we need help:**
 
-If someone have skills in design, I need a new icon for the app ! 😁
+- Icon design (current placeholder needs improvement)
+- Windows and Linux platform testing
+- Translation accuracy improvements
+- Performance optimizations
+- Documentation improvements
 
-### Issues
+## Changelog
 
-Open an issue if you have a bug or need a new feature !
+- [Changelog](CHANGELOG.md) - Release history and changes
 
 ## License
 
