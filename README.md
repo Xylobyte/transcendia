@@ -99,14 +99,6 @@ I'm working on even more optimizations for the next releases!
 
 The built application will be available in `src-tauri/target/release/bundle/`.
 
-## Usage
-
-1. **Launch Transcendia** from your Applications folder or system tray
-2. **Configure Settings** - Choose your target language and monitor
-3. **Select Region** - Click "Select region" and drag to choose the area to translate
-4. **Customize Appearance** - Adjust text size, color, position, and background settings
-5. **Start Translating** - The overlay will show real-time translations of detected text
-
 ## Configuration Options
 
 | Setting              | Description                         | Options                                             |
