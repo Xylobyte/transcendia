@@ -13,9 +13,8 @@ window.
 
 **Perfect for:**
 
-- Gaming (Japanese RPGs, Korean MMOs, visual novels)
+- Gaming
 - Streaming and video content
-- Document translation
 - Language learning
 - Accessibility support
 
