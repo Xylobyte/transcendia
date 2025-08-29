@@ -11,6 +11,7 @@ use rten::Model;
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_macos_permissions::{
     check_screen_recording_permission, request_screen_recording_permission,
@@ -114,6 +115,8 @@ fn take_and_process_screenshot(
     region: &Region,
     engine: &OcrEngine,
 ) -> String {
+    let start = Instant::now();
+
     let capture = monitor.capture_image().expect("Screen capture failed");
     let sf = monitor.scale_factor().expect("Can't get scale factor");
     let cropped_image = DynamicImage::ImageRgba8(capture)
@@ -146,33 +149,39 @@ fn take_and_process_screenshot(
         text_buffer.push_str(format!("{}\n", line).as_str());
     }
 
+    println!("Time to detect screenshot: {}", start.elapsed().as_millis());
     text_buffer
 }
 
-async fn translate_text(text: &mut String, target_lang: &String, client: &Client) {
+pub async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
+    let original_linebreaks = ["\r\n", "\n", "\r"];
+    let mut processed_text = text.clone();
+    for lb in &original_linebreaks {
+        processed_text = processed_text.replace(lb, "\u{200B}");
+    }
+
     let mut url = Url::parse(
-        format!(
+        &format!(
             "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
             target_lang
         )
-            .as_str(),
-    )
-        .unwrap();
-    url.query_pairs_mut().append_pair("q", text);
+    ).unwrap();
+    url.query_pairs_mut().append_pair("q", &processed_text);
+
     let res = client.get(url).send().await;
 
     if let Ok(r) = res {
         let res_text = r.text().await.expect("Could not read response");
-
         let json = serde_json::from_str::<Value>(&res_text).expect("Could not parse json");
         if let Some(values) = json.get(0).and_then(|v| v.as_array()).map(|arr| {
             arr.iter()
                 .filter_map(|i| i.get(0).and_then(|t| t.as_str()))
                 .collect::<Vec<&str>>()
         }) {
-            (*text).clear();
+            text.clear();
             for value in values {
-                (*text).push_str(value);
+                let restored = value.replace("\u{200B}", "\n");
+                text.push_str(&restored);
             }
         } else {
             eprintln!("Could not find translated text in response");
