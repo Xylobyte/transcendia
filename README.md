@@ -1,7 +1,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/Xylobyte/transcendia)&nbsp;
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Xylobyte/transcendia)&nbsp;
 ![GitHub License](https://img.shields.io/github/license/Xylobyte/transcendia)&nbsp;
-![GitHub Release](https://img.shields.io/github/v/release/Xylobyte/transcendia)
+![GitHub Release](https://img.shields.io/github/v/release/Xylobyte/transcendia?include_prereleases)
 
 # Transcendia
 
