@@ -5,7 +5,7 @@
 
 # Transcendia
 
-**Real-time Screen Translation for Games, Videos, and More**
+> **Real-time Screen Translation for Games, Videos, and More**
 
 Transcendia is a lightweight, privacy-focused desktop application that provides instant translation of any text visible
 on your screen. Simply select a region, and watch as translations appear in real-time through an always-on-top overlay
@@ -19,8 +19,6 @@ window.
 - Accessibility support
 
 ![Transcendia Demo](/screenshots/opus-translated-in-french.jpeg)
-
----
 
 ## Features
 
@@ -36,7 +34,7 @@ window.
 - **Text Styling**: Customize font size, color, and alignment (9 position options)
 - **Background Effects**: Optional blur background with customizable colors
 - **Multi-Language Support**: Translate to 17+ languages including major European languages
-- **Always-on-Top Overlay**: Translated text appears as a floating overlay window
+- **Always visible overlay**: translated text appears as a floating overlay window and clicks can pass through it
 
 ### Performance
 
@@ -61,13 +59,12 @@ I'm working on even more optimizations for the next releases!
 
 **System Requirements:**
 
-- macOS 11.0 (Big Sur) or later
-- Apple Silicon (M1/M2/M3) or Intel processor
-- ~100MB free disk space
+- Apple Silicon (M1/M2/M3/M4)
+- ~30MB free disk space
 
 ### Windows & Linux
 
-**Status:** In development. Windows and Linux versions will be available in the next major release.
+**Coming Soon!** Windows and Linux versions are almost ready and will be available in an upcoming release.
 
 ## Building from Source
 
@@ -130,7 +127,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 - **Screen Permissions**: Only captures the specific region you select
 - **Local OCR**: Text recognition is performed locally using optimized AI models
 - **No Data Storage**: No screenshots or text content is permanently stored
-- **Open Source**: Full source code available for security audit
+- **Open Source**: Full source code available here 😄
 
 ## Contributing
 
@@ -144,7 +141,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-**Areas where we need help:**
+**Areas where I need help:**
 
 - Icon design (current placeholder needs improvement)
 - Windows and Linux platform testing
