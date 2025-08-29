@@ -125,7 +125,7 @@ The built application will be available in `src-tauri/target/release/bundle/`.
 
 ### Icon
 
-If someone have skills in design, I need a new icon for the app !
+If someone have skills in design, I need a new icon for the app ! 😁
 
 ### Issues
 
@@ -133,7 +133,8 @@ Open an issue if you have a bug or need a new feature !
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+This project is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE.txt) file for
+details.
 
 ---
 

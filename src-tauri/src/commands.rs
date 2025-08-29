@@ -1,3 +1,6 @@
+// Copyright © 2025 Nantsa Montillet
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use crate::config::{Config, ConfigState};
 use crate::errors::TranscendiaError;
 use crate::events::Events;

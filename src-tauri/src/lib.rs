@@ -1,3 +1,6 @@
+// Copyright © 2025 Nantsa Montillet
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 mod commands;
 mod config;
 mod errors;

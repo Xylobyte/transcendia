@@ -4,6 +4,7 @@ version = "1.0.0-beta.1"
 description = "An app to translate in realtime a section of your screen"
 authors = ["you"]
 edition = "2021"
+license = "AGPL-3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

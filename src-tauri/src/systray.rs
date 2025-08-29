@@ -1,3 +1,6 @@
+// Copyright © 2025 Nantsa Montillet
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use crate::events::Events;
 use crate::windows::create_config_window;
 use tauri::menu::{Menu, MenuItem};

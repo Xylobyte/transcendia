@@ -1,3 +1,6 @@
+// Copyright © 2025 Nantsa Montillet
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use crate::events::Events;
 use crate::windows::create_download_window;
 use futures_util::StreamExt;

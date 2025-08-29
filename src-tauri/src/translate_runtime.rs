@@ -1,3 +1,6 @@
+// Copyright © 2025 Nantsa Montillet
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use crate::config::Region;
 use crate::events::Events;
 use crate::ocr_models::{DETECTION_MODEL_NAME, MODEL_FOLDER_NAME, RECOGNITION_MODEL_NAME};
