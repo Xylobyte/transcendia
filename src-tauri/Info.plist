@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
     <key>NSScreenRecordingUsageDescription</key>
-    <string>I need this</string>
+    <string>The app records a selected area of your screen to detect text and provide instant translations in real time.</string>
 </dict>
 </plist>
