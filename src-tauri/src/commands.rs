@@ -1,28 +1,29 @@
 /*
-    Copyright © 2025 Nantsa Montillet
-    SPDX-License-Identifier: AGPL-3.0-or-later
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published
-    by the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 use crate::config::{Config, ConfigState};
 use crate::errors::TranscendiaError;
 use crate::events::Events;
-use crate::translate_runtime::{start_translate_runtime, stop_translate_runtime, TranslateRuntime};
+use crate::runtime::translate_runtime::TranslateRuntime;
 use crate::windows::{
     create_config_window, create_overlay_window, create_select_region_window, edit_overlay,
 };
 use serde::Serialize;
-use std::sync::atomic::Ordering;
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
@@ -51,7 +52,7 @@ pub async fn set_config(
         .map_err(|_| TranscendiaError::CannotSaveConfig)?;
     *config = new_config;
 
-    runtime.interval.store(config.interval, Ordering::SeqCst);
+    runtime.update(config.interval);
 
     if refresh_w_overlay {
         let windows = app_handle.webview_windows();
@@ -99,7 +100,7 @@ pub async fn select_region(
     let window = windows.values().find(|x| x.label() == "overlay");
     if let Some(w) = window {
         w.close()?;
-        stop_translate_runtime(&runtime);
+        runtime.stop();
     }
 
     Ok(())
@@ -114,6 +115,17 @@ pub async fn finish_select_region(
     f_s_r(app_handle, config, runtime, true)
 }
 
+#[tauri::command]
+pub async fn download_finish(
+    app_handle: AppHandle,
+    config: tauri::State<'_, ConfigState>,
+    runtime: tauri::State<'_, TranslateRuntime>,
+) -> Result<(), tauri::Error> {
+    f_s_r(app_handle.clone(), config, runtime, false)?;
+
+    Ok(())
+}
+
 pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
@@ -122,9 +134,8 @@ pub fn f_s_r(
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
     if let Some(region) = &config.region {
-        start_translate_runtime(
+        runtime.start(
             &app_handle,
-            &runtime,
             config.monitor.clone(),
             region.clone(),
             config.lang.clone(),
@@ -135,17 +146,6 @@ pub fn f_s_r(
     if create_config {
         create_config_window(&app_handle)?;
     }
-
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn download_finish(
-    app_handle: AppHandle,
-    config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranslateRuntime>,
-) -> Result<(), tauri::Error> {
-    f_s_r(app_handle.clone(), config, runtime, false)?;
 
     Ok(())
 }

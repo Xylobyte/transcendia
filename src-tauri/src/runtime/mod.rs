@@ -16,22 +16,4 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub enum Events {
-    OnOffConfigTrayItem,
-    RefreshOverlay,
-    NewTranslatedText,
-    DownloadProgress,
-    StopDownload,
-}
-
-impl Events {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Events::OnOffConfigTrayItem => "OnOffConfigTrayItem",
-            Events::RefreshOverlay => "RefreshOverlay",
-            Events::NewTranslatedText => "NewTranslatedText",
-            Events::DownloadProgress => "DownloadProgress",
-            Events::StopDownload => "StopDownload",
-        }
-    }
-}
+pub mod translate_runtime;

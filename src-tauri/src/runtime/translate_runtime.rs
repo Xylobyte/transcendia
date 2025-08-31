@@ -1,5 +1,18 @@
-// Copyright © 2025 Nantsa Montillet
-// SPDX-License-Identifier: AGPL-3.0-or-later
+/*
+    Copyright © 2025 Nantsa Montillet
+    SPDX-License-Identifier: AGPL-3.0-or-later
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 use crate::config::Region;
 use crate::events::Events;
@@ -20,69 +33,86 @@ use tokio::sync::Notify;
 use tokio::time::{sleep, Duration};
 
 pub struct TranslateRuntime {
-    pub need_stop: Arc<Notify>,
-    pub is_running: Arc<AtomicBool>,
-    pub interval: Arc<AtomicU8>,
+    need_stop: Arc<Notify>,
+    is_running: Arc<AtomicBool>,
+    interval: Arc<AtomicU8>,
 }
 
-pub fn start_translate_runtime(
-    app_handle: &AppHandle,
-    data: &TranslateRuntime,
-    monitor: u32,
-    region: Region,
-    lang: String,
-) {
-    let app_handle = app_handle.clone();
-    let interval = data.interval.clone();
-    let need_stop = data.need_stop.clone();
-
-    if data.is_running.load(Ordering::Relaxed) {
-        return;
+impl TranslateRuntime {
+    pub fn new(interval: u8) -> Self {
+        Self {
+            need_stop: Arc::new(Notify::default()),
+            is_running: Arc::new(AtomicBool::new(false)),
+            interval: Arc::new(AtomicU8::new(interval)),
+        }
     }
 
-    tauri::async_runtime::spawn(async move {
-        #[cfg(target_os = "macos")]
-        if !check_screen_recording_permission().await {
-            println!("No permission for screen capture !");
-            request_screen_recording_permission().await;
+    pub fn update(&self, interval: u8) {
+        self.interval.store(interval, Ordering::Relaxed);
+    }
+
+    pub fn interval(&self) -> u8 {
+        self.interval.load(Ordering::Relaxed)
+    }
+
+    pub fn start(
+        &self,
+        app_handle: &AppHandle,
+        monitor: u32,
+        region: Region,
+        lang: String,
+    ) {
+        if self.is_running.load(Ordering::Relaxed) {
             return;
         }
 
-        let monitors = xcap::Monitor::all().unwrap();
-        let monitor = monitors
-            .iter()
-            .find(|m| m.id().expect("Can't get monitor name") == monitor)
-            .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+        let app_handle = app_handle.clone();
+        let interval = self.interval.clone();
+        let need_stop = self.need_stop.clone();
 
-        let models_folder = app_handle
-            .path()
-            .app_config_dir()
-            .expect("Could not get app config dir")
-            .join(MODEL_FOLDER_NAME);
+        tauri::async_runtime::spawn(async move {
+            #[cfg(target_os = "macos")]
+            if !check_screen_recording_permission().await {
+                println!("No permission for screen capture !");
+                request_screen_recording_permission().await;
+                return;
+            }
 
-        let detection_model = Model::load_file(models_folder.join(DETECTION_MODEL_NAME))
-            .expect("Could not load detection model");
-        let recognition_model = Model::load_file(models_folder.join(RECOGNITION_MODEL_NAME))
-            .expect("Could not load recognition model");
+            let monitors = xcap::Monitor::all().unwrap();
+            let monitor = monitors
+                .iter()
+                .find(|m| m.id().expect("Can't get monitor name") == monitor)
+                .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
 
-        let engine = OcrEngine::new(OcrEngineParams {
-            detection_model: Some(detection_model),
-            recognition_model: Some(recognition_model),
-            ..Default::default()
-        })
-            .expect("Impossible to create OCR engine");
+            let models_folder = app_handle
+                .path()
+                .app_config_dir()
+                .expect("Could not get app config dir")
+                .join(MODEL_FOLDER_NAME);
 
-        let mut old_text = String::new();
+            let detection_model = Model::load_file(models_folder.join(DETECTION_MODEL_NAME))
+                .expect("Could not load detection model");
+            let recognition_model = Model::load_file(models_folder.join(RECOGNITION_MODEL_NAME))
+                .expect("Could not load recognition model");
 
-        let client = Client::builder()
-            .connect_timeout(Duration::from_secs(10))
-            .timeout(Duration::from_secs(20))
-            .https_only(true)
-            .build()
-            .expect("Could not create HTTP client");
+            let engine = OcrEngine::new(OcrEngineParams {
+                detection_model: Some(detection_model),
+                recognition_model: Some(recognition_model),
+                ..Default::default()
+            })
+                .expect("Impossible to create OCR engine");
 
-        loop {
-            tokio::select! {
+            let mut old_text = String::new();
+
+            let client = Client::builder()
+                .connect_timeout(Duration::from_secs(10))
+                .timeout(Duration::from_secs(20))
+                .https_only(true)
+                .build()
+                .expect("Could not create HTTP client");
+
+            loop {
+                tokio::select! {
                 _ = need_stop.notified() => {
                     break;
                 }
@@ -94,20 +124,21 @@ pub fn start_translate_runtime(
                         old_text = text.clone();
                     }
 
-                    translate_text(&mut text, &lang, &client).await;
+                    //translate_text(&mut text, &lang, &client).await;
 
                     app_handle.emit(Events::NewTranslatedText.as_str(), text).unwrap();
                 }
             }
-        }
-    });
+            }
+        });
 
-    data.is_running.store(true, Ordering::Release);
-}
+        self.is_running.store(true, Ordering::Release);
+    }
 
-pub fn stop_translate_runtime(data: &TranslateRuntime) {
-    data.need_stop.notify_one();
-    data.is_running.store(false, Ordering::Release);
+    pub fn stop(&self) {
+        self.need_stop.notify_one();
+        self.is_running.store(false, Ordering::Release);
+    }
 }
 
 fn take_and_process_screenshot(
@@ -153,7 +184,7 @@ fn take_and_process_screenshot(
     text_buffer
 }
 
-pub async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
+async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
     let original_linebreaks = ["\r\n", "\n", "\r"];
     let mut processed_text = text.clone();
     for lb in &original_linebreaks {

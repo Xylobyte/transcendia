@@ -1,5 +1,20 @@
-// Copyright © 2025 Nantsa Montillet
-// SPDX-License-Identifier: AGPL-3.0-or-later
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 mod commands;
 mod config;
@@ -7,8 +22,8 @@ mod errors;
 mod events;
 mod ocr_models;
 mod systray;
-mod translate_runtime;
 mod windows;
+mod runtime;
 
 use crate::commands::{
     download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
@@ -17,13 +32,11 @@ use crate::commands::{
 use crate::config::{Config, ConfigState};
 use crate::ocr_models::check_for_models;
 use crate::systray::create_systray;
-use crate::translate_runtime::{start_translate_runtime, TranslateRuntime};
 use crate::windows::{create_config_window, create_overlay_window};
-use std::sync::atomic::{AtomicBool, AtomicU8};
-use std::sync::{Arc, Mutex};
+use runtime::translate_runtime::TranslateRuntime;
+use std::sync::Mutex;
 use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
-use tokio::sync::Notify;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -63,17 +76,12 @@ pub fn run() {
             let config = Config::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
-            let runtime = TranslateRuntime {
-                need_stop: Arc::new(Notify::default()),
-                is_running: Arc::new(AtomicBool::from(false)),
-                interval: Arc::new(AtomicU8::new(config.interval)),
-            };
+            let runtime = TranslateRuntime::new(config.interval);
 
             if check_for_models(app) {
                 if let Some(region) = config.region {
-                    start_translate_runtime(
+                    runtime.start(
                         app,
-                        &runtime,
                         config.monitor.clone(),
                         region.clone(),
                         config.lang.clone(),
