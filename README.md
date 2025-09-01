@@ -1,4 +1,4 @@
-[![GitHub last commit](https://img.shields.io/github/last-commit/Xylobyte/transcendia)](https://github.com/Xylobyte/transcendia/commits/main)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Xylobyte/transcendia/dev)](https://github.com/Xylobyte/transcendia/commits/main)
 [![GitHub Issues](https://img.shields.io/github/issues/Xylobyte/transcendia)](https://github.com/Xylobyte/transcendia/issues)
 [![GitHub License](https://img.shields.io/github/license/Xylobyte/transcendia)](LICENSE.txt)
 [![GitHub Release](https://img.shields.io/github/v/release/Xylobyte/transcendia?include_prereleases)](https://github.com/Xylobyte/transcendia/releases)
