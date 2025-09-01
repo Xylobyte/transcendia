@@ -44,7 +44,7 @@ window.
 
 The app typically uses ~80 MB of RAM and up to ~80% of a single CPU core, so it runs smoothly even while gaming.
 
-I'm working on even more optimizations for the next releases!
+I'm working on even more optimizations and functionalities for the next releases!
 
 ## Installation
 
