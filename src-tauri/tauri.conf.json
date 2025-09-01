@@ -1,13 +1,14 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
     "productName": "Transcendia",
-    "version": "1.0.0-beta.1",
+    "version": "1.0.0-beta.2",
     "identifier": "com.xylobyte.transcendia",
     "build": {
         "beforeDevCommand": "npm run dev",
         "devUrl": "http://localhost:1420",
         "beforeBuildCommand": "npm run build",
-        "frontendDist": "../dist"
+        "frontendDist": "../dist",
+        "removeUnusedCommands": true
     },
     "app": {
         "macOSPrivateApi": true,
