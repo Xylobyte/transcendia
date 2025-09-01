@@ -17,12 +17,12 @@
  */
 
 use crate::config::Region;
+use crate::monitors::TranscendiaMonitor;
 use tauri::utils::config::WindowEffectsConfig;
 use tauri::utils::{WindowEffect, WindowEffectState};
 use tauri::webview::Color;
-use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-};
+use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use xcap::Monitor;
 
 pub fn create_select_region_window(
     app: &AppHandle,
@@ -43,11 +43,7 @@ pub fn create_select_region_window(
             .visible(false)
             .build()?;
 
-    let monitors = xcap::Monitor::all().expect("Could not retrieve monitors");
-    let monitor = monitors
-        .iter()
-        .find(|m| m.id().unwrap() == monitor)
-        .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+    let monitor = Monitor::load(monitor);
     let scale = monitor.scale_factor().unwrap();
     window.set_position(LogicalPosition { x: monitor.x().unwrap() as f32 * scale, y: monitor.y().unwrap() as f32 * scale })?;
     window.set_size(LogicalSize { width: monitor.width().unwrap() as f32, height: monitor.height().unwrap() as f32 })?;
@@ -76,7 +72,7 @@ pub fn create_download_window(app: &AppHandle) -> Result<WebviewWindow, tauri::E
             .title("Transcendia - Downloader")
             .always_on_top(true)
             .accept_first_mouse(true)
-            .inner_size(500f64, 310f64)
+            .inner_size(500f64, 340f64)
             .resizable(false)
             .build()?;
     window.set_focus()?;
@@ -116,11 +112,7 @@ pub fn edit_overlay(
     monitor: u32,
     blur: bool,
 ) -> Result<(), tauri::Error> {
-    let monitors = xcap::Monitor::all().expect("Could not retrieve monitors");
-    let monitor = monitors
-        .iter()
-        .find(|m| m.id().unwrap() == monitor)
-        .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+    let monitor = Monitor::load(monitor);
     window.set_position(LogicalPosition {
         x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap() + region.x as f32,
         y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap() + region.y as f32,

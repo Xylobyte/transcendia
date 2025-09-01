@@ -26,17 +26,15 @@ import CustomButton from "../components/CustomButton.vue";
 import {invoke} from "@tauri-apps/api/core";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 
-const currWindow = getCurrentWebviewWindow();
-
 const progressDetectionFile = ref<DownloadProgress>();
 const progressRecognitionFile = ref<DownloadProgress>();
 
 let unlisten: UnlistenFn;
 onMounted(async () => {
     unlisten = await listen<DownloadProgress>(Events.DownloadProgress, (event) => {
-        if (event.payload.file.includes("detection")) {
+        if (event.payload.file.includes("det")) {
             progressDetectionFile.value = event.payload;
-        } else if (event.payload.file.includes("recognition")) {
+        } else if (event.payload.file.includes("rec")) {
             progressRecognitionFile.value = event.payload;
         }
     });
@@ -52,7 +50,7 @@ watch([progressDetectionFile, progressRecognitionFile], async () => {
         progressRecognitionFile.value?.progress === progressRecognitionFile.value?.total_size
     ) {
         await invoke("download_finish");
-        await currWindow.close();
+        await getCurrentWebviewWindow().close();
     }
 });
 

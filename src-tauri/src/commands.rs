@@ -19,11 +19,11 @@
 use crate::config::{Config, ConfigState};
 use crate::errors::TranscendiaError;
 use crate::events::Events;
-use crate::runtime::translate_runtime::TranslateRuntime;
+use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
+use crate::runtime::runtime::TranscendiaRuntime;
 use crate::windows::{
     create_config_window, create_overlay_window, create_select_region_window, edit_overlay,
 };
-use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
@@ -40,7 +40,7 @@ pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<Config, Trans
 pub async fn set_config(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranslateRuntime>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
     new_config: Config,
     refresh_w_overlay: bool,
 ) -> Result<(), TranscendiaError> {
@@ -70,28 +70,15 @@ pub async fn set_config(
     Ok(())
 }
 
-#[derive(Debug, Serialize)]
-pub struct XCapMonitor {
-    name: String,
-    id: u32,
-}
-
 #[tauri::command]
-pub fn get_monitors() -> Result<Vec<XCapMonitor>, TranscendiaError> {
-    Monitor::all()
-        .map(|ms| {
-            ms.into_iter().map(|m| XCapMonitor {
-                name: m.name().unwrap(),
-                id: m.id().unwrap(),
-            }).collect()
-        })
-        .map_err(|_| TranscendiaError::CannotGetMonitors)
+pub fn get_monitors() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
+    Monitor::get_all()
 }
 
 #[tauri::command]
 pub async fn select_region(
     app_handle: AppHandle,
-    runtime: tauri::State<'_, TranslateRuntime>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
     monitor: u32,
 ) -> Result<(), tauri::Error> {
     create_select_region_window(&app_handle, monitor)?;
@@ -110,7 +97,7 @@ pub async fn select_region(
 pub async fn finish_select_region(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranslateRuntime>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
 ) -> Result<(), tauri::Error> {
     f_s_r(app_handle, config, runtime, true)
 }
@@ -119,31 +106,30 @@ pub async fn finish_select_region(
 pub async fn download_finish(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranslateRuntime>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
 ) -> Result<(), tauri::Error> {
-    f_s_r(app_handle.clone(), config, runtime, false)?;
-
-    Ok(())
+    f_s_r(app_handle, config, runtime, false)
 }
 
 pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranslateRuntime>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
     create_config: bool,
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
-    if let Some(region) = &config.region {
+    let region = &config.region;
+    if let Some(r) = region {
         runtime.start(
             &app_handle,
             config.monitor.clone(),
-            region.clone(),
+            r.clone(),
             config.lang.clone(),
         );
-        create_overlay_window(&app_handle, region, config.monitor, config.blur_background)?;
+        create_overlay_window(&app_handle, r, config.monitor, config.blur_background)?;
     }
 
-    if create_config {
+    if create_config || region.is_none() {
         create_config_window(&app_handle)?;
     }
 

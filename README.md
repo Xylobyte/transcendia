@@ -153,5 +153,5 @@ details.
 ---
 
 **Made
-using [Rust](https://github.com/rust-lang/rust), [Tauri](https://github.com/tauri-apps/tauri), [Ocrs](https://github.com/robertknight/ocrs)
+using [Rust](https://github.com/rust-lang/rust), [Tauri](https://github.com/tauri-apps/tauri), [Rust PaddleOCR](https://github.com/zibo-chen/rust-paddle-ocr)
 and [Vue.js](https://github.com/vuejs)**

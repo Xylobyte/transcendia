@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 use crate::events::Events;
 use crate::windows::create_config_window;
+use log::{error, warn};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{App, Listener};
@@ -36,14 +36,14 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "config" => {
                 if let Err(err) = create_config_window(app) {
-                    println!("Failed to create config window : {:?}", err);
+                    error!("Failed to create config window : {:?}", err);
                 }
             }
             "quit" => {
                 app.exit(0);
             }
             _ => {
-                println!("Menu item {:?} not handled", event.id);
+                warn!("Menu item {:?} not handled", event.id);
             }
         })
         .build(app)?;

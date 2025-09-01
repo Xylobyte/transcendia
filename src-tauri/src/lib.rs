@@ -20,32 +20,34 @@ mod commands;
 mod config;
 mod errors;
 mod events;
-mod ocr_models;
 mod runtime;
 mod systray;
 mod windows;
+pub mod monitors;
 
 use crate::commands::{
     download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
     set_config,
 };
 use crate::config::{Config, ConfigState};
-use crate::ocr_models::check_for_models;
+use crate::runtime::ocr::TranscendiaOcr;
 use crate::systray::create_systray;
 use crate::windows::{create_config_window, create_overlay_window};
-use runtime::translate_runtime::TranslateRuntime;
+use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
+    env_logger::init();
 
     let mut builder = tauri::Builder::default();
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
+        let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
+
         builder = builder.plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |_app, shortcut, event| {
@@ -54,7 +56,7 @@ pub fn run() {
                         let window = windows.values().find(|x| x.label() == "select");
                         if let Some(w) = window {
                             let state = _app.state::<ConfigState>();
-                            let runtime = _app.state::<TranslateRuntime>();
+                            let runtime = _app.state::<TranscendiaRuntime>();
                             f_s_r(_app.clone(), state, runtime, true)
                                 .expect("Failed reopen windows");
                             w.close().expect("Failed to close window");
@@ -86,9 +88,9 @@ pub fn run() {
             let config = Config::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
-            let runtime = TranslateRuntime::new(config.interval);
+            let runtime = TranscendiaRuntime::new(config.interval);
 
-            if check_for_models(app) {
+            if TranscendiaOcr::check(app) {
                 if let Some(region) = config.region {
                     runtime.start(
                         app,

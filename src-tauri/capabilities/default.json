@@ -1,24 +1,23 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Capability for the all windows",
-  "windows": [
-    "select",
-    "config",
-    "overlay",
-    "downloader"
-  ],
-  "permissions": [
-    "core:default",
-    "shell:allow-open",
-    "process:default",
-    "core:window:allow-close",
-    "core:window:allow-hide",
-    "core:window:allow-show",
-    "global-shortcut:allow-is-registered",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister",
-    "global-shortcut:allow-unregister-all",
-    "macos-permissions:default"
-  ]
+    "$schema": "../gen/schemas/desktop-schema.json",
+    "identifier": "default",
+    "description": "Capability for the all windows",
+    "windows": [
+        "select",
+        "config",
+        "overlay",
+        "downloader"
+    ],
+    "permissions": [
+        "core:default",
+        "shell:allow-open",
+        "process:default",
+        "core:window:allow-close",
+        "core:window:allow-hide",
+        "core:window:allow-show",
+        "global-shortcut:allow-is-registered",
+        "global-shortcut:allow-register",
+        "global-shortcut:allow-unregister",
+        "global-shortcut:allow-unregister-all"
+    ]
 }

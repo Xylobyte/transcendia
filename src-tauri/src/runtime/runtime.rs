@@ -18,11 +18,10 @@
 
 use crate::config::Region;
 use crate::events::Events;
-use crate::ocr_models::{DETECTION_MODEL_NAME, MODEL_FOLDER_NAME, RECOGNITION_MODEL_NAME};
-use image::DynamicImage;
-use ocrs::{ImageSource, OcrEngine, OcrEngineParams};
+use crate::monitors::TranscendiaMonitor;
+use crate::runtime::ocr::{DETECTION_MODEL_NAME, MODEL_FOLDER_NAME, RECOGNITION_MODEL_NAME};
+use log::{debug, error};
 use reqwest::{Client, Url};
-use rten::Model;
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::Arc;
@@ -33,14 +32,15 @@ use tauri_plugin_macos_permissions::{
 };
 use tokio::sync::Notify;
 use tokio::time::{sleep, Duration};
+use xcap::Monitor;
 
-pub struct TranslateRuntime {
+pub struct TranscendiaRuntime {
     need_stop: Arc<Notify>,
     is_running: Arc<AtomicBool>,
     interval: Arc<AtomicU8>,
 }
 
-impl TranslateRuntime {
+impl TranscendiaRuntime {
     pub fn new(interval: u8) -> Self {
         Self {
             need_stop: Arc::new(Notify::default()),
@@ -53,17 +53,7 @@ impl TranslateRuntime {
         self.interval.store(interval, Ordering::Relaxed);
     }
 
-    pub fn interval(&self) -> u8 {
-        self.interval.load(Ordering::Relaxed)
-    }
-
-    pub fn start(
-        &self,
-        app_handle: &AppHandle,
-        monitor: u32,
-        region: Region,
-        lang: String,
-    ) {
+    pub fn start(&self, app_handle: &AppHandle, monitor: u32, region: Region, lang: String) {
         if self.is_running.load(Ordering::Relaxed) {
             return;
         }
@@ -75,16 +65,12 @@ impl TranslateRuntime {
         tauri::async_runtime::spawn(async move {
             #[cfg(target_os = "macos")]
             if !check_screen_recording_permission().await {
-                println!("No permission for screen capture !");
+                error!("No permission for screen capture !");
                 request_screen_recording_permission().await;
                 return;
             }
 
-            let monitors = xcap::Monitor::all().unwrap();
-            let monitor = monitors
-                .iter()
-                .find(|m| m.id().expect("Can't get monitor name") == monitor)
-                .unwrap_or(monitors.get(0).expect("Cannot find any monitor"));
+            let monitor = Monitor::load(monitor);
 
             let models_folder = app_handle
                 .path()
@@ -92,19 +78,7 @@ impl TranslateRuntime {
                 .expect("Could not get app config dir")
                 .join(MODEL_FOLDER_NAME);
 
-            let detection_model = Model::load_file(models_folder.join(DETECTION_MODEL_NAME))
-                .expect("Could not load detection model");
-            let recognition_model = Model::load_file(models_folder.join(RECOGNITION_MODEL_NAME))
-                .expect("Could not load recognition model");
-
-            let engine = OcrEngine::new(OcrEngineParams {
-                detection_model: Some(detection_model),
-                recognition_model: Some(recognition_model),
-                ..Default::default()
-            })
-                .expect("Impossible to create OCR engine");
-
-            let mut old_text = String::new();
+            // Load ocr engine here
 
             let client = Client::builder()
                 .connect_timeout(Duration::from_secs(10))
@@ -113,24 +87,21 @@ impl TranslateRuntime {
                 .build()
                 .expect("Could not create HTTP client");
 
+            let mut old_text = String::new();
+
             loop {
                 tokio::select! {
-                _ = need_stop.notified() => {
-                    break;
-                }
-                _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
-                    let mut text = take_and_process_screenshot(monitor, &region, &engine);
-                    if text == old_text {
-                        continue;
-                    } else {
-                        old_text = text.clone();
+                    _ = need_stop.notified() => {
+                        break;
                     }
+                    _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
+                        let start = Instant::now();
 
-                    //translate_text(&mut text, &lang, &client).await;
+                        app_handle.emit(Events::NewTranslatedText.as_str(), "".to_string()).unwrap();
 
-                    app_handle.emit(Events::NewTranslatedText.as_str(), text).unwrap();
+                        debug!("Time to translate the screen: {}", start.elapsed().as_millis());
+                    }
                 }
-            }
             }
         });
 
@@ -143,49 +114,6 @@ impl TranslateRuntime {
     }
 }
 
-fn take_and_process_screenshot(
-    monitor: &xcap::Monitor,
-    region: &Region,
-    engine: &OcrEngine,
-) -> String {
-    let start = Instant::now();
-
-    let capture = monitor.capture_image().expect("Screen capture failed");
-    let sf = monitor.scale_factor().expect("Can't get scale factor");
-    let cropped_image = DynamicImage::ImageRgba8(capture)
-        .crop_imm(
-            (region.x as f32 * sf) as u32,
-            (region.y as f32 * sf) as u32,
-            (region.w as f32 * sf) as u32,
-            (region.h as f32 * sf) as u32,
-        )
-        .to_rgb8();
-
-    let img_source =
-        ImageSource::from_bytes(cropped_image.as_raw(), cropped_image.dimensions()).unwrap();
-    let ocr_input = engine
-        .prepare_input(img_source)
-        .expect("Could not prepare input for OCR");
-
-    let world_rects = engine.detect_words(&ocr_input).unwrap();
-    let line_rects = engine.find_text_lines(&ocr_input, &world_rects);
-    let line_texts = engine
-        .recognize_text(&ocr_input, &line_rects)
-        .expect("Could not recognize text");
-
-    let mut text_buffer = String::from("");
-    for line in line_texts
-        .iter()
-        .flatten()
-        .filter(|l| l.to_string().len() > 1)
-    {
-        text_buffer.push_str(format!("{}\n", line).as_str());
-    }
-
-    println!("Time to detect screenshot: {}", start.elapsed().as_millis());
-    text_buffer
-}
-
 async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
     let original_linebreaks = ["\r\n", "\n", "\r"];
     let mut processed_text = text.clone();
@@ -193,12 +121,11 @@ async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
         processed_text = processed_text.replace(lb, "\u{200B}");
     }
 
-    let mut url = Url::parse(
-        &format!(
-            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
-            target_lang
-        )
-    ).unwrap();
+    let mut url = Url::parse(&format!(
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
+        target_lang
+    ))
+        .unwrap();
     url.query_pairs_mut().append_pair("q", &processed_text);
 
     let res = client.get(url).send().await;
@@ -217,7 +144,7 @@ async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
                 text.push_str(&restored);
             }
         } else {
-            eprintln!("Could not find translated text in response");
+            error!("Could not find translated text in response");
         }
     }
 }

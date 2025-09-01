@@ -23,10 +23,14 @@ tokio = { version = "1.47", features = ["macros", "time"] }
 tokio-macros = "2.5"
 xcap = "0.7"
 image = "0.25"
-ocrs = "0.10"
 reqwest = { version = "0.12", features = ["stream"] }
 futures-util = "0.3"
-rten = "0.21"
+env_logger = "0.11"
+log = "0.4"
+
+[dependencies.rust-paddle-ocr]
+git = "https://github.com/zibo-chen/rust-paddle-ocr.git"
+tag = "v1.4.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-plugin-macos-permissions = "2.3.0"
@@ -36,30 +40,6 @@ tauri-plugin-global-shortcut = "2.3"
 
 [profile.dev]
 incremental = true
-
-[profile.dev.package.ocrs]
-opt-level = 3
-
-[profile.dev.package.rten]
-opt-level = 3
-
-[profile.dev.package.rten-base]
-opt-level = 3
-
-[profile.dev.package.rten-gemm]
-opt-level = 3
-
-[profile.dev.package.rten-simd]
-opt-level = 3
-
-[profile.dev.package.rten-tensor]
-opt-level = 3
-
-[profile.dev.package.rten-vecmath]
-opt-level = 3
-
-[profile.dev.package.rten-imageproc]
-opt-level = 3
 
 [profile.release]
 codegen-units = 1
