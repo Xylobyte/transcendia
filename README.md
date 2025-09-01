@@ -59,7 +59,7 @@ I'm working on even more optimizations for the next releases!
 
 **System Requirements:**
 
-- Apple Silicon (M1/M2/M3/M4) with macOS 10.13
+- Apple Silicon (M1/M2/M3/M4) with macOS 10.13 or newer
 - ~30MB free disk space
 
 ### Windows & Linux
