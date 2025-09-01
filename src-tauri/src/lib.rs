@@ -21,9 +21,9 @@ mod config;
 mod errors;
 mod events;
 mod ocr_models;
+mod runtime;
 mod systray;
 mod windows;
-mod runtime;
 
 use crate::commands::{
     download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
@@ -42,8 +42,11 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 pub fn run() {
     let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
 
-    tauri::Builder::default()
-        .plugin(
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |_app, shortcut, event| {
                     if shortcut == &close_shortcut && event.state == ShortcutState::Released {
@@ -61,8 +64,15 @@ pub fn run() {
                 .with_shortcut(close_shortcut)
                 .expect("Shortcut error")
                 .build(),
-        )
-        .plugin(tauri_plugin_macos_permissions::init())
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.plugin(tauri_plugin_macos_permissions::init())
+    }
+
+    builder
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
