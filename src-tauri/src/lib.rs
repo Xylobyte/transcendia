@@ -30,7 +30,7 @@ use crate::commands::{
     set_config,
 };
 use crate::config::{Config, ConfigState};
-use crate::runtime::ocr::TranscendiaOcr;
+use crate::runtime::ocr_models::prepare_ocr_models;
 use crate::systray::create_systray;
 use crate::windows::{create_config_window, create_overlay_window};
 use runtime::runtime::TranscendiaRuntime;
@@ -90,7 +90,7 @@ pub fn run() {
 
             let runtime = TranscendiaRuntime::new(config.interval);
 
-            if TranscendiaOcr::check(app) {
+            if prepare_ocr_models(app) {
                 if let Some(region) = config.region {
                     runtime.start(
                         app,

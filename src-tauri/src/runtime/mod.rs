@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-pub mod ocr;
+mod ocr;
+pub mod ocr_models;
 pub mod runtime;
 mod translations;

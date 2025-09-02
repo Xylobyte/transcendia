@@ -19,7 +19,7 @@
 use crate::config::Region;
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
-use crate::runtime::ocr::{DETECTION_MODEL_NAME, MODEL_FOLDER_NAME, RECOGNITION_MODEL_NAME};
+use crate::runtime::ocr_models::MODEL_FOLDER_NAME;
 use log::{debug, error};
 use reqwest::{Client, Url};
 use serde_json::Value;
@@ -87,8 +87,6 @@ impl TranscendiaRuntime {
                 .build()
                 .expect("Could not create HTTP client");
 
-            let mut old_text = String::new();
-
             loop {
                 tokio::select! {
                     _ = need_stop.notified() => {
@@ -122,15 +120,15 @@ async fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
     }
 
     let mut url = Url::parse(&format!(
-        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t", // Other option : https://github.com/ssut/py-googletrans/issues/268
         target_lang
     ))
         .unwrap();
     url.query_pairs_mut().append_pair("q", &processed_text);
 
-    let res = client.get(url).send().await;
+    let response = client.get(url).send().await;
 
-    if let Ok(r) = res {
+    if let Ok(r) = response {
         let res_text = r.text().await.expect("Could not read response");
         let json = serde_json::from_str::<Value>(&res_text).expect("Could not parse json");
         if let Some(values) = json.get(0).and_then(|v| v.as_array()).map(|arr| {
