@@ -66,20 +66,6 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
     Ok(window)
 }
 
-pub fn create_download_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Error> {
-    let window =
-        WebviewWindowBuilder::new(app, "downloader", WebviewUrl::App("models.html".into()))
-            .title("Transcendia - Downloader")
-            .always_on_top(true)
-            .accept_first_mouse(true)
-            .inner_size(500f64, 340f64)
-            .resizable(false)
-            .build()?;
-    window.set_focus()?;
-
-    Ok(window)
-}
-
 pub fn create_overlay_window(
     app: &AppHandle,
     region: &Region,

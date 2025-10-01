@@ -19,7 +19,7 @@
 use crate::config::Region;
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
-use crate::runtime::ocr_models::MODEL_FOLDER_NAME;
+use crate::runtime::ocr::MODEL_FOLDER_NAME;
 use log::{debug, error};
 use reqwest::{Client, Url};
 use serde_json::Value;

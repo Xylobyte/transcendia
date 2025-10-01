@@ -24,9 +24,9 @@ tokio-macros = "2.5"
 xcap = "0.7"
 image = "0.25"
 reqwest = { version = "0.12", features = ["stream"] }
-futures-util = "0.3"
 env_logger = "0.11"
 log = "0.4"
+rust-embed = "8.7.2"
 
 [dependencies.rust-paddle-ocr]
 git = "https://github.com/zibo-chen/rust-paddle-ocr.git"

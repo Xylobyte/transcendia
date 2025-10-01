@@ -49,7 +49,7 @@ impl TranscendiaMonitor for Monitor {
         let monitors = Monitor::all().unwrap();
         monitors
             .iter()
-            .find(|m| m.id().expect("Can't get monitor name") == id)
+            .find(|m| m.id().expect("Can't get monitor id") == id)
             .unwrap_or(monitors.get(0).expect("Cannot find any monitor")).clone()
     }
 

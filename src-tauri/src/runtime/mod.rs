@@ -17,6 +17,5 @@
  */
 
 mod ocr;
-pub mod ocr_models;
 pub mod runtime;
 mod translations;
