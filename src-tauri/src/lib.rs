@@ -30,8 +30,9 @@ use crate::commands::{
     download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
     set_config,
 };
-use crate::config::{Config, ConfigState};
+use crate::config::{ConfigState, TranscendiaConfig};
 use crate::systray::create_systray;
+use crate::windows::{create_config_window, create_overlay_window};
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
@@ -84,10 +85,22 @@ pub fn run() {
 
             let app = app.handle();
 
-            let config = Config::load(app);
+            let config = TranscendiaConfig::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
             let runtime = TranscendiaRuntime::new(config.interval);
+
+            if let Some(region) = config.region {
+                runtime.start(
+                    app,
+                    config.monitor.clone(),
+                    region.clone(),
+                    config.lang.clone(),
+                );
+                create_overlay_window(app, &region, config.monitor, config.blur_background)?;
+            } else {
+                create_config_window(app)?;
+            }
 
             app.manage(runtime);
 

@@ -42,7 +42,7 @@ pub struct Region {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Config {
+pub struct TranscendiaConfig {
     pub region: Option<Region>,
     pub monitor: u32,
     pub text_color: String,
@@ -54,7 +54,7 @@ pub struct Config {
     pub lang: String,
 }
 
-impl Default for Config {
+impl Default for TranscendiaConfig {
     fn default() -> Self {
         Self {
             region: None,
@@ -70,7 +70,7 @@ impl Default for Config {
     }
 }
 
-impl Config {
+impl TranscendiaConfig {
     pub fn load(app: &AppHandle) -> Self {
         let config_path = get_config_path(app);
 
@@ -80,7 +80,7 @@ impl Config {
                 fs::create_dir_all(parent).expect("Could not create config dir");
             }
 
-            let data = serde_json::to_string(&Config::default())
+            let data = serde_json::to_string(&TranscendiaConfig::default())
                 .expect("Could not serialize default config");
             fs::write(config_path, &data).expect("Could not write config.json");
             data
@@ -88,7 +88,7 @@ impl Config {
             fs::read_to_string(config_path).expect("Could not read config.json")
         };
         let config =
-            serde_json::from_str::<Config>(&config).expect("Could not deserialize config.json");
+            serde_json::from_str::<TranscendiaConfig>(&config).expect("Could not deserialize config.json");
         config
     }
 
@@ -98,4 +98,4 @@ impl Config {
     }
 }
 
-pub struct ConfigState(pub Mutex<Config>);
+pub struct ConfigState(pub Mutex<TranscendiaConfig>);

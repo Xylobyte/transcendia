@@ -17,7 +17,8 @@
  */
 use crate::config::Region;
 use crate::errors::TranscendiaError;
-use image::{DynamicImage, RgbImage};
+use image::DynamicImage;
+use log::error;
 use serde::Serialize;
 use xcap::Monitor;
 
@@ -30,17 +31,19 @@ pub struct BaseTranscendiaMonitor {
 pub trait TranscendiaMonitor {
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError>;
     fn load(id: u32) -> Self;
-    fn capture_and_crop(&self, region: &Region) -> RgbImage;
+    fn capture_and_crop(&self, region: &Region) -> DynamicImage;
 }
 
 impl TranscendiaMonitor for Monitor {
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
         Monitor::all()
             .map(|ms| {
-                ms.into_iter().map(|m| BaseTranscendiaMonitor {
-                    name: m.name().unwrap(),
-                    id: m.id().unwrap(),
-                }).collect()
+                ms.into_iter()
+                    .map(|m| BaseTranscendiaMonitor {
+                        name: m.name().unwrap(),
+                        id: m.id().unwrap(),
+                    })
+                    .collect()
             })
             .map_err(|_| TranscendiaError::CannotGetMonitors)
     }
@@ -50,19 +53,27 @@ impl TranscendiaMonitor for Monitor {
         monitors
             .iter()
             .find(|m| m.id().expect("Can't get monitor id") == id)
-            .unwrap_or(monitors.get(0).expect("Cannot find any monitor")).clone()
+            .unwrap_or(monitors.get(0).expect("Cannot find any monitor"))
+            .clone()
     }
 
-    fn capture_and_crop(&self, region: &Region) -> RgbImage {
-        let capture = self.capture_image().expect("Screen capture failed");
+    fn capture_and_crop(&self, region: &Region) -> DynamicImage {
+        let capture = self.capture_image();
         let sf = self.scale_factor().expect("Can't get scale factor");
-        DynamicImage::ImageRgba8(capture)
-            .crop_imm(
-                (region.x as f32 * sf) as u32,
-                (region.y as f32 * sf) as u32,
-                (region.w as f32 * sf) as u32,
-                (region.h as f32 * sf) as u32,
-            )
-            .to_rgb8()
+
+        let w = region.w as f32 * sf;
+        let h = region.h as f32 * sf;
+        if let Ok(c) = capture {
+            DynamicImage::ImageRgba8(c)
+                .crop_imm(
+                    (region.x as f32 * sf) as u32,
+                    (region.y as f32 * sf) as u32,
+                    w as u32,
+                    h as u32,
+                )
+        } else {
+            error!("Can't get capture image");
+            DynamicImage::new_rgb8(w as u32, h as u32)
+        }
     }
 }

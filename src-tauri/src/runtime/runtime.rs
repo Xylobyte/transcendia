@@ -18,8 +18,9 @@
 
 use crate::config::Region;
 use crate::events::Events;
+use crate::models::{OCR_DET_FILE, OCR_REC_FILE};
 use crate::monitors::TranscendiaMonitor;
-use crate::runtime::ocr::MODEL_FOLDER_NAME;
+use crate::runtime::ocr::TranscendiaOcr;
 use log::{debug, error};
 use reqwest::{Client, Url};
 use serde_json::Value;
@@ -71,15 +72,7 @@ impl TranscendiaRuntime {
             }
 
             let monitor = Monitor::load(monitor);
-
-            let models_folder = app_handle
-                .path()
-                .app_config_dir()
-                .expect("Could not get app config dir")
-                .join(MODEL_FOLDER_NAME);
-
-            // Load ocr engine here
-
+            let mut ocr_engine = TranscendiaOcr::new();
             let client = Client::builder()
                 .connect_timeout(Duration::from_secs(10))
                 .timeout(Duration::from_secs(20))
@@ -95,9 +88,12 @@ impl TranscendiaRuntime {
                     _ = sleep(Duration::from_secs(interval.load(Ordering::Relaxed) as u64)) => {
                         let start = Instant::now();
 
-                        app_handle.emit(Events::NewTranslatedText.as_str(), "".to_string()).unwrap();
+                        let image = monitor.capture_and_crop(&region);
+                        ocr_engine.extract(image);
 
-                        debug!("Time to translate the screen: {}", start.elapsed().as_millis());
+                        app_handle.emit(Events::NewTranslatedText.as_str(), "Nothing...".to_string()).unwrap();
+
+                        debug!("Time to translate the screen: {}ms", start.elapsed().as_millis());
                     }
                 }
             }

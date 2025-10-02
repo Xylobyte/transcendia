@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::config::{Config, ConfigState};
+use crate::config::{ConfigState, TranscendiaConfig};
 use crate::errors::TranscendiaError;
 use crate::events::Events;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
@@ -28,7 +28,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
 #[tauri::command]
-pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<Config, TranscendiaError> {
+pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<TranscendiaConfig, TranscendiaError> {
     let config = config
         .0
         .lock()
@@ -41,7 +41,7 @@ pub async fn set_config(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranscendiaRuntime>,
-    new_config: Config,
+    new_config: TranscendiaConfig,
     refresh_w_overlay: bool,
 ) -> Result<(), TranscendiaError> {
     new_config.save(&app_handle);

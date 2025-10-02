@@ -17,7 +17,6 @@ export default defineConfig(async () => ({
                 select: "select.html",
                 config: "config.html",
                 overlay: "overlay.html",
-                models: "models.html"
             }
         }
     },
