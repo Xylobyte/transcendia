@@ -40,7 +40,6 @@ pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<TranscendiaCo
 pub async fn set_config(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranscendiaRuntime>,
     new_config: TranscendiaConfig,
     refresh_w_overlay: bool,
 ) -> Result<(), TranscendiaError> {
@@ -51,8 +50,6 @@ pub async fn set_config(
         .lock()
         .map_err(|_| TranscendiaError::CannotSaveConfig)?;
     *config = new_config;
-
-    runtime.update(config.interval);
 
     if refresh_w_overlay {
         let windows = app_handle.webview_windows();

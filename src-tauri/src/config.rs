@@ -50,7 +50,6 @@ pub struct TranscendiaConfig {
     pub text_size: u16,
     pub background_color: String,
     pub blur_background: bool,
-    pub interval: u8,
     pub lang: String,
 }
 
@@ -64,7 +63,6 @@ impl Default for TranscendiaConfig {
             text_size: 16,
             background_color: "#00000066".to_string(),
             blur_background: true,
-            interval: 1,
             lang: "en".to_string(),
         }
     }

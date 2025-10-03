@@ -23,10 +23,11 @@ tokio = { version = "1.47", features = ["macros", "time"] }
 tokio-macros = "2.5"
 xcap = "0.7"
 image = "0.25"
-reqwest = { version = "0.12", features = ["stream"] }
+reqwest = { version = "0.12", features = ["blocking"] }
 env_logger = "0.11"
 log = "0.4"
 rust-embed = "8.7.2"
+imageproc = "0.25.0"
 
 [dependencies.rust-paddle-ocr]
 git = "https://github.com/zibo-chen/rust-paddle-ocr.git"

@@ -20,7 +20,6 @@ pub enum Events {
     OnOffConfigTrayItem,
     RefreshOverlay,
     NewTranslatedText,
-    StopDownload,
 }
 
 impl Events {
@@ -29,7 +28,6 @@ impl Events {
             Events::OnOffConfigTrayItem => "OnOffConfigTrayItem",
             Events::RefreshOverlay => "RefreshOverlay",
             Events::NewTranslatedText => "NewTranslatedText",
-            Events::StopDownload => "StopDownload",
         }
     }
 }

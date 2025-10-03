@@ -63,17 +63,19 @@ impl TranscendiaMonitor for Monitor {
 
         let w = region.w as f32 * sf;
         let h = region.h as f32 * sf;
-        if let Ok(c) = capture {
-            DynamicImage::ImageRgba8(c)
-                .crop_imm(
-                    (region.x as f32 * sf) as u32,
-                    (region.y as f32 * sf) as u32,
-                    w as u32,
-                    h as u32,
-                )
-        } else {
-            error!("Can't get capture image");
-            DynamicImage::new_rgb8(w as u32, h as u32)
+        match capture {
+            Ok(c) =>
+                DynamicImage::ImageRgba8(c)
+                    .crop_imm(
+                        (region.x as f32 * sf) as u32,
+                        (region.y as f32 * sf) as u32,
+                        w as u32,
+                        h as u32,
+                    ),
+            Err(_) => {
+                error!("Can't get capture image");
+                DynamicImage::new_rgb8(w as u32, h as u32)
+            }
         }
     }
 }

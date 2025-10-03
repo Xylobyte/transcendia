@@ -17,19 +17,27 @@
  */
 use crate::models::{EmbeddedModels, OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
+use imageproc::rect::Rect;
 use log::error;
-use rust_paddle_ocr::{Det, Rec};
+use rust_paddle_ocr::{Det, OcrError, Rec};
+use serde::Serialize;
+
+#[derive(Serialize, Debug)]
+pub struct OcrResult {
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    text: String,
+    line_height: u32,
+}
+
+pub type TranscendiaOcrResults = Vec<OcrResult>;
 
 pub struct TranscendiaOcr {
     detection: Det,
     recognition: Rec,
 }
-
-// SAFETY: We manually implement Send for TranscendiaOcr because:
-// 1. The OCR engine will only be used within a single async task
-// 2. We never actually send it between OS threads - tokio manages the async context
-// 3. The raw pointers from MNN are only accessed from the same logical execution context
-unsafe impl Send for TranscendiaOcr {}
 
 impl TranscendiaOcr {
     pub fn new() -> Self {
@@ -49,20 +57,43 @@ impl TranscendiaOcr {
         }
     }
 
-    pub fn extract(&mut self, image: DynamicImage) -> String {
-        let text_images = self.detection.find_text_img(&image);
-
-        if let Ok(text_images) = text_images {
-            for text_image in text_images {
-                let text = self.recognition.predict_str(&text_image).expect("Cannot predict text");
-                println!("Text: {:?}", text);
+    pub fn extract(&mut self, image: DynamicImage) -> TranscendiaOcrResults {
+        let result = self.detect(image);
+        match result {
+            Ok((text_rects, text_images)) => {
+                let texts = self.recognize(text_images);
+                println!("{:#?}", texts);
+                TranscendiaOcrResults::new()
             }
-        } else {
-            error!("Could not detect text in image");
+            Err(_) => {
+                error!("Cannot detect text in image !");
+                TranscendiaOcrResults::new()
+            }
         }
-
-        "".to_string()
     }
 
-    fn detect(&mut self, image: DynamicImage) {}
+    fn detect(&mut self, image: DynamicImage) -> Result<(Vec<Rect>, Vec<DynamicImage>), OcrError> {
+        let text_rects = self.detection.find_text_rect(&image)?;
+
+        let mut images = Vec::<DynamicImage>::new();
+        for text_rect in &text_rects {
+            images.push(image.crop_imm(
+                text_rect.left() as u32,
+                text_rect.top() as u32,
+                text_rect.width(),
+                text_rect.height(),
+            ))
+        }
+
+        Ok((text_rects, images))
+    }
+
+    fn recognize(&mut self, images: Vec<DynamicImage>) -> Vec<String> {
+        let mut texts = Vec::<String>::new();
+        for image in images {
+            let text = self.recognition.predict_str(&image).unwrap_or(String::new());
+            texts.push(text);
+        }
+        texts
+    }
 }

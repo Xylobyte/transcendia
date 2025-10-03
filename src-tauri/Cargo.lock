@@ -4644,6 +4644,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -6190,6 +6191,7 @@ version = "1.0.0-beta.2"
 dependencies = [
  "env_logger 0.11.8",
  "image",
+ "imageproc",
  "log",
  "reqwest",
  "rust-embed",

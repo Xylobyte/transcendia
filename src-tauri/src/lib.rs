@@ -88,18 +88,21 @@ pub fn run() {
             let config = TranscendiaConfig::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
-            let runtime = TranscendiaRuntime::new(config.interval);
+            let runtime = TranscendiaRuntime::new();
 
-            if let Some(region) = config.region {
-                runtime.start(
-                    app,
-                    config.monitor.clone(),
-                    region.clone(),
-                    config.lang.clone(),
-                );
-                create_overlay_window(app, &region, config.monitor, config.blur_background)?;
-            } else {
-                create_config_window(app)?;
+            match config.region {
+                Some(region) => {
+                    runtime.start(
+                        app,
+                        config.monitor.clone(),
+                        region.clone(),
+                        config.lang.clone(),
+                    );
+                    create_overlay_window(app, &region, config.monitor, config.blur_background)?;
+                }
+                None => {
+                    create_config_window(app)?;
+                }
             }
 
             app.manage(runtime);

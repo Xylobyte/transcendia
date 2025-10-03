@@ -48,7 +48,6 @@ watch(() => [
     config.value?.text_color,
     config.value?.text_align,
     config.value?.background_color,
-    config.value?.interval,
     config.value?.text_size
 ], (_curr, prev) => {
     if (prev.every(v => v === undefined)) return;
@@ -190,18 +189,6 @@ const onClose = async () => {
                 theme="black"
             />
         </div>
-
-        <div class="interval">
-            <h2>Capture interval</h2>
-            <div>
-                <CustomInput
-                    v-model="config.interval"
-                    :max="60"
-                    type="number"
-                />
-                s
-            </div>
-        </div>
     </main>
 
     <div class="action">
@@ -247,13 +234,13 @@ h2 {
     color: rgb(174, 174, 174);
 }
 
-.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .lang {
+.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .lang {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .interval, .region-select, .lang {
+.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .region-select, .lang {
     background: #191919;
     padding: 10px;
     border-radius: 10px;
