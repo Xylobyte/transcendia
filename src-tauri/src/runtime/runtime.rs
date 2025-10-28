@@ -76,10 +76,10 @@ impl TranscendiaRuntime {
                 let start = Instant::now();
 
                 let image = monitor.capture_and_crop(&region);
-                ocr_engine.extract(image);
+                let texts = ocr_engine.extract(image);
 
                 app_handle
-                    .emit(Events::NewTranslatedText.as_str(), "Nothing...".to_string())
+                    .emit(Events::NewTranslatedText.as_str(), texts)
                     .unwrap();
 
                 debug!(

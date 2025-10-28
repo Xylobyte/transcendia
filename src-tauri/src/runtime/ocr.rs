@@ -22,10 +22,10 @@ use log::error;
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct OcrResult {
-    x: u32,
-    y: u32,
+    x: i32,
+    y: i32,
     width: u32,
     height: u32,
     text: String,
@@ -62,8 +62,40 @@ impl TranscendiaOcr {
         match result {
             Ok((text_rects, text_images)) => {
                 let texts = self.recognize(text_images);
-                println!("{:#?}", texts);
-                TranscendiaOcrResults::new()
+                let mut results = TranscendiaOcrResults::new();
+                for (i, rect) in text_rects.iter().enumerate() {
+                    let t = texts[i].trim();
+                    if t.is_empty() {
+                        continue;
+                    }
+
+                    let merge_border = 35;
+                    let merge_rect = results.iter_mut().find(|r| {
+                        (rect.left() - r.x).abs() < merge_border
+                            && (rect.top() - r.y).abs() < (r.height as i32 + merge_border)
+                    });
+
+                    match merge_rect {
+                        Some(merge_rect) => {
+                            merge_rect.height +=
+                                (merge_rect.y - rect.top()).abs() as u32 + rect.height();
+                            merge_rect.text.push('\n');
+                            merge_rect.text.push_str(t);
+                            merge_rect.line_height = merge_rect.height
+                                / merge_rect.text.split('\n').collect::<Vec<_>>().len() as u32;
+                        }
+                        None => results.push(OcrResult {
+                            x: rect.left(),
+                            y: rect.top(),
+                            width: rect.width(),
+                            height: rect.height(),
+                            line_height: rect.height()
+                                / (&t).split('\n').collect::<Vec<&str>>().len() as u32,
+                            text: t.to_string(),
+                        }),
+                    }
+                }
+                results
             }
             Err(_) => {
                 error!("Cannot detect text in image !");
@@ -91,7 +123,10 @@ impl TranscendiaOcr {
     fn recognize(&mut self, images: Vec<DynamicImage>) -> Vec<String> {
         let mut texts = Vec::<String>::new();
         for image in images {
-            let text = self.recognition.predict_str(&image).unwrap_or(String::new());
+            let text = self
+                .recognition
+                .predict_str(&image)
+                .unwrap_or(String::new());
             texts.push(text);
         }
         texts
