@@ -30,11 +30,14 @@ use crate::commands::{
     f_s_r, finish_select_region, get_config, get_monitors, select_region, set_config,
 };
 use crate::config::{ConfigState, TranscendiaConfig};
+use crate::events::Events;
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
-use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
+use tauri::{
+    generate_context, generate_handler, ActivationPolicy, Emitter, Manager, RunEvent, WindowEvent,
+};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -108,6 +111,18 @@ pub fn run() {
             select_region,
             finish_select_region
         ])
-        .run(generate_context!())
-        .expect("Error while running Transcendia");
+        .build(generate_context!())
+        .expect("Error while running Transcendia")
+        .run(|app_handle, event| match event {
+            RunEvent::WindowEvent { label, event, .. } if label == "config" => match event {
+                WindowEvent::CloseRequested { .. } => app_handle
+                    .emit(Events::OnOffConfigTrayItem.as_str(), true)
+                    .expect("Event error..."),
+                WindowEvent::Focused { .. } => app_handle
+                    .emit(Events::OnOffConfigTrayItem.as_str(), false)
+                    .expect("Event error..."),
+                _ => {}
+            },
+            _ => {}
+        });
 }

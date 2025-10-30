@@ -17,7 +17,7 @@
  */
 use crate::events::Events;
 use crate::windows::create_config_window;
-use log::{error, warn};
+use log::{debug, error, warn};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{App, Listener};
@@ -29,7 +29,7 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
     let menu_on = Menu::with_items(app, &[&config_item_on, &quit_item])?;
     let menu_off = Menu::with_items(app, &[&config_item_off, &quit_item])?;
 
-    let tray = TrayIconBuilder::new()
+    let tray = TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu_on)
         .show_menu_on_left_click(true)

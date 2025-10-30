@@ -22,8 +22,6 @@ import {invoke} from "@tauri-apps/api/core";
 import {Config} from "../types/config.ts";
 import CustomButton from "../components/CustomButton.vue";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-import {emit} from "@tauri-apps/api/event";
-import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {ColorPicker} from "vue3-colorpicker";
 import {languages} from "./languages.ts";
@@ -35,7 +33,6 @@ const config = ref<Config>();
 const canSave = ref(false);
 
 onMounted(async () => {
-    await emit(Events.OnOffConfigTrayItem, false);
     config.value = await invoke<Config>("get_config");
     monitors.value = await invoke("get_monitors");
 
@@ -78,11 +75,6 @@ const onSelect = async () => {
     } catch (e) {
         console.error(e);
     }
-};
-
-const onClose = async () => {
-    await emit(Events.OnOffConfigTrayItem, true);
-    await currWindow.close();
 };
 </script>
 
@@ -158,10 +150,10 @@ const onClose = async () => {
     </main>
 
     <div class="action">
-        <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig(false)">
+        <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig">
             Save
         </CustomButton>
-        <CustomButton :is-primary="true" title="Close" @click="onClose">Close</CustomButton>
+        <CustomButton :is-primary="true" title="Close" @click="currWindow.close()">Close</CustomButton>
     </div>
 </template>
 
