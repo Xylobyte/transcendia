@@ -46,10 +46,7 @@ pub struct TranscendiaConfig {
     pub region: Option<Region>,
     pub monitor: u32,
     pub text_color: String,
-    pub text_align: String,
-    pub text_size: u16,
-    pub background_color: String,
-    pub blur_background: bool,
+    pub text_shadow_color: String,
     pub lang: String,
 }
 
@@ -58,11 +55,8 @@ impl Default for TranscendiaConfig {
         Self {
             region: None,
             monitor: 0,
-            text_align: "C:C".to_string(),
             text_color: "#FFFFFF".to_string(),
-            text_size: 16,
-            background_color: "#00000066".to_string(),
-            blur_background: true,
+            text_shadow_color: "#00000066".to_string(),
             lang: "en".to_string(),
         }
     }
@@ -80,13 +74,15 @@ impl TranscendiaConfig {
 
             let data = serde_json::to_string(&TranscendiaConfig::default())
                 .expect("Could not serialize default config");
-            fs::write(config_path, &data).expect("Could not write config.json");
+            fs::write(&config_path, &data).expect("Could not write config.json");
             data
         } else {
-            fs::read_to_string(config_path).expect("Could not read config.json")
+            fs::read_to_string(&config_path).expect("Could not read config.json")
         };
-        let config =
-            serde_json::from_str::<TranscendiaConfig>(&config).expect("Could not deserialize config.json");
+        let config = serde_json::from_str::<TranscendiaConfig>(&config).unwrap_or_else(|_| {
+            fs::remove_file(config_path).expect("Could not reset the config.json");
+            Self::load(app)
+        });
         config
     }
 

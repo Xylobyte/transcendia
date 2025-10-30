@@ -31,7 +31,7 @@ pub struct BaseTranscendiaMonitor {
 pub trait TranscendiaMonitor {
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError>;
     fn load(id: u32) -> Self;
-    fn capture_and_crop(&self, region: &Region) -> DynamicImage;
+    fn capture_and_crop(&self, region: &Option<Region>) -> DynamicImage;
 }
 
 impl TranscendiaMonitor for Monitor {
@@ -57,24 +57,31 @@ impl TranscendiaMonitor for Monitor {
             .clone()
     }
 
-    fn capture_and_crop(&self, region: &Region) -> DynamicImage {
+    fn capture_and_crop(&self, region: &Option<Region>) -> DynamicImage {
         let capture = self.capture_image();
         let sf = self.scale_factor().expect("Can't get scale factor");
 
-        let w = region.w as f32 * sf;
-        let h = region.h as f32 * sf;
         match capture {
-            Ok(c) =>
-                DynamicImage::ImageRgba8(c)
-                    .crop_imm(
-                        (region.x as f32 * sf) as u32,
-                        (region.y as f32 * sf) as u32,
-                        w as u32,
-                        h as u32,
-                    ),
+            Ok(c) => {
+                let img = DynamicImage::ImageRgba8(c);
+
+                match region {
+                    Some(region) => {
+                        let w = region.w as f32 * sf;
+                        let h = region.h as f32 * sf;
+                        img.crop_imm(
+                            (region.x as f32 * sf) as u32,
+                            (region.y as f32 * sf) as u32,
+                            w as u32,
+                            h as u32,
+                        )
+                    }
+                    None => img
+                }
+            }
             Err(_) => {
                 error!("Can't get capture image");
-                DynamicImage::new_rgb8(w as u32, h as u32)
+                DynamicImage::new_rgb8(1, 1)
             }
         }
     }

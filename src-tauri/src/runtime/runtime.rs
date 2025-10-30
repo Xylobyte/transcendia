@@ -43,7 +43,7 @@ impl TranscendiaRuntime {
         }
     }
 
-    pub fn start(&self, app_handle: &AppHandle, monitor: u32, region: Region, lang: String) {
+    pub fn start(&self, app_handle: &AppHandle, monitor: u32, region: Option<Region>, lang: String) {
         if self.is_running.load(Ordering::Relaxed) {
             return;
         }
@@ -62,8 +62,8 @@ impl TranscendiaRuntime {
             let monitor = Monitor::load(monitor);
             let mut ocr_engine = TranscendiaOcr::new();
             let client = Client::builder()
-                .connect_timeout(Duration::from_secs(10))
-                .timeout(Duration::from_secs(20))
+                .connect_timeout(Duration::from_secs(5))
+                .timeout(Duration::from_secs(10))
                 .https_only(true)
                 .build()
                 .expect("Could not create HTTP client");

@@ -18,7 +18,7 @@
 use crate::models::{EmbeddedModels, OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use imageproc::rect::Rect;
-use log::error;
+use log::{debug, error};
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
 
@@ -63,6 +63,7 @@ impl TranscendiaOcr {
             Ok((text_rects, text_images)) => {
                 let texts = self.recognize(text_images);
                 let mut results = TranscendiaOcrResults::new();
+
                 for (i, rect) in text_rects.iter().enumerate() {
                     let t = texts[i].trim();
                     if t.is_empty() {
@@ -79,6 +80,12 @@ impl TranscendiaOcr {
                         Some(merge_rect) => {
                             merge_rect.height +=
                                 (merge_rect.y - rect.top()).abs() as u32 + rect.height();
+                            if rect.left() < merge_rect.x {
+                                merge_rect.x = rect.left();
+                            }
+                            if rect.width() > merge_rect.width {
+                                merge_rect.width = rect.width();
+                            }
                             merge_rect.text.push('\n');
                             merge_rect.text.push_str(t);
                             merge_rect.line_height = merge_rect.height
@@ -95,6 +102,8 @@ impl TranscendiaOcr {
                         }),
                     }
                 }
+
+                debug!("Texts: {:?}", results);
                 results
             }
             Err(_) => {

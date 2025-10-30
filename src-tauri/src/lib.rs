@@ -20,19 +20,18 @@ mod commands;
 mod config;
 mod errors;
 mod events;
+pub mod models;
+pub mod monitors;
 mod runtime;
 mod systray;
 mod windows;
-pub mod monitors;
-pub mod models;
 
 use crate::commands::{
-    download_finish, f_s_r, finish_select_region, get_config, get_monitors, select_region,
-    set_config,
+    f_s_r, finish_select_region, get_config, get_monitors, select_region, set_config,
 };
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::systray::create_systray;
-use crate::windows::{create_config_window, create_overlay_window};
+use crate::windows::create_overlay_window;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{generate_context, generate_handler, ActivationPolicy, Manager};
@@ -90,20 +89,13 @@ pub fn run() {
 
             let runtime = TranscendiaRuntime::new();
 
-            match config.region {
-                Some(region) => {
-                    runtime.start(
-                        app,
-                        config.monitor.clone(),
-                        region.clone(),
-                        config.lang.clone(),
-                    );
-                    create_overlay_window(app, &region, config.monitor, config.blur_background)?;
-                }
-                None => {
-                    create_config_window(app)?;
-                }
-            }
+            runtime.start(
+                app,
+                config.monitor.clone(),
+                config.region.clone(),
+                config.lang.clone(),
+            );
+            create_overlay_window(app, config.monitor)?;
 
             app.manage(runtime);
 
@@ -114,8 +106,7 @@ pub fn run() {
             set_config,
             get_monitors,
             select_region,
-            finish_select_region,
-            download_finish
+            finish_select_region
         ])
         .run(generate_context!())
         .expect("Error while running Transcendia");

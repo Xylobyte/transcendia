@@ -28,7 +28,9 @@ use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
 #[tauri::command]
-pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<TranscendiaConfig, TranscendiaError> {
+pub fn get_config(
+    config: tauri::State<'_, ConfigState>,
+) -> Result<TranscendiaConfig, TranscendiaError> {
     let config = config
         .0
         .lock()
@@ -55,8 +57,7 @@ pub async fn set_config(
         let windows = app_handle.webview_windows();
         let window = windows.values().find(|x| x.label() == "overlay");
         if let (Some(w), Some(r)) = (window, config.region.clone()) {
-            edit_overlay(w, &r, config.monitor, config.blur_background)
-                .expect("Failed to edit overlay");
+            edit_overlay(w, config.monitor).expect("Failed to edit overlay");
         }
     } else {
         app_handle
@@ -99,15 +100,6 @@ pub async fn finish_select_region(
     f_s_r(app_handle, config, runtime, true)
 }
 
-#[tauri::command]
-pub async fn download_finish(
-    app_handle: AppHandle,
-    config: tauri::State<'_, ConfigState>,
-    runtime: tauri::State<'_, TranscendiaRuntime>,
-) -> Result<(), tauri::Error> {
-    f_s_r(app_handle, config, runtime, false)
-}
-
 pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
@@ -115,18 +107,16 @@ pub fn f_s_r(
     create_config: bool,
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
-    let region = &config.region;
-    if let Some(r) = region {
-        runtime.start(
-            &app_handle,
-            config.monitor.clone(),
-            r.clone(),
-            config.lang.clone(),
-        );
-        create_overlay_window(&app_handle, r, config.monitor, config.blur_background)?;
-    }
 
-    if create_config || region.is_none() {
+    runtime.start(
+        &app_handle,
+        config.monitor.clone(),
+        config.region.clone(),
+        config.lang.clone(),
+    );
+    create_overlay_window(&app_handle, config.monitor)?;
+
+    if create_config {
         create_config_window(&app_handle)?;
     }
 

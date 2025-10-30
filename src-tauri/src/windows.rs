@@ -16,10 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::config::Region;
 use crate::monitors::TranscendiaMonitor;
-use tauri::utils::config::WindowEffectsConfig;
-use tauri::utils::{WindowEffect, WindowEffectState};
 use tauri::webview::Color;
 use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use xcap::Monitor;
@@ -68,16 +65,14 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
 
 pub fn create_overlay_window(
     app: &AppHandle,
-    region: &Region,
     monitor: u32,
-    blur: bool,
 ) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay.html".into()))
         .title("Transcendia - Overlay")
         .always_on_top(true)
         .visible_on_all_workspaces(true)
         .shadow(false)
-        .background_color(Color(0, 0, 0, 0))
+        .background_color(Color(0, 0, 0, 100))
         .decorations(false)
         .transparent(true)
         .resizable(false)
@@ -86,7 +81,7 @@ pub fn create_overlay_window(
         .build()?;
     window.set_ignore_cursor_events(true)?;
 
-    edit_overlay(&window, &region, monitor, blur)?;
+    edit_overlay(&window, monitor)?;
     window.show()?;
 
     Ok(window)
@@ -94,28 +89,18 @@ pub fn create_overlay_window(
 
 pub fn edit_overlay(
     window: &WebviewWindow,
-    region: &Region,
     monitor: u32,
-    blur: bool,
 ) -> Result<(), tauri::Error> {
     let monitor = Monitor::load(monitor);
+
     window.set_position(LogicalPosition {
-        x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap() + region.x as f32,
-        y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap() + region.y as f32,
+        x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap(),
+        y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap(),
     })?;
     window.set_size(LogicalSize {
-        width: region.w,
-        height: region.h,
+        width: monitor.width().unwrap(),
+        height: monitor.height().unwrap(),
     })?;
-
-    if blur {
-        window.set_effects(WindowEffectsConfig {
-            effects: vec![WindowEffect::HudWindow],
-            state: Some(WindowEffectState::Active),
-            radius: Some(30f64),
-            color: None,
-        })?;
-    }
 
     Ok(())
 }
