@@ -81,18 +81,7 @@ pub fn create_overlay_window(
         .build()?;
     window.set_ignore_cursor_events(true)?;
 
-    edit_overlay(&window, monitor)?;
-    window.show()?;
-
-    Ok(window)
-}
-
-pub fn edit_overlay(
-    window: &WebviewWindow,
-    monitor: u32,
-) -> Result<(), tauri::Error> {
     let monitor = Monitor::load(monitor);
-
     window.set_position(LogicalPosition {
         x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap(),
         y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap(),
@@ -101,6 +90,7 @@ pub fn edit_overlay(
         width: monitor.width().unwrap(),
         height: monitor.height().unwrap(),
     })?;
+    window.show()?;
 
-    Ok(())
+    Ok(window)
 }

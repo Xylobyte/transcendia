@@ -60,7 +60,7 @@ impl TranscendiaRuntime {
             }
 
             let monitor = Monitor::load(monitor);
-            let mut ocr_engine = TranscendiaOcr::new();
+            let mut ocr_engine = TranscendiaOcr::new(&app_handle);
             let client = Client::builder()
                 .connect_timeout(Duration::from_secs(5))
                 .timeout(Duration::from_secs(10))

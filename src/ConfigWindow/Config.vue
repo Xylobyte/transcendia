@@ -21,13 +21,11 @@ import {onMounted, ref, watch} from "vue";
 import {invoke} from "@tauri-apps/api/core";
 import {Config} from "../types/config.ts";
 import CustomButton from "../components/CustomButton.vue";
-import {exit} from "@tauri-apps/plugin-process";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {emit} from "@tauri-apps/api/event";
 import {Events} from "../types/events.ts";
 import CustomSelect from "../components/CustomSelect.vue";
 import {ColorPicker} from "vue3-colorpicker";
-import CustomInput from "../components/CustomInput.vue";
 import {languages} from "./languages.ts";
 
 const currWindow = getCurrentWebviewWindow();
@@ -46,22 +44,15 @@ onMounted(async () => {
 
 watch(() => [
     config.value?.text_color,
-    config.value?.text_align,
-    config.value?.background_color,
-    config.value?.text_size
+    config.value?.text_shadow_color,
 ], (_curr, prev) => {
     if (prev.every(v => v === undefined)) return;
     canSave.value = true;
 });
 
-watch(() => config.value?.blur_background, (_curr, prev) => {
-    if (prev === undefined) return;
-    saveConfig();
-});
-
-const saveConfig = async (rOverlay: boolean = true) => {
+const saveConfig = async () => {
     try {
-        await invoke<void>("set_config", {newConfig: config.value, refreshWOverlay: rOverlay});
+        await invoke<void>("set_config", {newConfig: config.value});
         canSave.value = false;
     } catch (e) {
         console.error(e);
@@ -90,12 +81,8 @@ const onSelect = async () => {
 };
 
 const onClose = async () => {
-    if (config.value?.region) {
-        await emit(Events.OnOffConfigTrayItem, true);
-        await currWindow.close();
-    } else {
-        await exit(0);
-    }
+    await emit(Events.OnOffConfigTrayItem, true);
+    await currWindow.close();
 };
 </script>
 
@@ -118,7 +105,18 @@ const onClose = async () => {
             />
         </div>
 
-        <div class="region-select">
+        <div class="full-screen">
+            <h2>Translate the entire screen</h2>
+            <input
+                id="full-screen"
+                :checked="!config.region"
+                name="blur"
+                type="checkbox"
+                @click="config.region ? config.region = null : onSelect"
+            >
+        </div>
+
+        <div v-if="config.region" class="region-select">
             <div class="head">
                 <h2>Screen region</h2>
                 <CustomButton :is-primary="false" title="Select region" @click="onSelect">
@@ -146,42 +144,10 @@ const onClose = async () => {
             />
         </div>
 
-        <div class="text-size">
-            <h2>Text size</h2>
-            <div>
-                <CustomInput
-                    v-model="config.text_size"
-                    :max="250"
-                    type="number"
-                />
-                px
-            </div>
-        </div>
-
-        <div class="text-align">
-            <h2>Text align</h2>
-            <div class="grid">
-                <span :class="{active: config.text_align === 'T:L'}" @click="config.text_align = 'T:L'">T:L</span>
-                <span :class="{active: config.text_align === 'T:C'}" @click="config.text_align = 'T:C'">T:C</span>
-                <span :class="{active: config.text_align === 'T:R'}" @click="config.text_align = 'T:R'">T:R</span>
-                <span :class="{active: config.text_align === 'C:L'}" @click="config.text_align = 'C:L'">C:L</span>
-                <span :class="{active: config.text_align === 'C:C'}" @click="config.text_align = 'C:C'">C:C</span>
-                <span :class="{active: config.text_align === 'C:R'}" @click="config.text_align = 'C:R'">C:R</span>
-                <span :class="{active: config.text_align === 'B:L'}" @click="config.text_align = 'B:L'">B:L</span>
-                <span :class="{active: config.text_align === 'B:C'}" @click="config.text_align = 'B:C'">B:C</span>
-                <span :class="{active: config.text_align === 'B:R'}" @click="config.text_align = 'B:R'">B:R</span>
-            </div>
-        </div>
-
-        <div class="window-blur">
-            <h2>Background blur (Need restart)</h2>
-            <input id="blur" v-model="config.blur_background" name="blur" type="checkbox">
-        </div>
-
         <div class="bg-color">
-            <h2>Background color</h2>
+            <h2>Text shadow color</h2>
             <ColorPicker
-                v-model:pure-color="config.background_color"
+                v-model:pure-color="config.text_shadow_color"
                 :z-index="20"
                 format="rgb"
                 lang="En"
@@ -195,9 +161,7 @@ const onClose = async () => {
         <CustomButton :disabled="!canSave" :is-primary="true" title="Close" @click="saveConfig(false)">
             Save
         </CustomButton>
-        <CustomButton :is-primary="true" title="Close" @click="onClose">
-            {{ config?.region ? "Close" : "Quit" }}
-        </CustomButton>
+        <CustomButton :is-primary="true" title="Close" @click="onClose">Close</CustomButton>
     </div>
 </template>
 
@@ -234,13 +198,13 @@ h2 {
     color: rgb(174, 174, 174);
 }
 
-.region-select .head, .screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .lang {
+.region-select .head, .screen, .text-color, .bg-color, .lang, .full-screen {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.screen, .text-color, .text-align, .text-size, .window-blur, .bg-color, .region-select, .lang {
+.screen, .text-color, .bg-color, .region-select, .lang, .full-screen {
     background: #191919;
     padding: 10px;
     border-radius: 10px;
@@ -249,30 +213,6 @@ h2 {
 .region-select .info {
     display: flex;
     justify-content: space-between;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.grid span {
-    border: 1px solid rgb(174, 174, 174);
-    padding: 3px;
-    font-size: 0.8em;
-    border-radius: 3px;
-    text-align: center;
-}
-
-.grid span:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.grid span.active {
-    background: rgb(232, 232, 232);
-    border-color: rgb(232, 232, 232);
-    color: black;
 }
 
 .action {

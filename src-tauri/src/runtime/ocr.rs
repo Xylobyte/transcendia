@@ -15,12 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::models::{EmbeddedModels, OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
+use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use imageproc::rect::Rect;
 use log::{debug, error};
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
+use tauri::path::BaseDirectory;
+use tauri::{AppHandle, Manager};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct OcrResult {
@@ -40,17 +42,26 @@ pub struct TranscendiaOcr {
 }
 
 impl TranscendiaOcr {
-    pub fn new() -> Self {
-        let det = EmbeddedModels::get(OCR_DET_FILE).unwrap();
-        let rec = EmbeddedModels::get(OCR_REC_FILE).unwrap();
-        let keys = EmbeddedModels::get(OCR_KEYS_FILE).unwrap();
+    pub fn new(app_handle: &AppHandle) -> Self {
+        let det = app_handle
+            .path()
+            .resolve(format!("models/{}", OCR_DET_FILE), BaseDirectory::Resource)
+            .unwrap();
+        let rec = app_handle
+            .path()
+            .resolve(format!("models/{}", OCR_REC_FILE), BaseDirectory::Resource)
+            .unwrap();
+        let keys = app_handle
+            .path()
+            .resolve(format!("models/{}", OCR_KEYS_FILE), BaseDirectory::Resource)
+            .unwrap();
 
         Self {
-            detection: Det::from_bytes(det.data.to_vec())
+            detection: Det::from_file(det)
                 .expect("Could not load detection model")
                 .with_merge_boxes(false)
                 .with_rect_border_size(12),
-            recognition: Rec::from_bytes_with_keys(rec.data.to_vec(), keys.data.to_vec())
+            recognition: Rec::from_file(rec, keys)
                 .expect("Could not load recognition model")
                 .with_min_score(0.6)
                 .with_punct_min_score(0.2),

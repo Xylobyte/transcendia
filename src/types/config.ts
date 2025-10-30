@@ -24,21 +24,9 @@ export type Region = {
 }
 
 export type Config = {
-    region?: Region,
+    region: Region | null,
     monitor: number,
     text_color: string,
-    text_align:
-        | 'T:L'
-        | 'T:C'
-        | 'T:R'
-        | 'C:L'
-        | 'C:C'
-        | 'C:R'
-        | 'B:L'
-        | 'B:C'
-        | 'B:R',
-    text_size: number,
-    background_color: string,
-    blur_background: boolean,
+    text_shadow_color: string,
     lang: string
 }

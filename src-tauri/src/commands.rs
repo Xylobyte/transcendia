@@ -22,7 +22,7 @@ use crate::events::Events;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::runtime::runtime::TranscendiaRuntime;
 use crate::windows::{
-    create_config_window, create_overlay_window, create_select_region_window, edit_overlay,
+    create_config_window, create_overlay_window, create_select_region_window,
 };
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
@@ -43,7 +43,6 @@ pub async fn set_config(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     new_config: TranscendiaConfig,
-    refresh_w_overlay: bool,
 ) -> Result<(), TranscendiaError> {
     new_config.save(&app_handle);
 
@@ -53,17 +52,9 @@ pub async fn set_config(
         .map_err(|_| TranscendiaError::CannotSaveConfig)?;
     *config = new_config;
 
-    if refresh_w_overlay {
-        let windows = app_handle.webview_windows();
-        let window = windows.values().find(|x| x.label() == "overlay");
-        if let (Some(w), Some(r)) = (window, config.region.clone()) {
-            edit_overlay(w, config.monitor).expect("Failed to edit overlay");
-        }
-    } else {
-        app_handle
-            .emit(Events::RefreshOverlay.as_str(), None::<bool>)
-            .expect("Failed to emit event");
-    }
+    app_handle
+        .emit(Events::RefreshOverlay.as_str(), None::<bool>)
+        .expect("Failed to emit event");
 
     Ok(())
 }

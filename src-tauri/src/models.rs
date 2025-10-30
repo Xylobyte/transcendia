@@ -15,12 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use rust_embed::Embed;
 
 pub const OCR_DET_FILE: &str = "PP-OCRv5_mobile_det_fp16.mnn";
 pub const OCR_REC_FILE: &str = "PP-OCRv5_mobile_rec_fp16.mnn";
 pub const OCR_KEYS_FILE: &str = "ppocr_keys_v5.txt";
-
-#[derive(Embed)]
-#[folder = "models"]
-pub struct EmbeddedModels;
