@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::config::Region;
+use crate::config::{ConfigState, Region, TranscendiaConfig};
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
 use crate::runtime::ocr::TranscendiaOcr;
@@ -33,22 +33,29 @@ use tokio::time::Duration;
 use xcap::Monitor;
 
 pub struct TranscendiaRuntime {
+    need_stop: Arc<AtomicBool>,
     is_running: Arc<AtomicBool>,
+    config: Arc<ConfigState>,
 }
 
 impl TranscendiaRuntime {
-    pub fn new() -> Self {
+    pub fn new(config: ConfigState) -> Self {
         Self {
+            need_stop: Arc::new(AtomicBool::new(false)),
             is_running: Arc::new(AtomicBool::new(false)),
+            config: Arc::new(config),
         }
     }
 
-    pub fn start(&self, app_handle: &AppHandle, monitor: u32, region: Option<Region>, lang: String) {
+    pub fn start(&self, app_handle: &AppHandle) {
         if self.is_running.load(Ordering::Relaxed) {
+            self.need_stop.store(false, Ordering::Release);
             return;
         }
 
+        let need_stop = self.need_stop.clone();
         let is_running = self.is_running.clone();
+        let config = self.config.clone();
         let app_handle = app_handle.clone();
 
         tauri::async_runtime::spawn_blocking(move || {
@@ -59,7 +66,7 @@ impl TranscendiaRuntime {
                 return;
             }
 
-            let monitor = Monitor::load(monitor);
+            let monitor = Monitor::load(config.0.lock().unwrap().monitor);
             let mut ocr_engine = TranscendiaOcr::new(&app_handle);
             let client = Client::builder()
                 .connect_timeout(Duration::from_secs(5))
@@ -69,13 +76,15 @@ impl TranscendiaRuntime {
                 .expect("Could not create HTTP client");
 
             loop {
-                if !is_running.load(Ordering::Relaxed) {
+                if need_stop.load(Ordering::Relaxed) {
+                    need_stop.store(false, Ordering::Release);
+                    is_running.store(false, Ordering::Release);
                     break;
                 }
 
                 let start = Instant::now();
 
-                let image = monitor.capture_and_crop(&region);
+                let image = monitor.capture_and_crop(&config.0.lock().unwrap().region);
                 let texts = ocr_engine.extract(image);
 
                 app_handle
@@ -89,11 +98,16 @@ impl TranscendiaRuntime {
             }
         });
 
-        self.is_running.store(true, Ordering::Relaxed);
+        self.is_running.store(true, Ordering::Release);
     }
 
     pub fn stop(&self) {
-        self.is_running.store(false, Ordering::Release);
+        self.need_stop.store(true, Ordering::Release);
+    }
+
+    pub fn update_config(&self, new_config: TranscendiaConfig) {
+        let mut config = self.config.0.lock().unwrap();
+        *config = new_config;
     }
 }
 

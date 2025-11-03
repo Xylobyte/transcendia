@@ -49,7 +49,7 @@ watch(() => [
 
 const saveConfig = async () => {
     try {
-        await invoke<void>("set_config", {newConfig: config.value});
+        await invoke<void>("set_config", {newConfig: config.value, reloadRuntime: true});
         canSave.value = false;
     } catch (e) {
         console.error(e);
@@ -69,13 +69,23 @@ const changeLang = (lang: string) => {
 };
 
 const onSelect = async () => {
+    console.log("On select")
     try {
-        await invoke("select_region", {monitor: config.value?.monitor || monitors.value[0].name || ''});
+        await invoke("select_region", {monitor: config.value?.monitor || monitors.value[0].id || ''});
         await currWindow.close();
     } catch (e) {
         console.error(e);
     }
 };
+
+const onToggleFullScreen = async () => {
+    if (config.value?.region) {
+        config.value.region = null;
+        await saveConfig();
+    } else {
+        await onSelect();
+    }
+}
 </script>
 
 <template>
@@ -104,7 +114,7 @@ const onSelect = async () => {
                 :checked="!config.region"
                 name="blur"
                 type="checkbox"
-                @click="config.region ? config.region = null : onSelect"
+                @change="onToggleFullScreen()"
             >
         </div>
 
@@ -140,6 +150,7 @@ const onSelect = async () => {
             <h2>Text shadow color</h2>
             <ColorPicker
                 v-model:pure-color="config.text_shadow_color"
+                :disable-alpha="true"
                 :z-index="20"
                 format="rgb"
                 lang="En"

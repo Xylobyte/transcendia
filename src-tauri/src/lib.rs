@@ -90,17 +90,11 @@ pub fn run() {
             let config = TranscendiaConfig::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
 
-            let runtime = TranscendiaRuntime::new();
-
-            runtime.start(
-                app,
-                config.monitor.clone(),
-                config.region.clone(),
-                config.lang.clone(),
-            );
-            create_overlay_window(app, config.monitor)?;
-
+            let runtime = TranscendiaRuntime::new(ConfigState(Mutex::new(config.clone())));
+            runtime.start(app);
             app.manage(runtime);
+
+            create_overlay_window(app, config.monitor)?;
 
             Ok(())
         })

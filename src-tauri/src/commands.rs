@@ -21,9 +21,7 @@ use crate::errors::TranscendiaError;
 use crate::events::Events;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::runtime::runtime::TranscendiaRuntime;
-use crate::windows::{
-    create_config_window, create_overlay_window, create_select_region_window,
-};
+use crate::windows::{create_config_window, create_overlay_window, create_select_region_window};
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
@@ -42,7 +40,9 @@ pub fn get_config(
 pub async fn set_config(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
+    runtime: tauri::State<'_, TranscendiaRuntime>,
     new_config: TranscendiaConfig,
+    reload_runtime: bool,
 ) -> Result<(), TranscendiaError> {
     new_config.save(&app_handle);
 
@@ -55,6 +55,10 @@ pub async fn set_config(
     app_handle
         .emit(Events::RefreshOverlay.as_str(), None::<bool>)
         .expect("Failed to emit event");
+
+    if reload_runtime {
+        runtime.update_config(config.clone());
+    }
 
     Ok(())
 }
@@ -99,12 +103,8 @@ pub fn f_s_r(
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
 
-    runtime.start(
-        &app_handle,
-        config.monitor.clone(),
-        config.region.clone(),
-        config.lang.clone(),
-    );
+    runtime.update_config(config.clone());
+    runtime.start(&app_handle);
     create_overlay_window(&app_handle, config.monitor)?;
 
     if create_config {

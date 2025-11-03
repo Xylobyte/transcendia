@@ -56,7 +56,7 @@ impl Default for TranscendiaConfig {
             region: None,
             monitor: 0,
             text_color: "#FFFFFF".to_string(),
-            text_shadow_color: "#00000066".to_string(),
+            text_shadow_color: "#000000".to_string(),
             lang: "en".to_string(),
         }
     }

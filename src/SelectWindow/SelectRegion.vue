@@ -27,7 +27,7 @@ const config = ref<Config>();
 onMounted(async () => {
     config.value = await invoke<Config>("get_config");
 
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    //document.addEventListener('contextmenu', event => event.preventDefault());
 });
 
 const drawRegion = ref(false);
@@ -56,7 +56,7 @@ const stopDraw = async () => {
                         h: height,
                     } as Region
                 } as Config,
-                refreshWOverlay: true,
+                reloadRuntime: true,
             });
             await invoke<void>("finish_select_region");
             await getCurrentWebviewWindow().close();
