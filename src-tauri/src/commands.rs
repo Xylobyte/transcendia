@@ -21,7 +21,9 @@ use crate::errors::TranscendiaError;
 use crate::events::Events;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::runtime::runtime::TranscendiaRuntime;
-use crate::windows::{create_config_window, create_overlay_window, create_select_region_window};
+use crate::windows::{
+    create_config_window, create_select_region_window, move_overlay,
+};
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
@@ -43,6 +45,7 @@ pub async fn set_config(
     runtime: tauri::State<'_, TranscendiaRuntime>,
     new_config: TranscendiaConfig,
     reload_runtime: bool,
+    monitor_changed: bool,
 ) -> Result<(), TranscendiaError> {
     new_config.save(&app_handle);
 
@@ -55,6 +58,13 @@ pub async fn set_config(
     app_handle
         .emit(Events::RefreshOverlay.as_str(), None::<bool>)
         .expect("Failed to emit event");
+
+    if monitor_changed {
+        let window = app_handle.get_webview_window("overlay");
+        if let Some(w) = window {
+            move_overlay(&w, config.monitor).expect("Failed to move overlay");
+        }
+    }
 
     if reload_runtime {
         runtime.update_config(config.clone());
@@ -73,15 +83,9 @@ pub async fn select_region(
     app_handle: AppHandle,
     runtime: tauri::State<'_, TranscendiaRuntime>,
     monitor: u32,
-) -> Result<(), tauri::Error> {
-    create_select_region_window(&app_handle, monitor)?;
-
-    let windows = app_handle.webview_windows();
-    let window = windows.values().find(|x| x.label() == "overlay");
-    if let Some(w) = window {
-        w.close()?;
-        runtime.stop();
-    }
+) -> Result<(), TranscendiaError> {
+    create_select_region_window(&app_handle, monitor)
+        .map_err(|_| TranscendiaError::WindowOpenError)?;
 
     Ok(())
 }
@@ -92,24 +96,18 @@ pub async fn finish_select_region(
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranscendiaRuntime>,
 ) -> Result<(), tauri::Error> {
-    f_s_r(app_handle, config, runtime, true)
+    f_s_r(app_handle, config, runtime)
 }
 
 pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranscendiaRuntime>,
-    create_config: bool,
 ) -> Result<(), tauri::Error> {
     let config = config.0.lock().expect("Cannot read config");
-
     runtime.update_config(config.clone());
-    runtime.start(&app_handle);
-    create_overlay_window(&app_handle, config.monitor)?;
 
-    if create_config {
-        create_config_window(&app_handle)?;
-    }
+    create_config_window(&app_handle)?;
 
     Ok(())
 }

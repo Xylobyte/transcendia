@@ -33,6 +33,7 @@ use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
+use log::debug;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{
@@ -49,23 +50,26 @@ pub fn run() {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
+        let toggle_overlay = Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyT);
 
         builder = builder.plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(move |_app, shortcut, event| {
-                    if shortcut == &close_shortcut && event.state == ShortcutState::Released {
-                        let windows = _app.webview_windows();
-                        let window = windows.values().find(|x| x.label() == "select");
-                        if let Some(w) = window {
-                            let state = _app.state::<ConfigState>();
-                            let runtime = _app.state::<TranscendiaRuntime>();
-                            f_s_r(_app.clone(), state, runtime, true)
-                                .expect("Failed reopen windows");
-                            w.close().expect("Failed to close window");
+                .with_handler(move |app, shortcut, event| {
+                    if event.state == ShortcutState::Released {
+                        if shortcut == &close_shortcut {
+                            let window = app.get_webview_window("select");
+                            if let Some(w) = window {
+                                let state = app.state::<ConfigState>();
+                                let runtime = app.state::<TranscendiaRuntime>();
+                                f_s_r(app.clone(), state, runtime).expect("Failed reopen windows");
+                                w.close().expect("Failed to close window");
+                            }
+                        } else if shortcut == &toggle_overlay {
+                            debug!("Shortcut not implemented");
                         }
                     }
                 })
-                .with_shortcut(close_shortcut)
+                .with_shortcuts([close_shortcut, toggle_overlay])
                 .expect("Shortcut error")
                 .build(),
         );
@@ -109,7 +113,7 @@ pub fn run() {
         .expect("Error while running Transcendia")
         .run(|app_handle, event| match event {
             RunEvent::WindowEvent { label, event, .. } if label == "config" => match event {
-                WindowEvent::CloseRequested { .. } => app_handle
+                WindowEvent::Destroyed { .. } => app_handle
                     .emit(Events::OnOffConfigTrayItem.as_str(), true)
                     .expect("Event error..."),
                 WindowEvent::Focused { .. } => app_handle
@@ -117,6 +121,39 @@ pub fn run() {
                     .expect("Event error..."),
                 _ => {}
             },
+            RunEvent::WindowEvent { label, event, .. } if label == "overlay" => {
+                let runtime = app_handle.state::<TranscendiaRuntime>();
+                match event {
+                    WindowEvent::Destroyed => {
+                        runtime.stop();
+                    }
+                    WindowEvent::Focused { .. } => {
+                        runtime.start(app_handle);
+                    }
+                    _ => {}
+                }
+            }
+            RunEvent::WindowEvent { label, event, .. } if label == "select" => {
+                match event {
+                    WindowEvent::Destroyed => {
+                        let config = app_handle.state::<ConfigState>();
+                        create_overlay_window(app_handle, config.0.lock().unwrap().monitor)
+                            .unwrap();
+                    }
+                    WindowEvent::Focused { .. } => {
+                        let window = app_handle.get_webview_window("overlay");
+                        if let Some(w) = window {
+                            w.close().unwrap();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            RunEvent::ExitRequested { api, code, .. } => {
+                if code.is_none() {
+                    api.prevent_exit();
+                }
+            }
             _ => {}
         });
 }

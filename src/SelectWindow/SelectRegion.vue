@@ -57,6 +57,7 @@ const stopDraw = async () => {
                     } as Region
                 } as Config,
                 reloadRuntime: true,
+                monitorChanged: false
             });
             await invoke<void>("finish_select_region");
             await getCurrentWebviewWindow().close();

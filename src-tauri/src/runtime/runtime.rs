@@ -66,20 +66,20 @@ impl TranscendiaRuntime {
                 return;
             }
 
-            let monitor = Monitor::load(config.0.lock().unwrap().monitor);
+            let mut monitor_id = config.0.lock().unwrap().monitor;
+            let mut monitor = Monitor::load(monitor_id);
             let mut ocr_engine = TranscendiaOcr::new(&app_handle);
-            let client = Client::builder()
-                .connect_timeout(Duration::from_secs(5))
-                .timeout(Duration::from_secs(10))
-                .https_only(true)
-                .build()
-                .expect("Could not create HTTP client");
 
             loop {
                 if need_stop.load(Ordering::Relaxed) {
                     need_stop.store(false, Ordering::Release);
                     is_running.store(false, Ordering::Release);
                     break;
+                }
+
+                if config.0.lock().unwrap().monitor != monitor_id {
+                    monitor_id = config.0.lock().unwrap().monitor;
+                    monitor = Monitor::load(monitor_id);
                 }
 
                 let start = Instant::now();
@@ -112,6 +112,13 @@ impl TranscendiaRuntime {
 }
 
 /*fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
+                let client = Client::builder()
+                .connect_timeout(Duration::from_secs(5))
+                .timeout(Duration::from_secs(10))
+                .https_only(true)
+                .build()
+                .expect("Could not create HTTP client");
+
     let original_linebreaks = ["\r\n", "\n", "\r"];
     let mut processed_text = text.clone();
     for lb in &original_linebreaks {

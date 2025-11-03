@@ -47,9 +47,9 @@ watch(() => [
     canSave.value = true;
 });
 
-const saveConfig = async () => {
+const saveConfig = async (monitorChanged: boolean) => {
     try {
-        await invoke<void>("set_config", {newConfig: config.value, reloadRuntime: true});
+        await invoke<void>("set_config", {newConfig: config.value, reloadRuntime: true, monitorChanged});
         canSave.value = false;
     } catch (e) {
         console.error(e);
@@ -59,13 +59,13 @@ const saveConfig = async () => {
 const changeMonitor = (monitor: string) => {
     if (!config.value) return;
     config.value.monitor = parseInt(monitor);
-    saveConfig();
+    saveConfig(true);
 };
 
 const changeLang = (lang: string) => {
     if (!config.value) return;
     config.value.lang = lang;
-    saveConfig();
+    saveConfig(false);
 };
 
 const onSelect = async () => {
@@ -81,7 +81,7 @@ const onSelect = async () => {
 const onToggleFullScreen = async () => {
     if (config.value?.region) {
         config.value.region = null;
-        await saveConfig();
+        await saveConfig(false);
     } else {
         await onSelect();
     }
