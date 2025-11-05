@@ -18,10 +18,10 @@
 use crate::config::ConfigState;
 use crate::events::Events;
 use crate::windows::{create_config_window, create_overlay_window};
-use log::{debug, error, warn};
-use tauri::menu::{CheckMenuItem, Menu, MenuBuilder, MenuItem};
+use log::{error, warn};
+use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
-use tauri::{App, Listener, Manager};
+use tauri::{App, AppHandle, Listener, Manager};
 
 pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
     let info_item = MenuItem::with_id(
@@ -51,6 +51,19 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
         .build()?;
 
     let show_overlay_clone = show_overlay.clone();
+    let toggle_overlay = move |app: &AppHandle| {
+        let window = app.get_webview_window("overlay");
+        if let Some(w) = window {
+            w.close().unwrap();
+            show_overlay_clone.set_checked(false).unwrap();
+        } else {
+            let config = app.state::<ConfigState>();
+            create_overlay_window(&app, config.0.lock().unwrap().monitor).unwrap();
+            show_overlay_clone.set_checked(true).unwrap();
+        }
+    };
+    let toggle_overlay_clone = toggle_overlay.clone();
+
     let tray = TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
@@ -61,20 +74,8 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
                     error!("Failed to create config window : {:?}", err);
                 }
             }
-            "quit" => {
-                app.exit(0);
-            }
-            "show_overlay" => {
-                let window = app.get_webview_window("overlay");
-                if let Some(w) = window {
-                    w.close().unwrap();
-                    show_overlay_clone.set_checked(false).unwrap();
-                } else {
-                    let config = app.state::<ConfigState>();
-                    create_overlay_window(&app, config.0.lock().unwrap().monitor).unwrap();
-                    show_overlay_clone.set_checked(true).unwrap();
-                }
-            }
+            "quit" => app.exit(0),
+            "show_overlay" => toggle_overlay(app),
             _ => {
                 warn!("Menu item {:?} not handled", event.id);
             }
@@ -87,6 +88,9 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
             .set_enabled(event.payload() == "true")
             .expect("Failed to set config item enabled state");
     });
+
+    let handle = app.handle().clone();
+    app.listen(Events::ToggleOverlay.as_str(), move |_| toggle_overlay_clone(&handle));
 
     Ok(tray)
 }

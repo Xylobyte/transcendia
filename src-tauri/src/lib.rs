@@ -33,7 +33,6 @@ use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
-use log::debug;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{
@@ -65,7 +64,8 @@ pub fn run() {
                                 w.close().expect("Failed to close window");
                             }
                         } else if shortcut == &toggle_overlay {
-                            debug!("Shortcut not implemented");
+                            app.emit(Events::ToggleOverlay.as_str(), None::<bool>)
+                                .expect("Event error...");
                         }
                     }
                 })
@@ -133,22 +133,19 @@ pub fn run() {
                     _ => {}
                 }
             }
-            RunEvent::WindowEvent { label, event, .. } if label == "select" => {
-                match event {
-                    WindowEvent::Destroyed => {
-                        let config = app_handle.state::<ConfigState>();
-                        create_overlay_window(app_handle, config.0.lock().unwrap().monitor)
-                            .unwrap();
-                    }
-                    WindowEvent::Focused { .. } => {
-                        let window = app_handle.get_webview_window("overlay");
-                        if let Some(w) = window {
-                            w.close().unwrap();
-                        }
-                    }
-                    _ => {}
+            RunEvent::WindowEvent { label, event, .. } if label == "select" => match event {
+                WindowEvent::Destroyed => {
+                    let config = app_handle.state::<ConfigState>();
+                    create_overlay_window(app_handle, config.0.lock().unwrap().monitor).unwrap();
                 }
-            }
+                WindowEvent::Focused { .. } => {
+                    let window = app_handle.get_webview_window("overlay");
+                    if let Some(w) = window {
+                        w.close().unwrap();
+                    }
+                }
+                _ => {}
+            },
             RunEvent::ExitRequested { api, code, .. } => {
                 if code.is_none() {
                     api.prevent_exit();

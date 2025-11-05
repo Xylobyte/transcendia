@@ -18,6 +18,7 @@
 
 pub enum Events {
     OnOffConfigTrayItem,
+    ToggleOverlay,
     RefreshOverlay,
     NewTranslatedText,
 }
@@ -28,6 +29,7 @@ impl Events {
             Events::OnOffConfigTrayItem => "OnOffConfigTrayItem",
             Events::RefreshOverlay => "RefreshOverlay",
             Events::NewTranslatedText => "NewTranslatedText",
+            Events::ToggleOverlay => "ToggleOverlay",
         }
     }
 }

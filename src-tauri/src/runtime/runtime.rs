@@ -16,12 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-use crate::config::{ConfigState, Region, TranscendiaConfig};
+use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
 use crate::runtime::ocr::TranscendiaOcr;
 use log::{debug, error};
-use reqwest::blocking::Client;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -29,7 +28,6 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_macos_permissions::{
     check_screen_recording_permission, request_screen_recording_permission,
 };
-use tokio::time::Duration;
 use xcap::Monitor;
 
 pub struct TranscendiaRuntime {
