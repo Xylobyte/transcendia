@@ -38,7 +38,7 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
         "Show overlay",
         true,
         true,
-        None::<&str>,
+        Some("Command+Shift+T"),
     )?;
     let quit_item = MenuItem::with_id(app, "quit", "Quit Transcendia", true, None::<&str>)?;
 
