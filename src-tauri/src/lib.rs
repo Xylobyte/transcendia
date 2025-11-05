@@ -46,12 +46,16 @@ pub fn run() {
 
     let mut builder = tauri::Builder::default();
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(target_os = "macos")]
     {
-        let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
-        let toggle_overlay = Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyT);
+        builder = builder.plugin(tauri_plugin_macos_permissions::init())
+    }
 
-        builder = builder.plugin(
+    let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
+    let toggle_overlay = Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyT);
+
+    builder
+        .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(move |app, shortcut, event| {
                     if event.state == ShortcutState::Released {
@@ -72,15 +76,7 @@ pub fn run() {
                 .with_shortcuts([close_shortcut, toggle_overlay])
                 .expect("Shortcut error")
                 .build(),
-        );
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        builder = builder.plugin(tauri_plugin_macos_permissions::init())
-    }
-
-    builder
+        )
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
