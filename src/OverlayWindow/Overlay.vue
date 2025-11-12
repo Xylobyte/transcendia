@@ -37,6 +37,7 @@ onMounted(async () => {
 
 	unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
 		texts.value = event.payload as OcrResult[];
+		console.log(texts.value);
 	});
 });
 
@@ -48,7 +49,6 @@ onUnmounted(() => {
 const mainStyle = computed(() => {
 	return {
 		color: config.value?.text_color,
-		fontSize: "15px",
 	} as CSSProperties;
 });
 
@@ -58,22 +58,47 @@ const getConfig = async () => {
 </script>
 
 <template>
-	<main v-if="texts">
-		<p :style="mainStyle">{{ texts }}</p>
+	<main :style="mainStyle">
+		<div
+			v-for="text in texts"
+			:key="`${text.x}x ${text.y}y ${text.width}w ${text.height}h`"
+			:style="{
+				top: text.y + 'px',
+				left: text.x + 'px',
+				minWidth: text.width + 'px',
+				height: text.height + 'px',
+			}"
+			class="ct"
+		>
+			<span :style="{ fontSize: text.height / 1.6 + 'px' }">
+				{{ text.text }}
+			</span>
+		</div>
 	</main>
 </template>
 
 <style scoped>
 main {
-	border-radius: 30px;
-	justify-content: center;
-	display: flex;
-	padding: 10px 20px;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
-p {
-	width: 100%;
+.ct {
+	display: flex;
+	position: absolute;
 	white-space: break-spaces;
+	align-items: center;
+	padding: 3px;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+span {
+	width: 100%;
+	text-align: justify;
+	text-align-last: justify;
+	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+	letter-spacing: 2px;
 }
 </style>
 

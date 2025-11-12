@@ -77,41 +77,19 @@ impl TranscendiaOcr {
 
                 for (i, rect) in text_rects.iter().enumerate() {
                     let t = texts[i].trim();
-                    if t.is_empty() {
+                    if t.len() < 2 {
                         continue;
                     }
 
-                    let merge_border = 10;
-                    let merge_rect = results.iter_mut().find(|r| {
-                        (rect.left() - r.x).abs() < merge_border
-                            && (rect.top() - r.y).abs() < (r.height as i32 + merge_border)
-                    });
-
-                    match merge_rect {
-                        Some(merge_rect) => {
-                            merge_rect.height +=
-                                (merge_rect.y - rect.top()).abs() as u32 + rect.height();
-                            if rect.left() < merge_rect.x {
-                                merge_rect.x = rect.left();
-                            }
-                            if rect.width() > merge_rect.width {
-                                merge_rect.width = rect.width();
-                            }
-                            merge_rect.text.push('\n');
-                            merge_rect.text.push_str(t);
-                            merge_rect.line_height = merge_rect.height
-                                / merge_rect.text.split('\n').collect::<Vec<_>>().len() as u32;
-                        }
-                        None => results.push(OcrResult {
-                            x: rect.left(),
-                            y: rect.top(),
-                            width: rect.width(),
-                            height: rect.height(),
-                            line_height: rect.height()
-                                / (&t).split('\n').collect::<Vec<&str>>().len() as u32,
-                            text: t.to_string(),
-                        }),
-                    }
+                    results.push(OcrResult {
+                        x: rect.left(),
+                        y: rect.top(),
+                        width: rect.width(),
+                        height: rect.height(),
+                        line_height: rect.height()
+                            / (&t).split('\n').collect::<Vec<&str>>().len() as u32,
+                        text: t.to_string(),
+                    })
                 }
 
                 debug!("Texts: {:?}", results);

@@ -186,7 +186,7 @@ const onToggleFullScreen = async () => {
 			:disabled="!canSave"
 			:is-primary="true"
 			title="Close"
-			@click="saveConfig"
+			@click="saveConfig(false)"
 		>
 			Save
 		</CustomButton>

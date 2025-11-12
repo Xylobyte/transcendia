@@ -17,6 +17,7 @@
  */
 use crate::config::Region;
 use crate::errors::TranscendiaError;
+use image::imageops::FilterType;
 use image::DynamicImage;
 use log::error;
 use serde::Serialize;
@@ -63,9 +64,9 @@ impl TranscendiaMonitor for Monitor {
 
         match capture {
             Ok(c) => {
-                let img = DynamicImage::ImageRgba8(c);
+                let mut img = DynamicImage::ImageRgba8(c);
 
-                match region {
+                img = match region {
                     Some(region) => {
                         let w = region.w as f32 * sf;
                         let h = region.h as f32 * sf;
@@ -76,8 +77,10 @@ impl TranscendiaMonitor for Monitor {
                             h as u32,
                         )
                     }
-                    None => img
-                }
+                    None => img,
+                };
+
+                img.resize((img.width() as f32 / sf) as u32, (img.height() as f32 / sf) as u32, FilterType::Triangle)
             }
             Err(_) => {
                 error!("Can't get capture image");
