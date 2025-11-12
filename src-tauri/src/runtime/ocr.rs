@@ -81,7 +81,7 @@ impl TranscendiaOcr {
                         continue;
                     }
 
-                    let merge_border = 35;
+                    let merge_border = 10;
                     let merge_rect = results.iter_mut().find(|r| {
                         (rect.left() - r.x).abs() < merge_border
                             && (rect.top() - r.y).abs() < (r.height as i32 + merge_border)

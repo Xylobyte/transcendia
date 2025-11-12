@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {createApp} from "vue";
+import { createApp } from "vue";
 import App from "./Config.vue";
 import "../index.css";
 import Vue3ColorPicker from "vue3-colorpicker";

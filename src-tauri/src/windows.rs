@@ -72,7 +72,7 @@ pub fn create_overlay_window(
         .always_on_top(true)
         .visible_on_all_workspaces(true)
         .shadow(false)
-        .background_color(Color(0, 0, 0, 100))
+        .background_color(Color(0, 0, 0, 0))
         .decorations(false)
         .transparent(true)
         .resizable(false)

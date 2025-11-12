@@ -45,5 +45,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Usage instructions
 
 [Unreleased]: https://github.com/Xylobyte/transcendia/compare/v1.0.0-beta.1...HEAD
-
 [1.0.0-beta.1]: https://github.com/Xylobyte/transcendia/releases/tag/v1.0.0-beta.1

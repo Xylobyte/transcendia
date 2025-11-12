@@ -77,32 +77,35 @@ I'm working on even more optimizations and functionalities for the next releases
 ### Build Steps
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Xylobyte/transcendia.git
-   cd transcendia
-   ```
+
+    ```bash
+    git clone https://github.com/Xylobyte/transcendia.git
+    cd transcendia
+    ```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 3. **Development mode**
-   ```bash
-   npm run tauri dev
-   ```
+
+    ```bash
+    npm run tauri dev
+    ```
 
 4. **Build for production**
-   ```bash
-   npm run tauri build
-   ```
+    ```bash
+    npm run tauri build
+    ```
 
 The built application will be available in `src-tauri/target/release/bundle/`.
 
 ## Configuration Options
 
 | Setting              | Description                         | Options                                             |
-|----------------------|-------------------------------------|-----------------------------------------------------|
+| -------------------- | ----------------------------------- | --------------------------------------------------- |
 | **Target Language**  | Language to translate text into     | 17+ languages (primarily Latin alphabet)            |
 | **Monitor**          | Which monitor to capture from       | All available monitors                              |
 | **Screen Region**    | Area of screen to monitor           | Custom rectangular selection                        |

@@ -1,33 +1,33 @@
 :root {
-    --primary: #3c99ff;
-    --on-primary: #000000;
-    --background: #202020;
+	--primary: #3c99ff;
+	--on-primary: #000000;
+	--background: #202020;
 
-    overscroll-behavior: none;
+	overscroll-behavior: none;
 }
 
 * {
-    padding: 0;
-    margin: 0;
-    outline: none;
-    line-height: 1em;
-    color: inherit;
-    border: 0;
-    box-sizing: border-box;
-    font: inherit;
+	padding: 0;
+	margin: 0;
+	outline: none;
+	line-height: 1em;
+	color: inherit;
+	border: 0;
+	box-sizing: border-box;
+	font: inherit;
 }
 
 *:not(input, textarea, div[contenteditable="true"]) {
-    user-select: none;
-    -webkit-user-select: none;
-    cursor: default;
+	user-select: none;
+	-webkit-user-select: none;
+	cursor: default;
 }
 
 body {
-    width: 100vw;
-    height: 100vh;
-    padding: 0;
-    margin: 0;
-    color: white;
-    font-family: sans-serif;
+	width: 100vw;
+	height: 100vh;
+	padding: 0;
+	margin: 0;
+	color: white;
+	font-family: sans-serif;
 }

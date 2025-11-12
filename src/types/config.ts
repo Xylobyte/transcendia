@@ -17,16 +17,16 @@
  */
 
 export type Region = {
-    x: number,
-    y: number,
-    w: number,
-    h: number
-}
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+};
 
 export type Config = {
-    region: Region | null,
-    monitor: number,
-    text_color: string,
-    text_shadow_color: string,
-    lang: string
-}
+	region: Region | null;
+	monitor: number;
+	text_color: string;
+	text_shadow_color: string;
+	lang: string;
+};

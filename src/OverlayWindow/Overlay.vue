@@ -17,83 +17,75 @@
   -->
 
 <script lang="ts" setup>
-import {computed, CSSProperties, onMounted, onUnmounted, ref} from "vue";
-import {Config} from "../types/config.ts";
-import {invoke} from "@tauri-apps/api/core";
-import {listen, UnlistenFn} from "@tauri-apps/api/event";
-import {Events} from "../types/events.ts";
+import { computed, CSSProperties, onMounted, onUnmounted, ref } from "vue";
+import { Config } from "../types/config.ts";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { Events } from "../types/events.ts";
+import { OcrResult } from "../types/translated-text.ts";
 
 const config = ref<Config>();
-const text = ref<string>("Loading...");
+const texts = ref<OcrResult[]>([]);
 
 let unlistenRefresh: UnlistenFn;
 let unlistenNewText: UnlistenFn;
 
 onMounted(async () => {
-    await getConfig();
+	await getConfig();
 
-    unlistenRefresh = await listen(Events.RefreshOverlay, () => {
-        getConfig();
-    });
+	unlistenRefresh = await listen(Events.RefreshOverlay, getConfig);
 
-    unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
-        text.value = event.payload as string;
-    });
+	unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
+		texts.value = event.payload as OcrResult[];
+	});
 });
 
 onUnmounted(() => {
-    unlistenRefresh();
-    unlistenNewText();
+	unlistenRefresh();
+	unlistenNewText();
 });
 
 const mainStyle = computed(() => {
-    const alignArray = config.value?.text_align.split(":") || ["C", "C"];
-    const vAlign = alignArray[0];
-    const hAlign = alignArray[1];
-    return {
-        color: config.value?.text_color,
-        textAlign: hAlign === "L" ? "left" : hAlign === "C" ? "center" : "right",
-        alignSelf: vAlign === "T" ? "start" : vAlign === "C" ? "center" : "end",
-        fontSize: config.value?.text_size + 'px'
-    } as CSSProperties;
+	return {
+		color: config.value?.text_color,
+		fontSize: "15px",
+	} as CSSProperties;
 });
 
 const getConfig = async () => {
-    config.value = await invoke<Config>("get_config");
+	config.value = await invoke<Config>("get_config");
 };
 </script>
 
 <template>
-    <main
-        v-if="text"
-        :style="{background: config?.background_color, height: config?.blur_background ? '100%' : 'fit-content', width: config?.blur_background ? '100%' : 'fit-content'}">
-        <p :style="mainStyle">{{ text }}</p>
-    </main>
+	<main v-if="texts">
+		<p :style="mainStyle">{{ texts }}</p>
+	</main>
 </template>
 
 <style scoped>
 main {
-    border-radius: 30px;
-    justify-content: center;
-    display: flex;
-    padding: 10px 20px;
+	border-radius: 30px;
+	justify-content: center;
+	display: flex;
+	padding: 10px 20px;
 }
 
 p {
-    width: 100%;
-    white-space: break-spaces;
+	width: 100%;
+	white-space: break-spaces;
 }
 </style>
 
 <style>
 html {
-    background: transparent;
+	background: transparent;
 }
 
 body {
-    display: flex;
-    background: transparent;
-    align-items: center;
-    justify-content: center;
+	display: flex;
+	background: transparent;
+	align-items: center;
+	justify-content: center;
 }
 </style>

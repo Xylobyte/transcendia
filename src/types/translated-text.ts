@@ -16,7 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum Events {
-	RefreshOverlay = "RefreshOverlay",
-	NewTranslatedText = "NewTranslatedText",
-}
+export type OcrResult = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	text: string;
+	line_height: number;
+};
