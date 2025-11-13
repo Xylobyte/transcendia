@@ -83,7 +83,6 @@ impl TranscendiaRuntime {
                 let start = Instant::now();
 
                 let image = monitor.capture_and_crop(&config.0.lock().unwrap().region);
-                debug!("Capture and crop: {}w {}h", image.width(), image.height());
                 let texts = ocr_engine.extract(image);
 
                 app_handle

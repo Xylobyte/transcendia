@@ -33,6 +33,7 @@ use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
+use log::debug;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{
@@ -48,7 +49,9 @@ pub fn run() {
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder.plugin(tauri_plugin_macos_permissions::init())
+        builder = builder
+            .plugin(tauri_plugin_macos_permissions::init())
+            .plugin(tauri_nspanel::init());
     }
 
     let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);
@@ -91,7 +94,6 @@ pub fn run() {
             app.manage(ConfigState(Mutex::new(config.clone())));
 
             let runtime = TranscendiaRuntime::new(ConfigState(Mutex::new(config.clone())));
-            runtime.start(app);
             app.manage(runtime);
 
             create_overlay_window(app, config.monitor)?;
@@ -117,24 +119,14 @@ pub fn run() {
                     .expect("Event error..."),
                 _ => {}
             },
-            RunEvent::WindowEvent { label, event, .. } if label == "overlay" => {
-                let runtime = app_handle.state::<TranscendiaRuntime>();
-                match event {
-                    WindowEvent::Destroyed => {
-                        runtime.stop();
-                    }
-                    WindowEvent::Focused { .. } => {
-                        runtime.start(app_handle);
-                    }
-                    _ => {}
-                }
-            }
+            #[cfg(not(target_os = "macos"))]
             RunEvent::WindowEvent { label, event, .. } if label == "select" => match event {
                 WindowEvent::Destroyed => {
                     let config = app_handle.state::<ConfigState>();
                     create_overlay_window(app_handle, config.0.lock().unwrap().monitor).unwrap();
                 }
                 WindowEvent::Focused { .. } => {
+                    debug!("Select open");
                     let window = app_handle.get_webview_window("overlay");
                     if let Some(w) = window {
                         w.close().unwrap();
@@ -143,6 +135,7 @@ pub fn run() {
                 _ => {}
             },
             RunEvent::ExitRequested { api, code, .. } => {
+                debug!("Exit request code : {:?}", code);
                 if code.is_none() {
                     api.prevent_exit();
                 }

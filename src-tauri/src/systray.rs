@@ -19,9 +19,11 @@ use crate::config::ConfigState;
 use crate::events::Events;
 use crate::windows::{create_config_window, create_overlay_window};
 use log::{error, warn};
+use std::os::unix::raw::off_t;
 use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{App, AppHandle, Listener, Manager};
+use tauri_nspanel::ManagerExt;
 
 pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
     let info_item = MenuItem::with_id(
@@ -52,14 +54,32 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
 
     let show_overlay_clone = show_overlay.clone();
     let toggle_overlay = move |app: &AppHandle| {
-        let window = app.get_webview_window("overlay");
-        if let Some(w) = window {
-            w.close().unwrap();
-            show_overlay_clone.set_checked(false).unwrap();
-        } else {
-            let config = app.state::<ConfigState>();
-            create_overlay_window(&app, config.0.lock().unwrap().monitor).unwrap();
-            show_overlay_clone.set_checked(true).unwrap();
+        #[cfg(target_os = "macos")]
+        {
+            let window = app.get_webview_panel("overlay");
+
+            if let Ok(w) = window {
+                if w.is_visible() {
+                    w.to_window().unwrap().close().unwrap();
+                    show_overlay_clone.set_checked(false).unwrap();
+                } else {
+                    w.show();
+                    show_overlay_clone.set_checked(true).unwrap();
+                }
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            let window = app.get_webview_window("overlay");
+
+            if let Some(w) = window {
+                w.close().unwrap();
+                show_overlay_clone.set_checked(false).unwrap();
+            } else {
+                let config = app.state::<ConfigState>();
+                create_overlay_window(&app, config.0.lock().unwrap().monitor).unwrap();
+                show_overlay_clone.set_checked(true).unwrap();
+            }
         }
     };
     let toggle_overlay_clone = toggle_overlay.clone();
