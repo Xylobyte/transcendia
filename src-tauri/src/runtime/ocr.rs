@@ -60,7 +60,7 @@ impl TranscendiaOcr {
             detection: Det::from_file(det)
                 .expect("Could not load detection model")
                 .with_merge_boxes(false)
-                .with_rect_border_size(12),
+                .with_rect_border_size(10),
             recognition: Rec::from_file(rec, keys)
                 .expect("Could not load recognition model")
                 .with_min_score(0.6)
@@ -92,7 +92,6 @@ impl TranscendiaOcr {
                     })
                 }
 
-                debug!("Texts: {:?}", results);
                 results
             }
             Err(_) => {
@@ -102,6 +101,7 @@ impl TranscendiaOcr {
         }
     }
 
+    #[inline(always)]
     fn detect(&mut self, image: DynamicImage) -> Result<(Vec<Rect>, Vec<DynamicImage>), OcrError> {
         let text_rects = self.detection.find_text_rect(&image)?;
 
@@ -118,6 +118,7 @@ impl TranscendiaOcr {
         Ok((text_rects, images))
     }
 
+    #[inline(always)]
     fn recognize(&mut self, images: Vec<DynamicImage>) -> Vec<String> {
         let mut texts = Vec::<String>::new();
         for image in images {

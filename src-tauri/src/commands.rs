@@ -81,7 +81,6 @@ pub fn get_monitors() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
 #[tauri::command]
 pub async fn select_region(
     app_handle: AppHandle,
-    runtime: tauri::State<'_, TranscendiaRuntime>,
     monitor: u32,
 ) -> Result<(), TranscendiaError> {
     create_select_region_window(&app_handle, monitor)

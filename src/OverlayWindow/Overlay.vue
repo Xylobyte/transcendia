@@ -70,7 +70,7 @@ const getConfig = async () => {
 			}"
 			class="ct"
 		>
-			<span :style="{ fontSize: text.height / 1.6 + 'px' }">
+			<span :style="{ fontSize: text.height / 2 + 'px' }">
 				{{ text.text }}
 			</span>
 		</div>
@@ -91,6 +91,7 @@ main {
 	align-items: center;
 	padding: 3px;
 	background: rgba(0, 0, 0, 0.5);
+	border-radius: 5px;
 }
 
 span {
@@ -98,7 +99,7 @@ span {
 	text-align: justify;
 	text-align-last: justify;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
-	letter-spacing: 2px;
+	letter-spacing: 1px;
 }
 </style>
 
