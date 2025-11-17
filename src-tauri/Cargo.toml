@@ -26,6 +26,7 @@ reqwest = { version = "0.12", features = ["blocking"] }
 env_logger = "0.11"
 log = "0.4"
 imageproc = "0.25.0"
+objc2-app-kit = "0.3.2"
 
 [dependencies.rust-paddle-ocr]
 git = "https://github.com/zibo-chen/rust-paddle-ocr.git"

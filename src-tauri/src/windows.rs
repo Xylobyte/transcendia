@@ -15,38 +15,47 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 use crate::monitors::TranscendiaMonitor;
+use crate::platform_specifics::macos;
 use tauri::webview::Color;
-use tauri::{AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+};
 use xcap::Monitor;
 
 pub fn create_select_region_window(
     app: &AppHandle,
     monitor: u32,
 ) -> Result<WebviewWindow, tauri::Error> {
-    let window =
-        WebviewWindowBuilder::new(app, "select", WebviewUrl::App("select.html".into()))
-            .title("Transcendia - Select a region")
-            .accept_first_mouse(true)
-            .always_on_top(true)
-            .visible_on_all_workspaces(true)
-            .shadow(false)
-            .background_color(Color(0, 0, 0, 0))
-            .decorations(false)
-            .disable_drag_drop_handler()
-            .transparent(true)
-            .resizable(false)
-            .visible(false)
-            .build()?;
+    let window = WebviewWindowBuilder::new(app, "select", WebviewUrl::App("select.html".into()))
+        .title("Transcendia - Select a region")
+        .accept_first_mouse(true)
+        .always_on_top(true)
+        .visible_on_all_workspaces(true)
+        .shadow(false)
+        .background_color(Color(0, 0, 0, 0))
+        .decorations(false)
+        .disable_drag_drop_handler()
+        .transparent(true)
+        .resizable(false)
+        .visible(false)
+        .build()?;
 
     let monitor = Monitor::load(monitor);
     let scale = monitor.scale_factor().unwrap();
-    window.set_position(LogicalPosition { x: monitor.x().unwrap() as f32 * scale, y: monitor.y().unwrap() as f32 * scale })?;
-    window.set_size(LogicalSize { width: monitor.width().unwrap() as f32, height: monitor.height().unwrap() as f32 })?;
+    window.set_position(LogicalPosition {
+        x: monitor.x().unwrap() as f32 * scale,
+        y: monitor.y().unwrap() as f32 * scale,
+    })?;
+    window.set_size(LogicalSize {
+        width: monitor.width().unwrap() as f32,
+        height: monitor.height().unwrap() as f32,
+    })?;
+
+    macos::make_popup_window(&window)?;
+
     window.show()?;
     window.set_focus()?;
-
     Ok(window)
 }
 
@@ -63,10 +72,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
     Ok(window)
 }
 
-pub fn create_overlay_window(
-    app: &AppHandle,
-    monitor: u32,
-) -> Result<WebviewWindow, tauri::Error> {
+pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<WebviewWindow, tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay.html".into()))
         .title("Transcendia - Overlay")
         .always_on_top(true)
@@ -80,10 +86,11 @@ pub fn create_overlay_window(
         .content_protected(true)
         .build()?;
     window.set_ignore_cursor_events(true)?;
-
     move_overlay(&window, monitor)?;
-    window.show()?;
 
+    macos::make_popup_window(&window)?;
+
+    window.show()?;
     Ok(window)
 }
 

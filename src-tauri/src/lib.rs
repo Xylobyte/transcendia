@@ -20,11 +20,12 @@ mod commands;
 mod config;
 mod errors;
 mod events;
-pub mod models;
-pub mod monitors;
+mod models;
+mod monitors;
 mod runtime;
 mod systray;
 mod windows;
+mod platform_specifics;
 
 use crate::commands::{
     f_s_r, finish_select_region, get_config, get_monitors, select_region, set_config,
