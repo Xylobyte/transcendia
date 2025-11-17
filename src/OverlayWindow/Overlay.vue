@@ -63,8 +63,8 @@ const getConfig = async () => {
 			v-for="text in texts"
 			:key="`${text.x}x ${text.y}y ${text.width}w ${text.height}h`"
 			:style="{
-				top: text.y + 'px',
-				left: text.x + 'px',
+				top: text.y + (config?.region?.y || 0) + 'px',
+				left: text.x + (config?.region?.x || 0) + 'px',
 				minWidth: text.width + 'px',
 				height: text.height + 'px',
 			}"
