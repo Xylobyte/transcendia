@@ -19,15 +19,13 @@
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
+use crate::platform_specifics::macos;
 use crate::runtime::ocr::TranscendiaOcr;
-use log::{debug, error};
+use log::debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
-use tauri_plugin_macos_permissions::{
-    check_screen_recording_permission, request_screen_recording_permission,
-};
 use xcap::Monitor;
 
 pub struct TranscendiaRuntime {
@@ -57,12 +55,7 @@ impl TranscendiaRuntime {
         let app_handle = app_handle.clone();
 
         tauri::async_runtime::spawn_blocking(move || {
-            #[cfg(target_os = "macos")]
-            if !tauri::async_runtime::block_on(check_screen_recording_permission()) {
-                error!("No permission for screen capture !");
-                tauri::async_runtime::block_on(request_screen_recording_permission());
-                return;
-            }
+            macos::request_screen_record_permissions();
 
             let mut monitor_id = config.0.lock().unwrap().monitor;
             let mut monitor = Monitor::load(monitor_id);

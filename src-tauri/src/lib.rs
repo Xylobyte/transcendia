@@ -50,7 +50,7 @@ pub fn run() {
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder.plugin(tauri_plugin_macos_permissions::init())
+        builder = builder.plugin(tauri_plugin_macos_permissions::init());
     }
 
     let close_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyX);

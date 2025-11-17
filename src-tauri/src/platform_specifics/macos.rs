@@ -18,6 +18,7 @@
 use log::error;
 use objc2_app_kit::{NSPopUpMenuWindowLevel, NSWindow, NSWindowCollectionBehavior};
 use tauri::{AppHandle, WebviewWindow};
+use tauri_plugin_macos_permissions::{check_screen_recording_permission, request_screen_recording_permission};
 
 #[inline(always)]
 pub fn make_popup_window(handle: &AppHandle, window: WebviewWindow) -> Result<(), tauri::Error> {
@@ -36,4 +37,14 @@ pub fn make_popup_window(handle: &AppHandle, window: WebviewWindow) -> Result<()
     })?;
 
     Ok(())
+}
+
+#[inline(always)]
+pub fn request_screen_record_permissions() {
+    #[cfg(target_os = "macos")]
+    if !tauri::async_runtime::block_on(check_screen_recording_permission()) {
+        error!("No permission for screen capture !");
+        tauri::async_runtime::block_on(request_screen_recording_permission());
+        return;
+    }
 }
