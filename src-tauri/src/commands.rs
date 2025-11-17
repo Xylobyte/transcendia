@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::errors::TranscendiaError;
 use crate::events::Events;

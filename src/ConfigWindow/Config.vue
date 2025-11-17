@@ -73,7 +73,6 @@ const changeLang = (lang: string) => {
 };
 
 const onSelect = async () => {
-	console.log("On select");
 	try {
 		await invoke("select_region", {
 			monitor: config.value?.monitor || monitors.value[0].id || "",

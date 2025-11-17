@@ -23,10 +23,7 @@ use tauri::{
 };
 use xcap::Monitor;
 
-pub fn create_select_region_window(
-    app: &AppHandle,
-    monitor: u32,
-) -> Result<WebviewWindow, tauri::Error> {
+pub fn create_select_region_window(app: &AppHandle, monitor: u32) -> Result<(), tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "select", WebviewUrl::App("select.html".into()))
         .title("Transcendia - Select a region")
         .accept_first_mouse(true)
@@ -42,24 +39,25 @@ pub fn create_select_region_window(
         .build()?;
 
     let monitor = Monitor::load(monitor);
-    let scale = monitor.scale_factor().unwrap();
+    let sf = monitor.scale_factor().unwrap();
     window.set_position(LogicalPosition {
-        x: monitor.x().unwrap() as f32 * scale,
-        y: monitor.y().unwrap() as f32 * scale,
+        x: monitor.x().unwrap() as f32 * sf,
+        y: monitor.y().unwrap() as f32 * sf,
     })?;
     window.set_size(LogicalSize {
         width: monitor.width().unwrap() as f32,
         height: monitor.height().unwrap() as f32,
     })?;
 
-    macos::make_popup_window(&window)?;
-
     window.show()?;
     window.set_focus()?;
-    Ok(window)
+
+    macos::make_popup_window(app, window)?;
+
+    Ok(())
 }
 
-pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Error> {
+pub fn create_config_window(app: &AppHandle) -> Result<(), tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "config", WebviewUrl::App("config.html".into()))
         .title("Transcendia - Configuration")
         .accept_first_mouse(true)
@@ -69,10 +67,10 @@ pub fn create_config_window(app: &AppHandle) -> Result<WebviewWindow, tauri::Err
         .build()?;
     window.set_focus()?;
 
-    Ok(window)
+    Ok(())
 }
 
-pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<WebviewWindow, tauri::Error> {
+pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<(), tauri::Error> {
     let window = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay.html".into()))
         .title("Transcendia - Overlay")
         .always_on_top(true)
@@ -88,17 +86,19 @@ pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<WebviewWin
     window.set_ignore_cursor_events(true)?;
     move_overlay(&window, monitor)?;
 
-    macos::make_popup_window(&window)?;
-
     window.show()?;
-    Ok(window)
+
+    macos::make_popup_window(app, window)?;
+
+    Ok(())
 }
 
 pub fn move_overlay(window: &WebviewWindow, monitor: u32) -> Result<(), tauri::Error> {
     let monitor = Monitor::load(monitor);
+    let sf = monitor.scale_factor().unwrap();
     window.set_position(LogicalPosition {
-        x: monitor.x().unwrap() as f32 * monitor.scale_factor().unwrap(),
-        y: monitor.y().unwrap() as f32 * monitor.scale_factor().unwrap(),
+        x: monitor.x().unwrap() as f32 * sf,
+        y: monitor.y().unwrap() as f32 * sf,
     })?;
     window.set_size(LogicalSize {
         width: monitor.width().unwrap(),

@@ -15,17 +15,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use log::{debug, error};
 use objc2_app_kit::{NSPopUpMenuWindowLevel, NSWindow, NSWindowCollectionBehavior};
-use tauri::WebviewWindow;
+use tauri::{AppHandle, WebviewWindow};
 
 #[inline(always)]
-pub fn make_popup_window(window: &WebviewWindow) -> Result<(), tauri::Error> {
-    #[cfg(target_os = "macos")]
-    unsafe {
-        let ns_win = window.ns_window()? as *mut NSWindow;
-        (*ns_win).setLevel(NSPopUpMenuWindowLevel);
-        (*ns_win).setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
-    }
+pub fn make_popup_window(handle: &AppHandle, window: WebviewWindow) -> Result<(), tauri::Error> {
+    handle.run_on_main_thread(move || {
+        #[cfg(target_os = "macos")]
+        unsafe {
+            let ns_win_ptr = window.ns_window().unwrap() as *mut NSWindow;
+            if ns_win_ptr.is_null() {
+                error!("Invalid window pointer");
+                return;
+            }
+
+            (*ns_win_ptr).setLevel(NSPopUpMenuWindowLevel);
+            (*ns_win_ptr).setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
+        }
+    })?;
 
     Ok(())
 }

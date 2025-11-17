@@ -34,6 +34,7 @@ use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
+use log::debug;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{
@@ -144,6 +145,7 @@ pub fn run() {
                 _ => {}
             },
             RunEvent::ExitRequested { api, code, .. } => {
+                debug!("Received exit request with code {:?}", code);
                 if code.is_none() {
                     api.prevent_exit();
                 }

@@ -74,6 +74,7 @@ const getConfig = async () => {
 				{{ text.text }}
 			</span>
 		</div>
+		<div v-if="texts.length < 1" class="loading">Loading...</div>
 	</main>
 </template>
 
@@ -100,6 +101,16 @@ span {
 	text-align-last: justify;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
 	letter-spacing: 1px;
+}
+
+.loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: rgb(227, 227, 227);
+	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+	font-size: 50px;
 }
 </style>
 

@@ -24,5 +24,4 @@ pub enum TranscendiaError {
     CannotSaveConfig,
     CannotGetMonitors,
     WindowOpenError,
-    WindowCloseError,
 }

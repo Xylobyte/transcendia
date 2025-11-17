@@ -18,7 +18,7 @@
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use imageproc::rect::Rect;
-use log::{debug, error};
+use log::error;
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
 use tauri::path::BaseDirectory;
