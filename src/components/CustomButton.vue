@@ -47,11 +47,6 @@ button {
 	padding: 6px 15px;
 }
 
-button:disabled {
-	pointer-events: none;
-	opacity: 0.5;
-}
-
 button:hover {
 	background: rgba(255, 255, 255, 0.1);
 }
@@ -64,5 +59,10 @@ button.primary {
 
 button.primary:hover {
 	opacity: 0.8;
+}
+
+button:disabled {
+	pointer-events: none;
+	opacity: 0.5;
 }
 </style>

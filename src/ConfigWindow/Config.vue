@@ -40,18 +40,22 @@ onMounted(async () => {
 });
 
 watch(
-	() => [config.value?.text_color, config.value?.text_shadow_color],
+	() => [
+		config.value?.text_color,
+		config.value?.text_shadow_color,
+		config.value?.show_fps,
+	],
 	(_curr, prev) => {
 		if (prev.every((v) => v === undefined)) return;
-		canSave.value = true;
+		saveConfig(false, false);
 	},
 );
 
-const saveConfig = async (monitorChanged: boolean) => {
+const saveConfig = async (reloadRuntime: boolean, monitorChanged: boolean) => {
 	try {
 		await invoke<void>("set_config", {
 			newConfig: config.value,
-			reloadRuntime: true,
+			reloadRuntime,
 			monitorChanged,
 		});
 		canSave.value = false;
@@ -63,13 +67,13 @@ const saveConfig = async (monitorChanged: boolean) => {
 const changeMonitor = (monitor: string) => {
 	if (!config.value) return;
 	config.value.monitor = parseInt(monitor);
-	saveConfig(true);
+	saveConfig(true, true);
 };
 
 const changeLang = (lang: string) => {
 	if (!config.value) return;
 	config.value.lang = lang;
-	saveConfig(false);
+	saveConfig(true, false);
 };
 
 const onSelect = async () => {
@@ -86,7 +90,7 @@ const onSelect = async () => {
 const onToggleFullScreen = async () => {
 	if (config.value?.region) {
 		config.value.region = null;
-		await saveConfig(false);
+		await saveConfig(true, false);
 	} else {
 		await onSelect();
 	}
@@ -178,24 +182,26 @@ const onToggleFullScreen = async () => {
 				theme="black"
 			/>
 		</div>
+
+		<div class="full-screen">
+			<h2>Show translation speed in fps</h2>
+			<input
+				id="full-screen"
+				v-model="config.show_fps"
+				name="blur"
+				type="checkbox"
+			/>
+		</div>
 	</main>
 
-	<div class="action">
-		<CustomButton
-			:disabled="!canSave"
-			:is-primary="true"
-			title="Close"
-			@click="saveConfig(false)"
-		>
-			Save
-		</CustomButton>
-		<CustomButton
-			:is-primary="true"
-			title="Close"
-			@click="currWindow.close()"
-			>Close</CustomButton
-		>
-	</div>
+	<CustomButton
+		:is-primary="true"
+		class="close"
+		title="Close"
+		@click="currWindow.close()"
+	>
+		Close
+	</CustomButton>
 </template>
 
 <style scoped>
@@ -258,11 +264,9 @@ h2 {
 	justify-content: space-between;
 }
 
-.action {
-	display: flex;
-	gap: 10px;
-	padding: 10px;
-	justify-content: end;
+.close {
+	align-self: end;
+	margin: 10px;
 }
 </style>
 

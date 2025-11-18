@@ -29,4 +29,5 @@ export type Config = {
 	text_color: string;
 	text_shadow_color: string;
 	lang: string;
+	show_fps: boolean;
 };

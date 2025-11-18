@@ -27,6 +27,9 @@ import { OcrResult } from "../types/translated-text.ts";
 const config = ref<Config>();
 const texts = ref<OcrResult[]>([]);
 
+const speed = ref(0);
+let lastUpdate = Date.now();
+
 let unlistenRefresh: UnlistenFn;
 let unlistenNewText: UnlistenFn;
 
@@ -37,7 +40,9 @@ onMounted(async () => {
 
 	unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
 		texts.value = event.payload as OcrResult[];
-		console.log(texts.value);
+		const elapsed = Date.now() - lastUpdate;
+		speed.value = 1000 / elapsed;
+		lastUpdate = Date.now();
 	});
 });
 
@@ -59,6 +64,10 @@ const getConfig = async () => {
 
 <template>
 	<main :style="mainStyle">
+		<div v-if="config?.show_fps" class="ct fps">
+			<span>{{ speed.toFixed(1) }} fps</span>
+		</div>
+
 		<div
 			v-for="text in texts"
 			:key="`${text.x}x ${text.y}y ${text.width}w ${text.height}h`"
@@ -93,6 +102,14 @@ main {
 	padding: 3px;
 	background: rgba(0, 0, 0, 0.5);
 	border-radius: 5px;
+}
+
+.fps {
+	top: 15px;
+	left: 15px;
+	background: black;
+	opacity: 0.5;
+	z-index: 1000;
 }
 
 span {

@@ -74,19 +74,25 @@ impl TranscendiaRuntime {
                     monitor = Monitor::load(monitor_id);
                 }
 
-                let start = Instant::now();
+                let mut time = Instant::now();
 
                 let image = monitor.capture_and_crop(&config.0.lock().unwrap().region);
+
+                let capture_time = time.elapsed();
+                time = Instant::now();
+
                 let texts = ocr_engine.extract(image);
+
+                let extract_time = time.elapsed();
+                debug!(
+                    "\nCapture time : {}ms\nExtract time : {}ms",
+                    capture_time.as_millis(),
+                    extract_time.as_millis()
+                );
 
                 app_handle
                     .emit(Events::NewTranslatedText.as_str(), texts)
                     .unwrap();
-
-                debug!(
-                    "Time to translate the screen: {}ms",
-                    start.elapsed().as_millis()
-                );
             }
         });
 

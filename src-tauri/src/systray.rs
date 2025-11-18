@@ -20,8 +20,8 @@ use crate::events::Events;
 use crate::windows::{create_config_window, create_overlay_window};
 use log::{error, warn};
 use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
-use tauri::tray::{TrayIcon, TrayIconBuilder};
-use tauri::{App, AppHandle, Listener, Manager};
+use tauri::tray::TrayIconBuilder;
+use tauri::{AppHandle, Listener, Manager};
 
 pub fn create_systray(app: &AppHandle) -> Result<(), tauri::Error> {
     let info_item = MenuItem::with_id(
