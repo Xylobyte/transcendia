@@ -22,23 +22,22 @@ mod errors;
 mod events;
 mod models;
 mod monitors;
+mod platform_specifics;
 mod runtime;
 mod systray;
 mod windows;
-mod platform_specifics;
 
 use crate::commands::{
     f_s_r, finish_select_region, get_config, get_monitors, select_region, set_config,
 };
 use crate::config::{ConfigState, TranscendiaConfig};
-use crate::events::Events;
+use crate::events::{handle_run_event, Events};
 use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
-use log::debug;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
 use tauri::{
-    generate_context, generate_handler, ActivationPolicy, Emitter, Manager, RunEvent, WindowEvent,
+    generate_context, generate_handler, ActivationPolicy, Emitter, Manager,
 };
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
@@ -80,14 +79,13 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(ActivationPolicy::Accessory);
 
-            create_systray(app)?;
-
             let app = app.handle();
+
+            create_systray(app)?;
 
             let config = TranscendiaConfig::load(app);
             app.manage(ConfigState(Mutex::new(config.clone())));
@@ -109,47 +107,5 @@ pub fn run() {
         ])
         .build(generate_context!())
         .expect("Error while running Transcendia")
-        .run(|app_handle, event| match event {
-            RunEvent::WindowEvent { label, event, .. } if label == "config" => match event {
-                WindowEvent::Destroyed { .. } => app_handle
-                    .emit(Events::OnOffConfigTrayItem.as_str(), true)
-                    .expect("Event error..."),
-                WindowEvent::Focused { .. } => app_handle
-                    .emit(Events::OnOffConfigTrayItem.as_str(), false)
-                    .expect("Event error..."),
-                _ => {}
-            },
-            RunEvent::WindowEvent { label, event, .. } if label == "overlay" => {
-                let runtime = app_handle.state::<TranscendiaRuntime>();
-                match event {
-                    WindowEvent::Destroyed => {
-                        runtime.stop();
-                    }
-                    WindowEvent::Focused { .. } => {
-                        runtime.start(app_handle);
-                    }
-                    _ => {}
-                }
-            }
-            RunEvent::WindowEvent { label, event, .. } if label == "select" => match event {
-                WindowEvent::Destroyed => {
-                    let config = app_handle.state::<ConfigState>();
-                    create_overlay_window(app_handle, config.0.lock().unwrap().monitor).unwrap();
-                }
-                WindowEvent::Focused { .. } => {
-                    let window = app_handle.get_webview_window("overlay");
-                    if let Some(w) = window {
-                        w.close().unwrap();
-                    }
-                }
-                _ => {}
-            },
-            RunEvent::ExitRequested { api, code, .. } => {
-                debug!("Received exit request with code {:?}", code);
-                if code.is_none() {
-                    api.prevent_exit();
-                }
-            }
-            _ => {}
-        });
+        .run(handle_run_event);
 }

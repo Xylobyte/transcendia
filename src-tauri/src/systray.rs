@@ -23,7 +23,7 @@ use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{App, AppHandle, Listener, Manager};
 
-pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
+pub fn create_systray(app: &AppHandle) -> Result<(), tauri::Error> {
     let info_item = MenuItem::with_id(
         app,
         "info",
@@ -64,7 +64,7 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
     };
     let toggle_overlay_clone = toggle_overlay.clone();
 
-    let tray = TrayIconBuilder::with_id("main")
+    TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .show_menu_on_left_click(true)
@@ -82,15 +82,14 @@ pub fn create_systray(app: &App) -> Result<TrayIcon, tauri::Error> {
         })
         .build(app)?;
 
-    let config_item_clone = config_item.clone();
     app.listen(Events::OnOffConfigTrayItem.as_str(), move |event| {
-        config_item_clone
+        config_item
             .set_enabled(event.payload() == "true")
             .expect("Failed to set config item enabled state");
     });
 
-    let handle = app.handle().clone();
+    let handle = app.clone();
     app.listen(Events::ToggleOverlay.as_str(), move |_| toggle_overlay_clone(&handle));
 
-    Ok(tray)
+    Ok(())
 }

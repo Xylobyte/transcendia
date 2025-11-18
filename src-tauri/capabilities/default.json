@@ -5,7 +5,6 @@
 	"windows": ["select", "config", "overlay", "downloader"],
 	"permissions": [
 		"core:default",
-		"shell:allow-open",
 		"process:default",
 		"core:window:allow-close",
 		"core:window:allow-hide",

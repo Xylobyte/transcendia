@@ -64,6 +64,7 @@ pub fn create_config_window(app: &AppHandle) -> Result<(), tauri::Error> {
         .always_on_top(true)
         .inner_size(400f64, 650f64)
         .resizable(false)
+        .minimizable(false)
         .build()?;
     window.set_focus()?;
 
@@ -84,8 +85,8 @@ pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<(), tauri:
         .content_protected(true)
         .build()?;
     window.set_ignore_cursor_events(true)?;
-    move_overlay(&window, monitor)?;
 
+    move_overlay(&window, monitor)?;
     window.show()?;
 
     macos::make_popup_window(app, window)?;

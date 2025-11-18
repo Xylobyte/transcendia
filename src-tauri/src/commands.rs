@@ -16,20 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::config::{ConfigState, TranscendiaConfig};
+use crate::errors::Result;
 use crate::errors::TranscendiaError;
 use crate::events::Events;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::runtime::runtime::TranscendiaRuntime;
-use crate::windows::{
-    create_config_window, create_select_region_window, move_overlay,
-};
+use crate::windows::{create_config_window, create_select_region_window, move_overlay};
 use tauri::{AppHandle, Emitter, Manager};
 use xcap::Monitor;
 
 #[tauri::command]
-pub fn get_config(
-    config: tauri::State<'_, ConfigState>,
-) -> Result<TranscendiaConfig, TranscendiaError> {
+pub fn get_config(config: tauri::State<'_, ConfigState>) -> Result<TranscendiaConfig> {
     let config = config
         .0
         .lock()
@@ -45,7 +42,7 @@ pub async fn set_config(
     new_config: TranscendiaConfig,
     reload_runtime: bool,
     monitor_changed: bool,
-) -> Result<(), TranscendiaError> {
+) -> Result<()> {
     new_config.save(&app_handle);
 
     let mut config = config
@@ -73,15 +70,12 @@ pub async fn set_config(
 }
 
 #[tauri::command]
-pub fn get_monitors() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
+pub fn get_monitors() -> Result<Vec<BaseTranscendiaMonitor>> {
     Monitor::get_all()
 }
 
 #[tauri::command]
-pub async fn select_region(
-    app_handle: AppHandle,
-    monitor: u32,
-) -> Result<(), TranscendiaError> {
+pub async fn select_region(app_handle: AppHandle, monitor: u32) -> Result<()> {
     create_select_region_window(&app_handle, monitor)
         .map_err(|_| TranscendiaError::WindowOpenError)?;
 
@@ -93,7 +87,7 @@ pub async fn finish_select_region(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranscendiaRuntime>,
-) -> Result<(), tauri::Error> {
+) -> Result<()> {
     f_s_r(app_handle, config, runtime)
 }
 
@@ -101,11 +95,11 @@ pub fn f_s_r(
     app_handle: AppHandle,
     config: tauri::State<'_, ConfigState>,
     runtime: tauri::State<'_, TranscendiaRuntime>,
-) -> Result<(), tauri::Error> {
+) -> Result<()> {
     let config = config.0.lock().expect("Cannot read config");
     runtime.update_config(config.clone());
 
-    create_config_window(&app_handle)?;
+    create_config_window(&app_handle).map_err(|_| TranscendiaError::WindowOpenError)?;
 
     Ok(())
 }

@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::config::Region;
+use crate::errors::Result;
 use crate::errors::TranscendiaError;
 use image::imageops::FilterType;
 use image::DynamicImage;
@@ -30,14 +31,14 @@ pub struct BaseTranscendiaMonitor {
 }
 
 pub trait TranscendiaMonitor {
-    fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError>;
+    fn get_all() -> Result<Vec<BaseTranscendiaMonitor>>;
     fn load(id: u32) -> Self;
     fn capture_and_crop(&self, region: &Option<Region>) -> DynamicImage;
 }
 
 impl TranscendiaMonitor for Monitor {
     #[inline]
-    fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
+    fn get_all() -> Result<Vec<BaseTranscendiaMonitor>> {
         Monitor::all()
             .map(|ms| {
                 ms.into_iter()
@@ -67,19 +68,16 @@ impl TranscendiaMonitor for Monitor {
             Ok(c) => {
                 let mut img = DynamicImage::ImageRgba8(c);
 
-                img = match region {
-                    Some(region) => {
-                        let w = region.w as f32 * sf;
-                        let h = region.h as f32 * sf;
-                        img.crop_imm(
-                            (region.x as f32 * sf) as u32,
-                            (region.y as f32 * sf) as u32,
-                            w as u32,
-                            h as u32,
-                        )
-                    }
-                    None => img,
-                };
+                if let Some(region) = region {
+                    let w = region.w as f32 * sf;
+                    let h = region.h as f32 * sf;
+                    img = img.crop_imm(
+                        (region.x as f32 * sf) as u32,
+                        (region.y as f32 * sf) as u32,
+                        w as u32,
+                        h as u32,
+                    )
+                }
 
                 img.resize((img.width() as f32 / sf) as u32, (img.height() as f32 / sf) as u32, FilterType::Triangle)
             }

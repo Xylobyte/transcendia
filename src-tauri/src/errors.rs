@@ -24,3 +24,5 @@ pub enum TranscendiaError {
     CannotGetMonitors,
     WindowOpenError,
 }
+
+pub type Result<T> = std::result::Result<T, TranscendiaError>;
