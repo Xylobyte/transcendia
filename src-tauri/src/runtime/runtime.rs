@@ -35,6 +35,7 @@ pub struct TranscendiaRuntime {
 }
 
 impl TranscendiaRuntime {
+    #[inline]
     pub fn new(config: ConfigState) -> Self {
         Self {
             need_stop: Arc::new(AtomicBool::new(false)),
@@ -92,10 +93,12 @@ impl TranscendiaRuntime {
         self.is_running.store(true, Ordering::Release);
     }
 
+    #[inline(always)]
     pub fn stop(&self) {
         self.need_stop.store(true, Ordering::Release);
     }
 
+    #[inline(always)]
     pub fn update_config(&self, new_config: TranscendiaConfig) {
         let mut config = self.config.0.lock().unwrap();
         *config = new_config;

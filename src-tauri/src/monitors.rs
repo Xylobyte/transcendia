@@ -36,6 +36,7 @@ pub trait TranscendiaMonitor {
 }
 
 impl TranscendiaMonitor for Monitor {
+    #[inline]
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>, TranscendiaError> {
         Monitor::all()
             .map(|ms| {
@@ -48,7 +49,7 @@ impl TranscendiaMonitor for Monitor {
             })
             .map_err(|_| TranscendiaError::CannotGetMonitors)
     }
-
+    #[inline]
     fn load(id: u32) -> Self {
         let monitors = Monitor::all().unwrap();
         monitors

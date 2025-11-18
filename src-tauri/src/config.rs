@@ -85,6 +85,7 @@ impl TranscendiaConfig {
         config
     }
 
+    #[inline(always)]
     pub fn save(&self, app: &AppHandle) {
         let config = serde_json::to_string(self).expect("Could not stringify config");
         fs::write(get_config_path(app), &config).expect("Could not write config.json");
