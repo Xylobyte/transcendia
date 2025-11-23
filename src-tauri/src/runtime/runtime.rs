@@ -76,7 +76,7 @@ impl TranscendiaRuntime {
 
                 let mut time = Instant::now();
 
-                let image = monitor.capture_and_crop(&config.0.lock().unwrap().region);
+                let image = monitor.capture_and_crop(1.0, &config.0.lock().unwrap().region);
 
                 let capture_time = time.elapsed();
                 time = Instant::now();

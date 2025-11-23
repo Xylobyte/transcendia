@@ -33,7 +33,7 @@ pub struct BaseTranscendiaMonitor {
 pub trait TranscendiaMonitor {
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>>;
     fn load(id: u32) -> Self;
-    fn capture_and_crop(&self, region: &Option<Region>) -> DynamicImage;
+    fn capture_and_crop(&self, scale_factor: f32, region: &Option<Region>) -> DynamicImage;
 }
 
 impl TranscendiaMonitor for Monitor {
@@ -60,26 +60,27 @@ impl TranscendiaMonitor for Monitor {
             .clone()
     }
 
-    fn capture_and_crop(&self, region: &Option<Region>) -> DynamicImage {
-        let capture = self.capture_image();
+    fn capture_and_crop(&self, scale_factor: f32, region: &Option<Region>) -> DynamicImage {
         let sf = self.scale_factor().expect("Can't get scale factor");
+        let capture = if let Some(region) = region {
+            self.capture_region(
+                (region.x as f32 * sf) as u32,
+                (region.y as f32 * sf) as u32,
+                (region.w as f32 * sf) as u32,
+                (region.h as f32 * sf) as u32,
+            )
+        } else {
+            self.capture_image()
+        };
 
         match capture {
             Ok(c) => {
-                let mut img = DynamicImage::ImageRgba8(c);
-
-                if let Some(region) = region {
-                    let w = region.w as f32 * sf;
-                    let h = region.h as f32 * sf;
-                    img = img.crop_imm(
-                        (region.x as f32 * sf) as u32,
-                        (region.y as f32 * sf) as u32,
-                        w as u32,
-                        h as u32,
-                    )
-                }
-
-                img.resize((img.width() as f32 / sf) as u32, (img.height() as f32 / sf) as u32, FilterType::Triangle)
+                let img = DynamicImage::ImageRgba8(c);
+                img.resize(
+                    (img.width() as f32 / sf * scale_factor) as u32,
+                    (img.height() as f32 / sf * scale_factor) as u32,
+                    FilterType::Triangle,
+                )
             }
             Err(_) => {
                 error!("Can't get capture image");

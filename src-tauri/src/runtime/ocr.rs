@@ -71,13 +71,6 @@ impl TranscendiaOcr {
     }
 
     pub fn extract(&mut self, mut image: DynamicImage) -> TranscendiaOcrResults {
-        /*image = Self::preprocess(image);
-        image.save("image.png").expect("Error save");
-
-        thread::sleep(Duration::from_secs(2));
-
-        return Vec::new();*/
-
         let result = self.detect(image);
         match result {
             Ok((text_rects, text_images)) => {
@@ -108,11 +101,6 @@ impl TranscendiaOcr {
                 TranscendiaOcrResults::new()
             }
         }
-    }
-
-    #[inline(always)]
-    fn preprocess(mut image: DynamicImage) -> DynamicImage {
-        image
     }
 
     #[inline(always)]
