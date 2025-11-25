@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
@@ -69,19 +68,27 @@ impl TranscendiaRuntime {
                     break;
                 }
 
-                if config.0.lock().unwrap().monitor != monitor_id {
-                    monitor_id = config.0.lock().unwrap().monitor;
+                let m_lock = config.0.lock().unwrap();
+                if m_lock.monitor != monitor_id {
+                    monitor_id = m_lock.monitor;
                     monitor = Monitor::load(monitor_id);
                 }
+                let region = m_lock.region.clone();
+                let resolution_multiplier = 1.4; // m_lock.scale_factor.clone();
+                drop(m_lock);
 
                 let mut time = Instant::now();
 
-                let image = monitor.capture_and_crop(1.0, &config.0.lock().unwrap().region);
+                let image = monitor.capture_and_crop(resolution_multiplier, &region);
 
                 let capture_time = time.elapsed();
                 time = Instant::now();
 
-                let texts = ocr_engine.extract(image);
+                let texts = ocr_engine.extract(
+                    image,
+                    resolution_multiplier,
+                    (monitor.width().unwrap(), monitor.height().unwrap()),
+                );
 
                 let extract_time = time.elapsed();
                 debug!(

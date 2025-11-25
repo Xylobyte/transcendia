@@ -22,7 +22,7 @@ import { Config } from "../types/config.ts";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { Events } from "../types/events.ts";
-import { OcrResult } from "../types/translated-text.ts";
+import { OcrResult, TranscendiaOcrResults } from "../types/translated-text.ts";
 
 const config = ref<Config>();
 const texts = ref<OcrResult[]>([]);
@@ -39,7 +39,13 @@ onMounted(async () => {
 	unlistenRefresh = await listen(Events.RefreshOverlay, getConfig);
 
 	unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
-		texts.value = event.payload as OcrResult[];
+		let tmp_texts: OcrResult[] = [];
+		for (const text of event.payload as TranscendiaOcrResults) {
+			if (text.Paragraph) tmp_texts.push(...text.Paragraph);
+			else if (text.Sentence) tmp_texts.push(text.Sentence);
+		}
+		texts.value = tmp_texts;
+
 		const elapsed = Date.now() - lastUpdate;
 		speed.value = 1000 / elapsed;
 		lastUpdate = Date.now();

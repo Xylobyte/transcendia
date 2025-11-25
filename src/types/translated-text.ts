@@ -22,5 +22,9 @@ export type OcrResult = {
 	width: number;
 	height: number;
 	text: string;
-	line_height: number;
 };
+
+export type TranscendiaOcrResults = {
+	Sentence?: OcrResult;
+	Paragraph?: OcrResult[];
+}[];

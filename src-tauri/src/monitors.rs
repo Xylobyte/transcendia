@@ -60,15 +60,14 @@ impl TranscendiaMonitor for Monitor {
             .clone()
     }
 
-    fn capture_and_crop(&self, scale_factor: f32, region: &Option<Region>) -> DynamicImage {
+    fn capture_and_crop(
+        &self,
+        resolution_multiplier: f32,
+        region: &Option<Region>,
+    ) -> DynamicImage {
         let sf = self.scale_factor().expect("Can't get scale factor");
         let capture = if let Some(region) = region {
-            self.capture_region(
-                (region.x as f32 * sf) as u32,
-                (region.y as f32 * sf) as u32,
-                (region.w as f32 * sf) as u32,
-                (region.h as f32 * sf) as u32,
-            )
+            self.capture_region(region.x, region.y, region.w, region.h)
         } else {
             self.capture_image()
         };
@@ -77,13 +76,13 @@ impl TranscendiaMonitor for Monitor {
             Ok(c) => {
                 let img = DynamicImage::ImageRgba8(c);
                 img.resize(
-                    (img.width() as f32 / sf * scale_factor) as u32,
-                    (img.height() as f32 / sf * scale_factor) as u32,
+                    (img.width() as f32 / sf * resolution_multiplier) as u32,
+                    (img.height() as f32 / sf * resolution_multiplier) as u32,
                     FilterType::Triangle,
                 )
             }
-            Err(_) => {
-                error!("Can't get capture image");
+            Err(e) => {
+                error!("Can't get capture image : {}", e);
                 DynamicImage::new_rgb8(1, 1)
             }
         }
