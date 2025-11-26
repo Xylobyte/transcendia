@@ -219,14 +219,12 @@ impl TranscendiaOcr {
                 let el = &merged_ocr_results[ii];
                 if el.y < ocr_result.y + ocr_result.height as i32 + threshold
                     && el.y > ocr_result.y
-                    && ((el.x <= ocr_result.x
-                    && (el.x + el.width as i32) >= ocr_result.x + ocr_result.width as i32)
-                    || (el.x > ocr_result.x
-                    && (el.x + el.width as i32) < ocr_result.x + ocr_result.width as i32))
+                    && ((el.x <= ocr_result.x && (el.x + el.width as i32) >= ocr_result.x + ocr_result.width as i32)
+                    || (el.x >= ocr_result.x && (el.x + el.width as i32) <= ocr_result.x + ocr_result.width as i32))
                 {
                     skip.insert(ii);
-                    ocr_result = el;
                     paragraphs.push(el.clone());
+                    ocr_result = el;
                 }
             }
 
