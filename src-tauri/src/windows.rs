@@ -65,8 +65,11 @@ pub fn create_config_window(app: &AppHandle) -> Result<(), tauri::Error> {
         .inner_size(400f64, 650f64)
         .resizable(false)
         .minimizable(false)
+        .content_protected(true)
         .build()?;
     window.set_focus()?;
+
+    macos::make_popup_window(app, window)?;
 
     Ok(())
 }
