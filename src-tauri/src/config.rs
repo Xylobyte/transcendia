@@ -48,6 +48,7 @@ pub struct TranscendiaConfig {
     pub text_shadow_color: String,
     pub lang: String,
     pub show_fps: bool,
+    pub resolution_multiplier: f32,
 }
 
 impl Default for TranscendiaConfig {
@@ -59,6 +60,7 @@ impl Default for TranscendiaConfig {
             text_shadow_color: "#000000".to_string(),
             lang: "en".to_string(),
             show_fps: false,
+            resolution_multiplier: 1.0,
         }
     }
 }

@@ -30,4 +30,5 @@ export type Config = {
 	text_shadow_color: string;
 	lang: string;
 	show_fps: boolean;
+	resolution_multiplier: number;
 };

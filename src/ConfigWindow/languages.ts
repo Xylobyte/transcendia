@@ -17,28 +17,44 @@
  */
 
 export const languages = [
-	// Major Western Languages
 	{ value: "en", label: "English" },
-	{ value: "es", label: "Spanish" },
 	{ value: "fr", label: "French" },
+	{ value: "es", label: "Spanish" },
 	{ value: "de", label: "German" },
-	{ value: "it", label: "Italian" },
 	{ value: "pt", label: "Portuguese (Portugal)" },
-	{ value: "pt-br", label: "Portuguese (Brazil)" },
+	{ value: "pt-BR", label: "Portuguese (Brazil)" },
+	{ value: "it", label: "Italian" },
 	{ value: "nl", label: "Dutch" },
-
-	// Nordic Languages (Latin alphabet)
 	{ value: "sv", label: "Swedish" },
-	{ value: "no", label: "Norwegian" },
 	{ value: "da", label: "Danish" },
+	{ value: "nb", label: "Norwegian Bokmål" },
+	{ value: "no", label: "Norwegian Nynorsk" },
 	{ value: "fi", label: "Finnish" },
-
-	// Central/Eastern European (Latin alphabet)
 	{ value: "pl", label: "Polish" },
 	{ value: "cs", label: "Czech" },
 	{ value: "hu", label: "Hungarian" },
 	{ value: "ro", label: "Romanian" },
+	{ value: "ru", label: "Russian" },
+	{ value: "tr", label: "Turkish" },
+	{ value: "el", label: "Greek" },
 
-	// Note: Russian uses Cyrillic, but keeping for existing users
-	{ value: "ru", label: "Russian (Limited OCR support)" },
+	{ value: "zh-CN", label: "Chinese (Simplified)" },
+	{ value: "zh-TW", label: "Chinese (Traditional)" },
+	{ value: "ja", label: "Japanese" },
+	{ value: "ko", label: "Korean" },
+
+	{ value: "sl", label: "Slovenian" },
+	{ value: "sk", label: "Slovak" },
+	{ value: "bg", label: "Bulgarian" },
+	{ value: "lt", label: "Lithuanian" },
+	{ value: "lv", label: "Latvian" },
+	{ value: "vi", label: "Vietnamese" },
+	{ value: "th", label: "Thai" },
+	{ value: "id", label: "Indonesian" },
+	{ value: "ms", label: "Malay" },
+
+	{ value: "he", label: "Hebrew" },
+	{ value: "ar", label: "Arabic" },
+	{ value: "fa", label: "Persian (Farsi)" },
+	{ value: "hi", label: "Hindi" },
 ];

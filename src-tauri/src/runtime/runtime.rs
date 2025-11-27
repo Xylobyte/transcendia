@@ -74,7 +74,7 @@ impl TranscendiaRuntime {
                     monitor = Monitor::load(monitor_id);
                 }
                 let region = m_lock.region.clone();
-                let resolution_multiplier = 1.4; // m_lock.scale_factor.clone();
+                let resolution_multiplier = m_lock.resolution_multiplier;
                 drop(m_lock);
 
                 let mut time = Instant::now();
@@ -87,14 +87,20 @@ impl TranscendiaRuntime {
                 let texts = ocr_engine.extract(
                     image,
                     resolution_multiplier,
-                    (monitor.width().unwrap(), monitor.height().unwrap()),
+                    (monitor.height().unwrap() as f32 / monitor.scale_factor().unwrap() / 100.0) as i32,
                 );
 
                 let extract_time = time.elapsed();
+                time = Instant::now();
+
+                // todo: translate texts
+
+                let translate_time = time.elapsed();
                 debug!(
-                    "\nCapture time : {}ms\nExtract time : {}ms",
+                    "\nCapture time : {}ms\nExtract time : {}ms\nTranslate time : {}ms",
                     capture_time.as_millis(),
-                    extract_time.as_millis()
+                    extract_time.as_millis(),
+                    translate_time.as_millis()
                 );
 
                 app_handle

@@ -19,6 +19,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { watchDebounced } from "@vueuse/core";
 import { Config } from "../types/config.ts";
 import CustomButton from "../components/CustomButton.vue";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -31,9 +32,11 @@ const currWindow = getCurrentWebviewWindow();
 const monitors = ref<{ name: string; id: number }[]>([]);
 const config = ref<Config>();
 const canSave = ref(false);
+const rsMultiplier = ref(1.0);
 
 onMounted(async () => {
 	config.value = await invoke<Config>("get_config");
+	rsMultiplier.value = config.value.resolution_multiplier;
 	monitors.value = await invoke("get_monitors");
 
 	//document.addEventListener('contextmenu', event => event.preventDefault());
@@ -49,6 +52,16 @@ watch(
 		if (prev.every((v) => v === undefined)) return;
 		saveConfig(false, false);
 	},
+);
+
+watchDebounced(
+	rsMultiplier,
+	(val) => {
+		if (!config.value) return;
+		config.value.resolution_multiplier = Number(val);
+		saveConfig(true, false);
+	},
+	{ debounce: 1000 },
 );
 
 const saveConfig = async (reloadRuntime: boolean, monitorChanged: boolean) => {
@@ -190,6 +203,19 @@ const onToggleFullScreen = async () => {
 				v-model="config.show_fps"
 				name="blur"
 				type="checkbox"
+			/>
+		</div>
+
+		<div class="full-screen">
+			<h2>Resolution multiplier ({{ rsMultiplier }}x)</h2>
+			<input
+				id="full-screen"
+				v-model="rsMultiplier"
+				max="2"
+				min="0.2"
+				name="blur"
+				step="0.1"
+				type="range"
 			/>
 		</div>
 	</main>

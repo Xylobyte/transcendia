@@ -78,7 +78,7 @@ impl TranscendiaMonitor for Monitor {
                 img.resize(
                     (img.width() as f32 / sf * resolution_multiplier) as u32,
                     (img.height() as f32 / sf * resolution_multiplier) as u32,
-                    FilterType::Triangle,
+                    FilterType::CatmullRom,
                 )
             }
             Err(e) => {

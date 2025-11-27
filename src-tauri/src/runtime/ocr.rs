@@ -92,14 +92,14 @@ impl TranscendiaOcr {
         &mut self,
         image: DynamicImage,
         resolution_multiplier: f32,
-        screen_size: (u32, u32),
+        box_threshold: i32,
     ) -> TranscendiaOcrResults {
         let result = self.detect(image);
         match result {
             Ok((text_rects, text_images)) => {
                 let texts = self.recognize(text_images);
 
-                Self::generate_results(texts, text_rects, resolution_multiplier, screen_size)
+                Self::generate_results(texts, text_rects, resolution_multiplier, box_threshold)
             }
             Err(_) => {
                 error!("Cannot detect text in image !");
@@ -143,10 +143,8 @@ impl TranscendiaOcr {
         texts: Vec<String>,
         text_rects: Vec<Rect>,
         resolution_multiplier: f32,
-        screen_size: (u32, u32),
+        box_threshold: i32,
     ) -> TranscendiaOcrResults {
-        let threshold = (screen_size.1 / 100) as i32;
-
         let mut skip: HashSet<usize> = Self::check_skip_items(&texts);
         let mut merged_ocr_results = Vec::<OcrResult>::new();
         for (i, actual_rect) in text_rects.iter().enumerate() {
@@ -169,10 +167,10 @@ impl TranscendiaOcr {
 
                 let rect = Self::scale_rect(text_rects[ii], resolution_multiplier);
 
-                if rect.top() > actual_result.y - threshold
-                    && rect.bottom() < actual_result.y + actual_result.height as i32 + threshold
+                if rect.top() > actual_result.y - box_threshold
+                    && rect.bottom() < actual_result.y + actual_result.height as i32 + box_threshold
                 {
-                    if rect.left() < actual_result.x + actual_result.width as i32 + threshold
+                    if rect.left() < actual_result.x + actual_result.width as i32 + box_threshold
                         && rect.left() > actual_result.x
                     {
                         skip.insert(ii);
@@ -186,7 +184,7 @@ impl TranscendiaOcr {
                     }
 
                     if rect.right() < actual_result.x + actual_result.width as i32
-                        && rect.right() > actual_result.x - threshold
+                        && rect.right() > actual_result.x - box_threshold
                     {
                         skip.insert(ii);
                         actual_result.width =
@@ -217,10 +215,14 @@ impl TranscendiaOcr {
             let mut paragraphs: Vec<OcrResult> = vec![ocr_result.clone()];
             for ii in i + 1..merged_ocr_results.len() {
                 let el = &merged_ocr_results[ii];
-                if el.y < ocr_result.y + ocr_result.height as i32 + threshold
+                if el.y < ocr_result.y + ocr_result.height as i32 + box_threshold
                     && el.y > ocr_result.y
-                    && ((el.x <= ocr_result.x && (el.x + el.width as i32) >= ocr_result.x + ocr_result.width as i32)
-                    || (el.x >= ocr_result.x && (el.x + el.width as i32) <= ocr_result.x + ocr_result.width as i32))
+                    && ((el.x - box_threshold <= ocr_result.x
+                    && (el.x + box_threshold + el.width as i32)
+                    >= ocr_result.x + ocr_result.width as i32)
+                    || (el.x + box_threshold >= ocr_result.x
+                    && (el.x - box_threshold + el.width as i32)
+                    <= ocr_result.x + ocr_result.width as i32))
                 {
                     skip.insert(ii);
                     paragraphs.push(el.clone());
