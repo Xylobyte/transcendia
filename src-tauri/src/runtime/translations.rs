@@ -15,3 +15,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use reqwest::blocking::Client;
+use std::collections::HashMap;
+use std::time::Duration;
+
+pub struct TranscendiaTranslations {
+    client: Client,
+    translations_history: HashMap<String, String>,
+}
+
+impl TranscendiaTranslations {
+    pub fn new() -> Self {
+        Self {
+            client: Client::builder()
+                .connect_timeout(Duration::from_secs(10))
+                .timeout(Duration::from_secs(20))
+                .https_only(true)
+                .build()
+                .expect("Could not create HTTP client"),
+            translations_history: HashMap::new(),
+        }
+    }
+}

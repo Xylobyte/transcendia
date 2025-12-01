@@ -20,6 +20,7 @@ use crate::events::Events;
 use crate::monitors::TranscendiaMonitor;
 use crate::platform_specifics::macos;
 use crate::runtime::ocr::TranscendiaOcr;
+use crate::runtime::translations::TranscendiaTranslations;
 use log::debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -60,6 +61,7 @@ impl TranscendiaRuntime {
             let mut monitor_id = config.0.lock().unwrap().monitor;
             let mut monitor = Monitor::load(monitor_id);
             let mut ocr_engine = TranscendiaOcr::new(&app_handle);
+            let mut translation_engine = TranscendiaTranslations::new();
 
             loop {
                 if need_stop.load(Ordering::Relaxed) {

@@ -18,7 +18,8 @@
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use imageproc::rect::Rect;
-use log::error;
+use log::{debug, error};
+use regex::Regex;
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
 use std::collections::HashSet;
@@ -59,6 +60,7 @@ pub type TranscendiaOcrResults = Vec<OcrGroupOrItem>;
 pub struct TranscendiaOcr {
     detection: Det,
     recognition: Rec,
+    is_not_special_regex: Regex,
 }
 
 impl TranscendiaOcr {
@@ -85,6 +87,7 @@ impl TranscendiaOcr {
                 .expect("Could not load recognition model")
                 .with_min_score(0.6)
                 .with_punct_min_score(0.2),
+            is_not_special_regex: Regex::new(r"[\p{L}\p{N}\d]").unwrap(),
         }
     }
 
@@ -99,7 +102,7 @@ impl TranscendiaOcr {
             Ok((text_rects, text_images)) => {
                 let texts = self.recognize(text_images);
 
-                Self::generate_results(texts, text_rects, resolution_multiplier, box_threshold)
+                self.generate_results(texts, text_rects, resolution_multiplier, box_threshold)
             }
             Err(_) => {
                 error!("Cannot detect text in image !");
@@ -140,12 +143,13 @@ impl TranscendiaOcr {
 
     #[inline(always)]
     fn generate_results(
+        &self,
         texts: Vec<String>,
         text_rects: Vec<Rect>,
         resolution_multiplier: f32,
         box_threshold: i32,
     ) -> TranscendiaOcrResults {
-        let mut skip: HashSet<usize> = Self::check_skip_items(&texts);
+        let mut skip: HashSet<usize> = self.check_skip_items(&texts);
         let mut merged_ocr_results = Vec::<OcrResult>::new();
         for (i, actual_rect) in text_rects.iter().enumerate() {
             let text = texts[i].clone();
@@ -242,10 +246,14 @@ impl TranscendiaOcr {
     }
 
     #[inline(always)]
-    fn check_skip_items(texts: &Vec<String>) -> HashSet<usize> {
+    fn check_skip_items(&self, texts: &Vec<String>) -> HashSet<usize> {
         let mut results = HashSet::new();
         for (i, text) in texts.iter().enumerate() {
-            if text.len() < 2 || text.parse::<f64>().is_ok() {
+            if text.len() < 2
+                || text.parse::<f64>().is_ok()
+                || text.contains("_")
+                || !self.is_not_special_regex.is_match(text)
+            {
                 results.insert(i);
             }
         }
