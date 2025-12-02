@@ -22,7 +22,7 @@ import { Config } from "../types/config.ts";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { Events } from "../types/events.ts";
-import { OcrResult, TranscendiaOcrResults } from "../types/translated-text.ts";
+import { OcrResult } from "../types/translated-text.ts";
 
 const config = ref<Config>();
 const texts = ref<OcrResult[]>([]);
@@ -39,12 +39,7 @@ onMounted(async () => {
 	unlistenRefresh = await listen(Events.RefreshOverlay, getConfig);
 
 	unlistenNewText = await listen(Events.NewTranslatedText, (event) => {
-		let tmp_texts: OcrResult[] = [];
-		for (const text of event.payload as TranscendiaOcrResults) {
-			if (text.Paragraph) tmp_texts.push(...text.Paragraph);
-			else if (text.Sentence) tmp_texts.push(text.Sentence);
-		}
-		texts.value = tmp_texts;
+		texts.value = event.payload as OcrResult[];
 
 		const elapsed = Date.now() - lastUpdate;
 		speed.value = 1000 / elapsed;
@@ -71,7 +66,7 @@ const getConfig = async () => {
 <template>
 	<main :style="mainStyle">
 		<div v-if="config?.show_fps" class="ct fps">
-			<span>{{ speed.toFixed(1) }} fps</span>
+			<span>{{ speed.toFixed(2) }} tps</span>
 		</div>
 
 		<div

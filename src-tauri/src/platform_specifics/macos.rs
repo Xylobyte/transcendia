@@ -22,8 +22,8 @@ use tauri_plugin_macos_permissions::{check_screen_recording_permission, request_
 
 #[inline(always)]
 pub fn make_popup_window(handle: &AppHandle, window: WebviewWindow) -> Result<(), tauri::Error> {
+    #[cfg(target_os = "macos")]
     handle.run_on_main_thread(move || {
-        #[cfg(target_os = "macos")]
         unsafe {
             let ns_win_ptr = window.ns_window().unwrap() as *mut NSWindow;
             if ns_win_ptr.is_null() {

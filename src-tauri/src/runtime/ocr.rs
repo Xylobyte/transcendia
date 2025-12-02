@@ -18,7 +18,7 @@
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use imageproc::rect::Rect;
-use log::{debug, error};
+use log::error;
 use regex::Regex;
 use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
@@ -28,11 +28,11 @@ use tauri::{AppHandle, Manager};
 
 #[derive(Serialize, Clone, Debug)]
 pub struct OcrResult {
-    x: i32,
-    y: i32,
-    width: u32,
-    height: u32,
-    text: String,
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub text: String,
 }
 
 impl OcrResult {
@@ -115,7 +115,7 @@ impl TranscendiaOcr {
     fn detect(&mut self, image: DynamicImage) -> Result<(Vec<Rect>, Vec<DynamicImage>), OcrError> {
         let text_rects = self.detection.find_text_rect(&image)?;
 
-        let mut images = Vec::<DynamicImage>::new();
+        let mut images = Vec::new();
         for text_rect in &text_rects {
             images.push(image.crop_imm(
                 text_rect.left() as u32,
@@ -130,7 +130,7 @@ impl TranscendiaOcr {
 
     #[inline(always)]
     fn recognize(&mut self, images: Vec<DynamicImage>) -> Vec<String> {
-        let mut texts = Vec::<String>::new();
+        let mut texts = Vec::new();
         for image in images {
             let text = self
                 .recognition
@@ -150,7 +150,7 @@ impl TranscendiaOcr {
         box_threshold: i32,
     ) -> TranscendiaOcrResults {
         let mut skip: HashSet<usize> = self.check_skip_items(&texts);
-        let mut merged_ocr_results = Vec::<OcrResult>::new();
+        let mut merged_ocr_results = Vec::new();
         for (i, actual_rect) in text_rects.iter().enumerate() {
             let text = texts[i].clone();
             if skip.contains(&i) {
@@ -241,7 +241,6 @@ impl TranscendiaOcr {
             });
         }
 
-        println!("{:#?}", results);
         results
     }
 

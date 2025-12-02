@@ -61,7 +61,7 @@ impl TranscendiaRuntime {
             let mut monitor_id = config.0.lock().unwrap().monitor;
             let mut monitor = Monitor::load(monitor_id);
             let mut ocr_engine = TranscendiaOcr::new(&app_handle);
-            let mut translation_engine = TranscendiaTranslations::new();
+            let mut translation_engine = TranscendiaTranslations::new("en");
 
             loop {
                 if need_stop.load(Ordering::Relaxed) {
@@ -77,6 +77,7 @@ impl TranscendiaRuntime {
                 }
                 let region = m_lock.region.clone();
                 let resolution_multiplier = m_lock.resolution_multiplier;
+                translation_engine.lang = m_lock.lang.clone();
                 drop(m_lock);
 
                 let mut time = Instant::now();
@@ -89,13 +90,13 @@ impl TranscendiaRuntime {
                 let texts = ocr_engine.extract(
                     image,
                     resolution_multiplier,
-                    (monitor.height().unwrap() as f32 / monitor.scale_factor().unwrap() / 100.0) as i32,
+                    (monitor.height().unwrap() as f32 / monitor.scale_factor().unwrap() / 50.0) as i32,
                 );
 
                 let extract_time = time.elapsed();
                 time = Instant::now();
 
-                // todo: translate texts
+                let texts = translation_engine.translate(texts);
 
                 let translate_time = time.elapsed();
                 debug!(

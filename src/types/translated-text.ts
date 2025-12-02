@@ -23,8 +23,3 @@ export type OcrResult = {
 	height: number;
 	text: string;
 };
-
-export type TranscendiaOcrResults = {
-	Sentence?: OcrResult;
-	Paragraph?: OcrResult[];
-}[];

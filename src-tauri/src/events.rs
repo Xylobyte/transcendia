@@ -56,9 +56,11 @@ pub fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
                 WindowEvent::Destroyed => {
                     runtime.stop();
                 }
-                WindowEvent::Focused { .. } => {
-                    debug!("Start runtime");
-                    runtime.start(app_handle);
+                WindowEvent::Focused(is_focused) => {
+                    if is_focused {
+                        debug!("Start runtime");
+                        runtime.start(app_handle);
+                    }
                 }
                 _ => {}
             }
