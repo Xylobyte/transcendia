@@ -36,16 +36,15 @@ use crate::systray::create_systray;
 use crate::windows::create_overlay_window;
 use runtime::runtime::TranscendiaRuntime;
 use std::sync::Mutex;
-use tauri::{
-    generate_context, generate_handler, ActivationPolicy, Emitter, Manager,
-};
+use tauri::{generate_context, generate_handler, ActivationPolicy, Emitter, Manager};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     env_logger::init();
 
-    let mut builder = tauri::Builder::default();
+    let mut builder =
+        tauri::Builder::default().plugin(tauri_plugin_single_instance::init(|_, _, _| {}));
 
     #[cfg(target_os = "macos")]
     {

@@ -18,22 +18,22 @@
 use log::error;
 use objc2_app_kit::{NSPopUpMenuWindowLevel, NSWindow, NSWindowCollectionBehavior};
 use tauri::{AppHandle, WebviewWindow};
-use tauri_plugin_macos_permissions::{check_screen_recording_permission, request_screen_recording_permission};
+use tauri_plugin_macos_permissions::{
+    check_screen_recording_permission, request_screen_recording_permission,
+};
 
 #[inline(always)]
 pub fn make_popup_window(handle: &AppHandle, window: WebviewWindow) -> Result<(), tauri::Error> {
     #[cfg(target_os = "macos")]
-    handle.run_on_main_thread(move || {
-        unsafe {
-            let ns_win_ptr = window.ns_window().unwrap() as *mut NSWindow;
-            if ns_win_ptr.is_null() {
-                error!("Invalid window pointer");
-                return;
-            }
-
-            (*ns_win_ptr).setLevel(NSPopUpMenuWindowLevel);
-            (*ns_win_ptr).setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
+    handle.run_on_main_thread(move || unsafe {
+        let ns_win_ptr = window.ns_window().unwrap() as *mut NSWindow;
+        if ns_win_ptr.is_null() {
+            error!("Invalid window pointer");
+            return;
         }
+
+        (*ns_win_ptr).setLevel(NSPopUpMenuWindowLevel);
+        (*ns_win_ptr).setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
     })?;
 
     Ok(())

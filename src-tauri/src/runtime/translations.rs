@@ -101,7 +101,8 @@ impl TranscendiaTranslations {
                 for mut sub_item in sub_items {
                     let trad = new_translations.get(i);
                     if let Some(trad) = trad {
-                        self.translations_history.insert(sub_item.text, trad.clone());
+                        self.translations_history
+                            .insert(sub_item.text, trad.clone());
 
                         sub_item.text = trad.clone();
                         translated_texts.push(sub_item.clone());
@@ -121,7 +122,7 @@ impl TranscendiaTranslations {
             "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t", // Other option : https://github.com/ssut/py-googletrans/issues/268
             self.lang
         ))
-            .unwrap();
+        .unwrap();
         url.query_pairs_mut().append_pair("q", &text);
 
         let r = self.client.get(url).send()?;

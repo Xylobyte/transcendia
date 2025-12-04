@@ -222,11 +222,11 @@ impl TranscendiaOcr {
                 if el.y < ocr_result.y + ocr_result.height as i32 + box_threshold
                     && el.y > ocr_result.y
                     && ((el.x - box_threshold <= ocr_result.x
-                    && (el.x + box_threshold + el.width as i32)
-                    >= ocr_result.x + ocr_result.width as i32)
-                    || (el.x + box_threshold >= ocr_result.x
-                    && (el.x - box_threshold + el.width as i32)
-                    <= ocr_result.x + ocr_result.width as i32))
+                        && (el.x + box_threshold + el.width as i32)
+                            >= ocr_result.x + ocr_result.width as i32)
+                        || (el.x + box_threshold >= ocr_result.x
+                            && (el.x - box_threshold + el.width as i32)
+                                <= ocr_result.x + ocr_result.width as i32))
                 {
                     skip.insert(ii);
                     paragraphs.push(el.clone());
@@ -265,9 +265,9 @@ impl TranscendiaOcr {
             (rect.left() as f32 / resolution_multiplier) as i32,
             (rect.top() as f32 / resolution_multiplier) as i32,
         )
-            .of_size(
-                (rect.width() as f32 / resolution_multiplier) as u32,
-                (rect.height() as f32 / resolution_multiplier) as u32,
-            )
+        .of_size(
+            (rect.width() as f32 / resolution_multiplier) as u32,
+            (rect.height() as f32 / resolution_multiplier) as u32,
+        )
     }
 }

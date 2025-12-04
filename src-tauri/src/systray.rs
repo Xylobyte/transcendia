@@ -89,7 +89,9 @@ pub fn create_systray(app: &AppHandle) -> Result<(), tauri::Error> {
     });
 
     let handle = app.clone();
-    app.listen(Events::ToggleOverlay.as_str(), move |_| toggle_overlay_clone(&handle));
+    app.listen(Events::ToggleOverlay.as_str(), move |_| {
+        toggle_overlay_clone(&handle)
+    });
 
     Ok(())
 }
