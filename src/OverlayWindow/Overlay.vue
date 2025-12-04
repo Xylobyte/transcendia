@@ -101,7 +101,7 @@ main {
 	white-space: break-spaces;
 	align-items: center;
 	padding: 3px;
-	background: rgba(0, 0, 0, 0.5);
+	background: rgba(0, 0, 0, 0.7);
 	border-radius: 5px;
 }
 

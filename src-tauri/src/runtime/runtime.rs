@@ -45,6 +45,8 @@ impl TranscendiaRuntime {
     }
 
     pub fn start(&self, app_handle: &AppHandle) {
+        debug!("Starting transcendia runtime");
+
         if self.is_running.load(Ordering::Relaxed) {
             self.need_stop.store(false, Ordering::Release);
             return;
@@ -87,11 +89,8 @@ impl TranscendiaRuntime {
                 let capture_time = time.elapsed();
                 time = Instant::now();
 
-                let texts = ocr_engine.extract(
-                    image,
-                    resolution_multiplier,
-                    (monitor.height().unwrap() as f32 / monitor.scale_factor().unwrap() / 50.0) as i32,
-                );
+                let threshold = (image.height() as f32 / 100.0) as i32;
+                let texts = ocr_engine.extract(image, resolution_multiplier, threshold);
 
                 let extract_time = time.elapsed();
                 time = Instant::now();
@@ -117,6 +116,7 @@ impl TranscendiaRuntime {
 
     #[inline(always)]
     pub fn stop(&self) {
+        debug!("Stopping transcendia runtime");
         self.need_stop.store(true, Ordering::Release);
     }
 
@@ -126,46 +126,3 @@ impl TranscendiaRuntime {
         *config = new_config;
     }
 }
-
-/*fn translate_text(text: &mut String, target_lang: &str, client: &Client) {
-                let client = Client::builder()
-                .connect_timeout(Duration::from_secs(5))
-                .timeout(Duration::from_secs(10))
-                .https_only(true)
-                .build()
-                .expect("Could not create HTTP client");
-
-    let original_linebreaks = ["\r\n", "\n", "\r"];
-    let mut processed_text = text.clone();
-    for lb in &original_linebreaks {
-        processed_text = processed_text.replace(lb, "\u{200B}");
-    }
-
-    let mut url = Url::parse(&format!(
-        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t", // Other option : https://github.com/ssut/py-googletrans/issues/268
-        target_lang
-    ))
-        .unwrap();
-    url.query_pairs_mut().append_pair("q", &processed_text);
-
-    let response = client.get(url).send();
-
-    if let Ok(r) = response {
-        let res_text = r.text().expect("Could not read response");
-        let json = serde_json::from_str::<Value>(&res_text).expect("Could not parse json");
-        if let Some(values) = json.get(0).and_then(|v| v.as_array()).map(|arr| {
-            arr.iter()
-                .filter_map(|i| i.get(0).and_then(|t| t.as_str()))
-                .collect::<Vec<&str>>()
-        }) {
-            text.clear();
-            for value in values {
-                let restored = value.replace("\u{200B}", "\n");
-                text.push_str(&restored);
-            }
-        } else {
-            error!("Could not find translated text in response");
-        }
-    }
-}
-*/

@@ -184,7 +184,7 @@ const onToggleFullScreen = async () => {
 		</div>
 
 		<div class="bg-color">
-			<h2>Text shadow color</h2>
+			<h2>Text background color</h2>
 			<ColorPicker
 				v-model:pure-color="config.text_shadow_color"
 				:disable-alpha="true"
@@ -197,7 +197,7 @@ const onToggleFullScreen = async () => {
 		</div>
 
 		<div class="full-screen">
-			<h2>Show translation speed in fps</h2>
+			<h2>Show translation speed in tps</h2>
 			<input
 				id="full-screen"
 				v-model="config.show_fps"

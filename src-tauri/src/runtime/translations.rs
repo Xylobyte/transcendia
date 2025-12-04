@@ -23,9 +23,12 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::time::Duration;
 
+const SEPARATOR_CHARACTER: &str = "↪️";
+
 pub struct TranscendiaTranslations {
     client: Client,
     translations_history: HashMap<String, String>,
+
     pub lang: String,
 }
 
@@ -61,7 +64,7 @@ impl TranscendiaTranslations {
                     }
                 }
                 OcrGroupOrItem::Paragraph(data) => {
-                    let mut need_translation_paragraph = Vec::new();
+                    let mut need_translation_paragraph = Vec::with_capacity(data.len());
 
                     for mut item in data {
                         let trad = self.translations_history.get(&item.text);
@@ -74,18 +77,40 @@ impl TranscendiaTranslations {
                         }
                     }
 
-                    need_translation_texts
-                        .push(OcrGroupOrItem::Paragraph(need_translation_paragraph));
+                    if !need_translation_texts.is_empty() {
+                        need_translation_texts
+                            .push(OcrGroupOrItem::Paragraph(need_translation_paragraph));
+                    }
                 }
             }
         }
 
-        debug!("Text to translate: {:#?}", need_translation_texts);
+        if !need_translation_texts.is_empty() {
+            let new_translations = self
+                .process_text(Self::build_string_to_translate(&need_translation_texts))
+                .unwrap_or(Vec::new());
+            debug!("Translations result: {:#?}", new_translations);
 
-        let new_translations =
-            self.process_text(Self::build_string_to_translate(&need_translation_texts));
+            let mut i = 0;
+            for item in need_translation_texts {
+                let sub_items = match item {
+                    OcrGroupOrItem::Sentence(data) => vec![data],
+                    OcrGroupOrItem::Paragraph(data) => data,
+                };
 
-        debug!("Process result: {:#?}", new_translations);
+                for mut sub_item in sub_items {
+                    let trad = new_translations.get(i);
+                    if let Some(trad) = trad {
+                        self.translations_history.insert(sub_item.text, trad.clone());
+
+                        sub_item.text = trad.clone();
+                        translated_texts.push(sub_item.clone());
+                    }
+
+                    i += 1;
+                }
+            }
+        }
 
         translated_texts
     }
@@ -110,7 +135,7 @@ impl TranscendiaTranslations {
                 .collect::<Vec<&str>>()
         }) {
             for value in values {
-                value.split("↪️").for_each(|text| {
+                value.split(SEPARATOR_CHARACTER).for_each(|text| {
                     texts.push(text.trim().to_string());
                 });
             }
@@ -128,12 +153,12 @@ impl TranscendiaTranslations {
             match item {
                 OcrGroupOrItem::Sentence(data) => str_array.push(data.text.clone()),
                 OcrGroupOrItem::Paragraph(data) => {
-                    let mut paragraph = Vec::new();
+                    let mut paragraph = Vec::with_capacity(data.len());
                     for d in data {
                         paragraph.push(d.text.clone());
                     }
 
-                    str_array.push(paragraph.join("↪️"));
+                    str_array.push(paragraph.join(SEPARATOR_CHARACTER));
                 }
             }
         }

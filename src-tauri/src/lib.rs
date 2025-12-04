@@ -91,7 +91,6 @@ pub fn run() {
             app.manage(ConfigState(Mutex::new(config.clone())));
 
             let runtime = TranscendiaRuntime::new(ConfigState(Mutex::new(config.clone())));
-            runtime.start(app);
             app.manage(runtime);
 
             create_overlay_window(app, config.monitor)?;
