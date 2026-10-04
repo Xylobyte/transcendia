@@ -80,7 +80,7 @@ const getConfig = async () => {
 			}"
 			class="ct"
 		>
-			<span :style="{ fontSize: text.height / 1.4 + 'px' }">
+			<span :style="{ fontSize: text.height / 2 + 'px' }">
 				{{ text.text }}
 			</span>
 		</div>

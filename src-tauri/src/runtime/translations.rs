@@ -48,6 +48,8 @@ impl TranscendiaTranslations {
     }
 
     pub fn translate(&mut self, texts: TranscendiaOcrResults) -> Vec<OcrResult> {
+        debug!("{:#?}", texts);
+
         let mut translated_texts = Vec::new();
         let mut need_translation_texts = Vec::new();
 
@@ -116,18 +118,22 @@ impl TranscendiaTranslations {
         translated_texts
     }
 
+
+    // For offline translation there is an option : https://github.com/LinguaSpark/core
     #[inline(always)]
     fn process_text(&self, text: String) -> Result<Vec<String>, reqwest::Error> {
+        debug!("{:#?}", text);
         let mut url = Url::parse(&format!(
-            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t", // Other option : https://github.com/ssut/py-googletrans/issues/268
+            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t",
             self.lang
         ))
-        .unwrap();
+            .unwrap();
         url.query_pairs_mut().append_pair("q", &text);
 
         let r = self.client.get(url).send()?;
         let res_text = r.text().expect("Could not read response");
         let json = serde_json::from_str::<Value>(&res_text).expect("Could not parse json");
+        debug!("{:#?}", json);
 
         let mut texts = Vec::new();
         if let Some(values) = json.get(0).and_then(|v| v.as_array()).map(|arr| {
