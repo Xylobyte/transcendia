@@ -89,8 +89,10 @@ impl TranscendiaRuntime {
                 let capture_time = time.elapsed();
                 time = Instant::now();
 
-                let threshold = (image.height() as f32 / 100.0) as i32;
-                let texts = ocr_engine.extract(image, resolution_multiplier, threshold);
+                let threshold_x = (image.width() / 400).max(1) as i32;
+                let threshold_y = (image.height() / 400).max(1) as i32;
+                let texts =
+                    ocr_engine.extract(image, resolution_multiplier, threshold_x, threshold_y);
 
                 let extract_time = time.elapsed();
                 time = Instant::now();

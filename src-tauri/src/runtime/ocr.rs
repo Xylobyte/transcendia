@@ -64,10 +64,11 @@ impl TranscendiaOcr {
                 Some(OcrEngineConfig {
                     backend: Backend::CPU,
                     thread_count: 4,
-                    precision_mode: PrecisionMode::High,
-                    min_result_confidence: 0.94,
+                    precision_mode: PrecisionMode::Low,
+                    min_result_confidence: 0.7,
                     det_options: DetOptions {
                         box_border: 0,
+                        min_area: 40,
                         ..Default::default()
                     },
                     ..Default::default()
@@ -81,25 +82,31 @@ impl TranscendiaOcr {
     pub fn extract(
         &mut self,
         image: DynamicImage,
-        resolution_multiplier: f32,
-        box_threshold: i32,
+        scale_factor: f32,
+        box_threshold_x: i32,
+        box_threshold_y: i32,
     ) -> Vec<OcrResult> {
         let result = self.engine.recognize(&image);
         match result {
             Ok(texts) => {
-                let texts = self.cleanup_and_convert_texts(texts);
-                let blocks = self.merge_ocr_blocks(texts, false, 6, 6);
+                let texts = self.cleanup_and_convert_texts(texts, scale_factor);
+                // return texts;
+                let blocks = self.merge_ocr_blocks(texts, false, box_threshold_x, box_threshold_y);
                 blocks
             }
-            Err(_) => {
-                error!("Cannot detect text in image !");
+            Err(e) => {
+                error!("Cannot detect text in image ! {}", e);
                 Vec::new()
             }
         }
     }
 
     #[inline(always)]
-    fn cleanup_and_convert_texts(&mut self, texts: Vec<OcrResult_>) -> Vec<OcrResult> {
+    fn cleanup_and_convert_texts(
+        &mut self,
+        texts: Vec<OcrResult_>,
+        scale_factor: f32,
+    ) -> Vec<OcrResult> {
         let mut final_texts = Vec::new();
         for text in texts {
             let t = text.text.trim();
@@ -109,10 +116,10 @@ impl TranscendiaOcr {
             {
                 final_texts.push(OcrResult {
                     text: t.to_string(),
-                    x: text.bbox.rect.left(),
-                    y: text.bbox.rect.top(),
-                    width: text.bbox.rect.width(),
-                    height: text.bbox.rect.height(),
+                    x: (text.bbox.rect.left() as f32 / scale_factor) as i32,
+                    y: (text.bbox.rect.top() as f32 / scale_factor) as i32,
+                    width: (text.bbox.rect.width() as f32 / scale_factor) as u32,
+                    height: (text.bbox.rect.height() as f32 / scale_factor) as u32,
                     line_count: 1,
                 });
             }
@@ -125,81 +132,97 @@ impl TranscendiaOcr {
         &mut self,
         mut blocks: Vec<OcrResult>,
         is_japanese: bool,
-        thresh_y: i32,
         thresh_x: i32,
+        thresh_y: i32,
     ) -> Vec<OcrResult> {
-        if blocks.is_empty() {
-            return vec![];
+        if blocks.len() <= 1 {
+            return blocks;
         }
 
-        blocks.sort_unstable_by(|a, b| {
-            let y_diff = a.y - b.y;
-            if y_diff.abs() < 10 {
-                a.x.cmp(&b.x)
-            } else {
-                a.y.cmp(&b.y)
-            }
-        });
+        let line_y_tolerance = (thresh_y / 2).max(1);
 
-        let mut merged = Vec::with_capacity(blocks.len());
-        let mut iter = blocks.into_iter();
-        merged.push(iter.next().unwrap());
+        blocks.sort_unstable_by_key(|block| (block.y, block.x));
 
-        for next in iter {
-            let last = merged.last_mut().unwrap();
+        let mut merged: Vec<OcrResult> = Vec::with_capacity(blocks.len());
 
-            let last_left = last.x;
-            let last_right = last_left + last.width as i32;
-            let last_top = last.y;
-            let last_bottom = last_top + last.height as i32;
+        for next in blocks {
+            let mut has_merged = false;
 
-            let next_left = next.x;
-            let next_right = next_left + next.width as i32;
-            let next_top = next.y;
-            let next_bottom = next_top + next.height as i32;
+            for last in merged.iter_mut().rev() {
+                let last_right = last.x + last.width as i32;
+                let last_bottom = last.y + last.height as i32;
+                let next_right = next.x + next.width as i32;
+                let next_bottom = next.y + next.height as i32;
 
-            let vertical_gap = next_top - last_bottom;
-            let horizontal_gap = next_left - last_right;
-            let top_diff = (next_top - last_top).abs();
+                let horizontal_overlap = (last_right.min(next_right) - last.x.max(next.x)).max(0);
+                let vertical_overlap = (last_bottom.min(next_bottom) - next.y).max(0);
 
-            let x_overlap = last_right.min(next_right) - last_left.max(next_left);
-            let same_column = x_overlap > 10 || (next_left - last_left).abs() < 35;
+                let horizontal_gap = (next.x - last_right).max(last.x - next_right).max(0);
+                let vertical_gap = (next.y - last_bottom).max(0);
 
-            let is_same_line = top_diff <= 12 && horizontal_gap >= -15 && horizontal_gap < thresh_x;
+                let same_line = (vertical_overlap * 3 >= last.height.min(next.height) as i32
+                    || (next.y + next_bottom - last.y - last_bottom).abs() <= line_y_tolerance * 2)
+                    && last.height.max(next.height)
+                        <= (last.height.min(next.height) + (thresh_y as u32 * 3))
+                    && (horizontal_overlap > 0 || horizontal_gap <= thresh_x);
 
-            let is_next_line =
-                top_diff > 12 && vertical_gap >= -15 && vertical_gap < thresh_y && same_column;
+                let same_column = horizontal_overlap * 2 >= last.width.min(next.width) as i32
+                    || (next.x + next_right - last.x - last_right).abs()
+                        <= last.width.min(next.width) as i32 + thresh_x * 2;
 
-            if is_same_line || is_next_line {
-                let next_text = next.text.trim();
-                if !next_text.is_empty() {
-                    if is_japanese {
-                        last.text.push_str(next_text);
-                    } else if is_same_line {
-                        last.text.push(' ');
-                        last.text.push_str(next_text);
-                    } else if last.text.ends_with('-') {
-                        last.text.pop();
-                        last.text.push_str(next_text);
-                    } else {
-                        last.text.push(' ');
-                        last.text.push_str(next_text);
+                let next_line = !same_line
+                    && next.y > last.y
+                    && (next.y + next_bottom - last.y - last_bottom).abs() > line_y_tolerance * 2
+                    && vertical_gap <= thresh_y
+                    && same_column;
+
+                if same_line || next_line {
+                    let next_text = next.text.trim();
+
+                    if !next_text.is_empty() {
+                        if is_japanese {
+                            last.text.push_str(next_text);
+                        } else if same_line {
+                            if !last.text.is_empty() {
+                                last.text.push(' ');
+                            }
+                            last.text.push_str(next_text);
+                        } else if last.text.ends_with('-') {
+                            last.text.pop();
+                            last.text.push_str(next_text);
+                        } else if matches!(next_text.chars().next(), Some('-' | '•' | '·'))
+                            || (last.text.ends_with('.')
+                                && next_text
+                                    .chars()
+                                    .next()
+                                    .is_some_and(|c: char| char::is_ascii_uppercase(&c)))
+                        {
+                            last.text.push('\n');
+                            last.text.push_str(next_text);
+                        } else {
+                            last.text.push(' ');
+                            last.text.push_str(next_text);
+                        }
                     }
-                }
 
-                let min_x = last_left.min(next_left);
-                let min_y = last_top.min(next_top);
-                let max_x = last_right.max(next_right);
-                let max_y = last_bottom.max(next_bottom);
+                    let merged_right = last_right.max(next_right);
+                    let merged_bottom = last_bottom.max(next_bottom);
 
-                last.x = min_x;
-                last.y = min_y;
-                last.width = (max_x - min_x) as u32;
-                last.height = (max_y - min_y) as u32;
-                if is_next_line {
-                    last.line_count += 1;
+                    last.x = last.x.min(next.x);
+                    last.y = last.y.min(next.y);
+                    last.width = (merged_right - last.x) as u32;
+                    last.height = (merged_bottom - last.y) as u32;
+
+                    if next_line {
+                        last.line_count += 1;
+                    }
+
+                    has_merged = true;
+                    break;
                 }
-            } else {
+            }
+
+            if !has_merged {
                 merged.push(next);
             }
         }

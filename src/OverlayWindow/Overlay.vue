@@ -62,10 +62,46 @@ const getConfig = async () => {
 	config.value = await invoke<Config>("get_config");
 };
 
-const calcFontSize = (text: OcrResult) => {
-	const lineHeight = (text.height / text.line_count) * 0.8;
-	const sizeByWidth = text.width / (text.text.length * 0.65);
-	return `${text.line_count === 1 ? Math.min(lineHeight, sizeByWidth) : lineHeight}px`;
+const calcFontSize = (text: OcrResult): string => {
+	const { width, height, text: str } = text;
+	if (!str || width <= 0 || height <= 0) return "12px";
+
+	const usableWidth = width * 0.95;
+	const usableHeight = height * 0.95;
+
+	const paragraphs = str.split(/\r?\n/);
+
+	const fits = (size: number): boolean => {
+		const lineH = size * 1.2;
+		const charW = size * 0.6;
+		const maxCharsPerLine = usableWidth / charW;
+
+		if (maxCharsPerLine < 1) return false;
+
+		let totalLines = 0;
+		for (const p of paragraphs) {
+			const len = p.length || 1;
+			totalLines += Math.ceil(len / maxCharsPerLine);
+		}
+
+		return totalLines * lineH <= usableHeight;
+	};
+
+	let low = 1;
+	let high = Math.floor(usableHeight);
+	let bestSize = 1;
+
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		if (fits(mid)) {
+			bestSize = mid;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+
+	return `${bestSize}px`;
 };
 </script>
 
@@ -124,9 +160,14 @@ main {
 }
 
 span {
+	font-family: "Inter Tight", sans-serif;
+	line-height: 1.2;
 	width: 100%;
+	text-align: justify;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
-	letter-spacing: 1px;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+	hyphens: auto;
 }
 
 .loading {

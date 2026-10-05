@@ -52,7 +52,6 @@ pub fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
         },
         RunEvent::WindowEvent { label, event, .. } if label == "overlay" => {
             let runtime = app_handle.state::<TranscendiaRuntime>();
-            debug!("Overlay window event: {:?}", event);
             match event {
                 WindowEvent::Destroyed => {
                     runtime.stop();
