@@ -61,6 +61,12 @@ const mainStyle = computed(() => {
 const getConfig = async () => {
 	config.value = await invoke<Config>("get_config");
 };
+
+const calcFontSize = (text: OcrResult) => {
+	const lineHeight = (text.height / text.line_count) * 0.8;
+	const sizeByWidth = text.width / (text.text.length * 0.65);
+	return `${text.line_count === 1 ? Math.min(lineHeight, sizeByWidth) : lineHeight}px`;
+};
 </script>
 
 <template>
@@ -75,12 +81,16 @@ const getConfig = async () => {
 			:style="{
 				top: text.y + (config?.region?.y || 0) + 'px',
 				left: text.x + (config?.region?.x || 0) + 'px',
-				minWidth: text.width + 'px',
+				width: text.width + 'px',
 				height: text.height + 'px',
 			}"
 			class="ct"
 		>
-			<span :style="{ fontSize: text.height / 2 + 'px' }">
+			<span
+				:style="{
+					fontSize: calcFontSize(text),
+				}"
+			>
 				{{ text.text }}
 			</span>
 		</div>
@@ -115,8 +125,6 @@ main {
 
 span {
 	width: 100%;
-	text-align: justify;
-	text-align-last: justify;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 1);
 	letter-spacing: 1px;
 }

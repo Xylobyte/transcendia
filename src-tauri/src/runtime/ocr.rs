@@ -17,12 +17,12 @@
  */
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
-use imageproc::rect::Rect;
-use log::error;
+use log::{debug, error};
+use ocr_rs::{
+    Backend, DetOptions, OcrEngine, OcrEngineConfig, OcrResult_, PrecisionMode, RecOptions,
+};
 use regex::Regex;
-use rust_paddle_ocr::{Det, OcrError, Rec};
 use serde::Serialize;
-use std::collections::HashSet;
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
 
@@ -33,33 +33,11 @@ pub struct OcrResult {
     pub width: u32,
     pub height: u32,
     pub text: String,
+    pub line_count: u32,
 }
-
-impl OcrResult {
-    #[inline]
-    fn from(rect: Rect, resolution_multiplier: Option<f32>, text: String) -> Self {
-        let factor = resolution_multiplier.unwrap_or(1.0);
-        Self {
-            x: (rect.left() as f32 / factor) as i32,
-            y: (rect.top() as f32 / factor) as i32,
-            width: (rect.width() as f32 / factor) as u32,
-            height: (rect.height() as f32 / factor) as u32,
-            text,
-        }
-    }
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub enum OcrGroupOrItem {
-    Sentence(OcrResult),
-    Paragraph(Vec<OcrResult>),
-}
-
-pub type TranscendiaOcrResults = Vec<OcrGroupOrItem>;
 
 pub struct TranscendiaOcr {
-    detection: Det,
-    recognition: Rec,
+    engine: OcrEngine,
     is_not_special_regex: Regex,
 }
 
@@ -79,14 +57,23 @@ impl TranscendiaOcr {
             .unwrap();
 
         Self {
-            detection: Det::from_file(det)
-                .expect("Could not load detection model")
-                .with_merge_boxes(false)
-                .with_rect_border_size(12),
-            recognition: Rec::from_file(rec, keys)
-                .expect("Could not load recognition model")
-                .with_min_score(0.6)
-                .with_punct_min_score(0.2),
+            engine: OcrEngine::new(
+                det,
+                rec,
+                keys,
+                Some(OcrEngineConfig {
+                    backend: Backend::CPU,
+                    thread_count: 4,
+                    precision_mode: PrecisionMode::High,
+                    min_result_confidence: 0.94,
+                    det_options: DetOptions {
+                        box_border: 0,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                }),
+            )
+            .expect("Failed to init OCR engine!"),
             is_not_special_regex: Regex::new(r"[\p{L}\p{N}\d]").unwrap(),
         }
     }
@@ -96,178 +83,127 @@ impl TranscendiaOcr {
         image: DynamicImage,
         resolution_multiplier: f32,
         box_threshold: i32,
-    ) -> TranscendiaOcrResults {
-        let result = self.detect(image);
+    ) -> Vec<OcrResult> {
+        let result = self.engine.recognize(&image);
         match result {
-            Ok((text_rects, text_images)) => {
-                let texts = self.recognize(text_images);
-
-                self.generate_results(texts, text_rects, resolution_multiplier, box_threshold)
+            Ok(texts) => {
+                let texts = self.cleanup_and_convert_texts(texts);
+                let blocks = self.merge_ocr_blocks(texts, false, 6, 6);
+                blocks
             }
             Err(_) => {
                 error!("Cannot detect text in image !");
-                TranscendiaOcrResults::new()
+                Vec::new()
             }
         }
     }
 
     #[inline(always)]
-    fn detect(&mut self, image: DynamicImage) -> Result<(Vec<Rect>, Vec<DynamicImage>), OcrError> {
-        let text_rects = self.detection.find_text_rect(&image)?;
-
-        let mut images = Vec::new();
-        for text_rect in &text_rects {
-            images.push(image.crop_imm(
-                text_rect.left() as u32,
-                text_rect.top() as u32,
-                text_rect.width(),
-                text_rect.height(),
-            ))
-        }
-
-        Ok((text_rects, images))
-    }
-
-    #[inline(always)]
-    fn recognize(&mut self, images: Vec<DynamicImage>) -> Vec<String> {
-        let mut texts = Vec::new();
-        for image in images {
-            let text = self
-                .recognition
-                .predict_str(&image)
-                .unwrap_or(String::new());
-            texts.push(text.trim().to_string());
-        }
-        texts
-    }
-
-    #[inline(always)]
-    fn generate_results(
-        &self,
-        texts: Vec<String>,
-        text_rects: Vec<Rect>,
-        resolution_multiplier: f32,
-        box_threshold: i32,
-    ) -> TranscendiaOcrResults {
-        let mut skip: HashSet<usize> = self.check_skip_items(&texts);
-        let mut merged_ocr_results = Vec::new();
-        for (i, actual_rect) in text_rects.iter().enumerate() {
-            let text = texts[i].clone();
-            if skip.contains(&i) {
-                continue;
-            }
-
-            let mut actual_result =
-                OcrResult::from(*actual_rect, Some(resolution_multiplier), text);
-            skip.insert(i);
-
-            let mut ii = 0;
-            while ii < text_rects.len() {
-                let text_ii = &texts[ii];
-                if skip.contains(&ii) {
-                    ii += 1;
-                    continue;
-                }
-
-                let rect = Self::scale_rect(text_rects[ii], resolution_multiplier);
-
-                if rect.top() > actual_result.y - box_threshold
-                    && rect.bottom() < actual_result.y + actual_result.height as i32 + box_threshold
-                {
-                    if rect.left() < actual_result.x + actual_result.width as i32 + box_threshold
-                        && rect.left() > actual_result.x
-                    {
-                        skip.insert(ii);
-                        actual_result.width = (rect.right() - actual_result.x) as u32;
-                        if !actual_result.text.ends_with(' ') && !text_ii.starts_with(' ') {
-                            actual_result.text.push(' ');
-                        }
-                        actual_result.text.push_str(text_ii);
-                        ii = 0;
-                        continue;
-                    }
-
-                    if rect.right() < actual_result.x + actual_result.width as i32
-                        && rect.right() > actual_result.x - box_threshold
-                    {
-                        skip.insert(ii);
-                        actual_result.width =
-                            (actual_result.x + actual_result.width as i32 - rect.left()) as u32;
-                        actual_result.x = rect.left();
-                        if !actual_result.text.starts_with(' ') && !text_ii.ends_with(' ') {
-                            actual_result.text.insert(0, ' ');
-                        }
-                        actual_result.text.insert_str(0, text_ii);
-                        ii = 0;
-                        continue;
-                    }
-                }
-
-                ii += 1;
-            }
-
-            merged_ocr_results.push(actual_result);
-        }
-
-        skip.clear();
-        let mut results = TranscendiaOcrResults::new();
-        for (i, mut ocr_result) in merged_ocr_results.iter().enumerate() {
-            if skip.contains(&i) {
-                continue;
-            }
-
-            let mut paragraphs: Vec<OcrResult> = vec![ocr_result.clone()];
-            for ii in i + 1..merged_ocr_results.len() {
-                let el = &merged_ocr_results[ii];
-                if el.y < ocr_result.y + ocr_result.height as i32 + box_threshold
-                    && el.y > ocr_result.y
-                    && ((el.x - box_threshold <= ocr_result.x
-                        && (el.x + box_threshold + el.width as i32)
-                            >= ocr_result.x + ocr_result.width as i32)
-                        || (el.x + box_threshold >= ocr_result.x
-                            && (el.x - box_threshold + el.width as i32)
-                                <= ocr_result.x + ocr_result.width as i32))
-                {
-                    skip.insert(ii);
-                    paragraphs.push(el.clone());
-                    ocr_result = el;
-                }
-            }
-
-            results.push(if paragraphs.len() == 1 {
-                OcrGroupOrItem::Sentence(paragraphs[0].clone())
-            } else {
-                OcrGroupOrItem::Paragraph(paragraphs)
-            });
-        }
-
-        results
-    }
-
-    #[inline(always)]
-    fn check_skip_items(&self, texts: &Vec<String>) -> HashSet<usize> {
-        let mut results = HashSet::new();
-        for (i, text) in texts.iter().enumerate() {
-            if text.len() < 2
-                || text.parse::<f64>().is_ok()
-                || text.contains("_")
-                || !self.is_not_special_regex.is_match(text)
+    fn cleanup_and_convert_texts(&mut self, texts: Vec<OcrResult_>) -> Vec<OcrResult> {
+        let mut final_texts = Vec::new();
+        for text in texts {
+            let t = text.text.trim();
+            if self.is_not_special_regex.is_match(t)
+                && t.len() > 1
+                && !t.chars().all(|c| c.is_ascii_digit())
             {
-                results.insert(i);
+                final_texts.push(OcrResult {
+                    text: t.to_string(),
+                    x: text.bbox.rect.left(),
+                    y: text.bbox.rect.top(),
+                    width: text.bbox.rect.width(),
+                    height: text.bbox.rect.height(),
+                    line_count: 1,
+                });
             }
         }
-        results
+        final_texts
     }
 
     #[inline(always)]
-    fn scale_rect(rect: Rect, resolution_multiplier: f32) -> Rect {
-        Rect::at(
-            (rect.left() as f32 / resolution_multiplier) as i32,
-            (rect.top() as f32 / resolution_multiplier) as i32,
-        )
-        .of_size(
-            (rect.width() as f32 / resolution_multiplier) as u32,
-            (rect.height() as f32 / resolution_multiplier) as u32,
-        )
+    fn merge_ocr_blocks(
+        &mut self,
+        mut blocks: Vec<OcrResult>,
+        is_japanese: bool,
+        thresh_y: i32,
+        thresh_x: i32,
+    ) -> Vec<OcrResult> {
+        if blocks.is_empty() {
+            return vec![];
+        }
+
+        blocks.sort_unstable_by(|a, b| {
+            let y_diff = a.y - b.y;
+            if y_diff.abs() < 10 {
+                a.x.cmp(&b.x)
+            } else {
+                a.y.cmp(&b.y)
+            }
+        });
+
+        let mut merged = Vec::with_capacity(blocks.len());
+        let mut iter = blocks.into_iter();
+        merged.push(iter.next().unwrap());
+
+        for next in iter {
+            let last = merged.last_mut().unwrap();
+
+            let last_left = last.x;
+            let last_right = last_left + last.width as i32;
+            let last_top = last.y;
+            let last_bottom = last_top + last.height as i32;
+
+            let next_left = next.x;
+            let next_right = next_left + next.width as i32;
+            let next_top = next.y;
+            let next_bottom = next_top + next.height as i32;
+
+            let vertical_gap = next_top - last_bottom;
+            let horizontal_gap = next_left - last_right;
+            let top_diff = (next_top - last_top).abs();
+
+            let x_overlap = last_right.min(next_right) - last_left.max(next_left);
+            let same_column = x_overlap > 10 || (next_left - last_left).abs() < 35;
+
+            let is_same_line = top_diff <= 12 && horizontal_gap >= -15 && horizontal_gap < thresh_x;
+
+            let is_next_line =
+                top_diff > 12 && vertical_gap >= -15 && vertical_gap < thresh_y && same_column;
+
+            if is_same_line || is_next_line {
+                let next_text = next.text.trim();
+                if !next_text.is_empty() {
+                    if is_japanese {
+                        last.text.push_str(next_text);
+                    } else if is_same_line {
+                        last.text.push(' ');
+                        last.text.push_str(next_text);
+                    } else if last.text.ends_with('-') {
+                        last.text.pop();
+                        last.text.push_str(next_text);
+                    } else {
+                        last.text.push(' ');
+                        last.text.push_str(next_text);
+                    }
+                }
+
+                let min_x = last_left.min(next_left);
+                let min_y = last_top.min(next_top);
+                let max_x = last_right.max(next_right);
+                let max_y = last_bottom.max(next_bottom);
+
+                last.x = min_x;
+                last.y = min_y;
+                last.width = (max_x - min_x) as u32;
+                last.height = (max_y - min_y) as u32;
+                if is_next_line {
+                    last.line_count += 1;
+                }
+            } else {
+                merged.push(next);
+            }
+        }
+
+        merged
     }
 }

@@ -91,6 +91,7 @@ pub fn create_overlay_window(app: &AppHandle, monitor: u32) -> Result<(), tauri:
 
     move_overlay(&window, monitor)?;
     window.show()?;
+    window.set_focus()?;
 
     macos::make_popup_window(app, window)?;
 

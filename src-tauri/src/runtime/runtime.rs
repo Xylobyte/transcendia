@@ -95,7 +95,7 @@ impl TranscendiaRuntime {
                 let extract_time = time.elapsed();
                 time = Instant::now();
 
-                let texts = translation_engine.translate(texts);
+                //let texts = translation_engine.translate(texts);
 
                 let translate_time = time.elapsed();
                 debug!(

@@ -22,4 +22,5 @@ export type OcrResult = {
 	width: number;
 	height: number;
 	text: string;
+	line_count: number;
 };
