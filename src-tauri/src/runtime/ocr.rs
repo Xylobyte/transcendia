@@ -17,7 +17,7 @@
  */
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
-use log::{debug, error};
+use log::error;
 use ocr_rs::{
     Backend, DetOptions, OcrEngine, OcrEngineConfig, OcrResult_, PrecisionMode, RecOptions,
 };
@@ -75,7 +75,8 @@ impl TranscendiaOcr {
                 }),
             )
             .expect("Failed to init OCR engine!"),
-            is_not_special_regex: Regex::new(r"[\p{L}\p{N}\d]").unwrap(),
+            is_not_special_regex: Regex::new(r"^(?:[^\w\s]{1,2}|[+-]?\d+([.,]\d+)?\s*%?|[\s_-]*)$")
+                .unwrap(),
         }
     }
 
@@ -110,7 +111,7 @@ impl TranscendiaOcr {
         let mut final_texts = Vec::new();
         for text in texts {
             let t = text.text.trim();
-            if self.is_not_special_regex.is_match(t)
+            if !self.is_not_special_regex.is_match(t)
                 && t.len() > 1
                 && !t.chars().all(|c| c.is_ascii_digit())
             {
