@@ -63,7 +63,8 @@ impl TranscendiaRuntime {
             let mut monitor_id = config.0.lock().unwrap().monitor;
             let mut monitor = Monitor::load(monitor_id);
             let mut ocr_engine = TranscendiaOcr::new(&app_handle);
-            let mut translation_engine = TranscendiaTranslations::new("en");
+            let mut translation_engine =
+                TranscendiaTranslations::new(&app_handle, "eng_Latn", "fra_Latn");
 
             loop {
                 if need_stop.load(Ordering::Relaxed) {
@@ -79,7 +80,7 @@ impl TranscendiaRuntime {
                 }
                 let region = m_lock.region.clone();
                 let resolution_multiplier = m_lock.resolution_multiplier;
-                translation_engine.lang = m_lock.lang.clone();
+                // translation_engine.lang = m_lock.lang.clone();
                 drop(m_lock);
 
                 let mut time = Instant::now();
@@ -91,13 +92,18 @@ impl TranscendiaRuntime {
 
                 let threshold_x = (image.width() / 400).max(1) as i32;
                 let threshold_y = (image.height() / 400).max(1) as i32;
-                let texts =
-                    ocr_engine.extract(image, resolution_multiplier, threshold_x, threshold_y);
+                let texts = ocr_engine.extract(
+                    image,
+                    resolution_multiplier,
+                    threshold_x,
+                    threshold_y,
+                    translation_engine.source_lang.starts_with("jp"),
+                );
 
                 let extract_time = time.elapsed();
                 time = Instant::now();
 
-                //let texts = translation_engine.translate(texts);
+                let texts = translation_engine.translate(texts);
 
                 let translate_time = time.elapsed();
                 debug!(

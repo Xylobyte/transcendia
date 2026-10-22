@@ -24,9 +24,11 @@ xcap = "0.9"
 image = { version = "0.25", default-features = false }
 env_logger = "0.11"
 log = "0.4"
-imageproc = "0.25"
+imageproc = "0.27"
 ocr-rs = "2.4.1"
 regex = "1.13"
+ct2rs = { version = "0.10", features = ["accelerate"] }
+tokenizers = "0.23"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-plugin-macos-permissions = "2.3"

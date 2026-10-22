@@ -18,9 +18,7 @@
 use crate::models::{OCR_DET_FILE, OCR_KEYS_FILE, OCR_REC_FILE};
 use image::DynamicImage;
 use log::error;
-use ocr_rs::{
-    Backend, DetOptions, OcrEngine, OcrEngineConfig, OcrResult_, PrecisionMode, RecOptions,
-};
+use ocr_rs::{Backend, DetOptions, OcrEngine, OcrEngineConfig, OcrResult_, PrecisionMode};
 use regex::Regex;
 use serde::Serialize;
 use tauri::path::BaseDirectory;
@@ -86,13 +84,14 @@ impl TranscendiaOcr {
         scale_factor: f32,
         box_threshold_x: i32,
         box_threshold_y: i32,
+        is_japanese: bool,
     ) -> Vec<OcrResult> {
         let result = self.engine.recognize(&image);
         match result {
             Ok(texts) => {
                 let texts = self.cleanup_and_convert_texts(texts, scale_factor);
-                // return texts;
-                let blocks = self.merge_ocr_blocks(texts, false, box_threshold_x, box_threshold_y);
+                let blocks =
+                    self.merge_ocr_blocks(texts, is_japanese, box_threshold_x, box_threshold_y);
                 blocks
             }
             Err(e) => {

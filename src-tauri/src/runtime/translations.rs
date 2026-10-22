@@ -15,31 +15,95 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use crate::models::CTRANSLATE_TOK;
 use crate::runtime::ocr::OcrResult;
+use ct2rs::sys::Translator;
 use log::debug;
 use std::collections::HashMap;
-
-const SEPARATOR_CHARACTER: &str = "↪️";
+use tauri::path::BaseDirectory;
+use tauri::{AppHandle, Manager};
+use tokenizers::Tokenizer;
 
 pub struct TranscendiaTranslations {
     translations_history: HashMap<String, String>,
-    pub lang: String,
+    tokenizer: Tokenizer,
+    translator: Translator,
+    pub source_lang: String,
+    pub target_lang: String,
 }
 
 impl TranscendiaTranslations {
     #[inline]
-    pub fn new<L: ToString>(lang: L) -> Self {
+    pub fn new<L: ToString>(app_handle: &AppHandle, src_lang: L, target_lang: L) -> Self {
+        let tok = app_handle
+            .path()
+            .resolve(
+                format!("models/{}", CTRANSLATE_TOK),
+                BaseDirectory::Resource,
+            )
+            .unwrap();
+        let model = app_handle
+            .path()
+            .resolve("models".to_string(), BaseDirectory::Resource)
+            .unwrap();
+
         Self {
             translations_history: HashMap::new(),
-            lang: lang.to_string(),
+            tokenizer: Tokenizer::from_file(tok).unwrap(),
+            translator: Translator::new(model, &Default::default()).unwrap(),
+            source_lang: src_lang.to_string(),
+            target_lang: target_lang.to_string(),
         }
     }
 
-    pub fn translate(&mut self, texts: Vec<String>) -> Vec<OcrResult> {
-        debug!("{:#?}", texts);
+    pub fn translate(&mut self, mut texts: Vec<OcrResult>) -> Vec<OcrResult> {
+        let texts_len = texts.len();
+        if texts_len == 0 {
+            return Vec::new();
+        }
 
-        let mut translated_texts = Vec::new();
+        let mut batch_tokens = Vec::with_capacity(texts_len);
+        for text in texts.clone() {
+            let Ok(encoding) = self.tokenizer.encode(text.text, false) else {
+                return Vec::new();
+            };
+            let mut tokens = Vec::with_capacity(encoding.get_tokens().len() + 2);
+            tokens.push(self.source_lang.clone());
+            tokens.extend_from_slice(encoding.get_tokens());
+            tokens.push("</s>".to_string());
+            batch_tokens.push(tokens);
+        }
 
-        translated_texts
+        let target_prefix = vec![vec![self.target_lang.clone()]; texts_len];
+
+        let Ok(results) = self.translator.translate_batch_with_target_prefix(
+            &batch_tokens,
+            &target_prefix,
+            &Default::default(),
+            None,
+        ) else {
+            return Vec::new();
+        };
+
+        for (i, result) in results.iter().enumerate() {
+            let Some(tokens) = result.output() else {
+                continue;
+            };
+
+            let ids: Vec<u32> = tokens
+                .iter()
+                .filter(|t| *t != &self.target_lang)
+                .filter_map(|t| self.tokenizer.token_to_id(t))
+                .collect();
+
+            match self.tokenizer.decode(&ids, true) {
+                Ok(decoded) => {
+                    texts[i].text = decoded;
+                }
+                Err(e) => debug!("Decode error: {}", e),
+            }
+        }
+
+        texts
     }
 }
