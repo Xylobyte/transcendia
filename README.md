@@ -71,8 +71,6 @@ I'm working on even more optimizations and functionalities for the next releases
 ### Prerequisites
 
 - **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
-- **Node.js** (v18 or higher) - [Install Node.js](https://nodejs.org/)
-- **npm**, **pnpm** or **yarn**
 
 ### Build Steps
 
@@ -83,29 +81,25 @@ I'm working on even more optimizations and functionalities for the next releases
     cd transcendia
     ```
 
-2. **Install dependencies**
+2. **Run in development**
 
     ```bash
-    npm install
+    cargo run
     ```
 
-3. **Development mode**
+3. **Build a bundle** (`.app` and `.dmg`)
 
     ```bash
-    npm run tauri dev
+    cargo install cargo-packager --locked
+    cargo packager --release
     ```
 
-4. **Build for production**
-    ```bash
-    npm run tauri build
-    ```
-
-The built application will be available in `src-tauri/target/release/bundle/`.
+The built application will be available in `dist/`.
 
 ## Configuration Options
 
 | Setting              | Description                         | Options                                             |
-| -------------------- | ----------------------------------- | --------------------------------------------------- |
+|----------------------|-------------------------------------|-----------------------------------------------------|
 | **Target Language**  | Language to translate text into     | 17+ languages (primarily Latin alphabet)            |
 | **Monitor**          | Which monitor to capture from       | All available monitors                              |
 | **Screen Region**    | Area of screen to monitor           | Custom rectangular selection                        |
@@ -156,5 +150,4 @@ details.
 ---
 
 **Made
-using [Rust](https://github.com/rust-lang/rust), [Tauri](https://github.com/tauri-apps/tauri), [Rust PaddleOCR](https://github.com/zibo-chen/rust-paddle-ocr)
-and [Vue.js](https://github.com/vuejs)**
+using [Rust](https://github.com/rust-lang/rust), [egui](https://github.com/emilk/egui), [PaddleOCR](https://github.com/zibo-chen/rust-paddle-ocr)**
