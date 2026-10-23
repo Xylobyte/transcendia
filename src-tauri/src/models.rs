@@ -20,6 +20,4 @@ pub const OCR_DET_FILE: &str = "PP-OCRv6_small_det.mnn";
 pub const OCR_REC_FILE: &str = "PP-OCRv6_small_rec.mnn";
 pub const OCR_KEYS_FILE: &str = "ppocr_keys_v6_small.txt";
 
-pub const CTRANSLATE_MODEL: &str = "model.bin";
 pub const CTRANSLATE_TOK: &str = "tokenizer.json";
-pub const CTRANSLATE_VOC: &str = "shared_vocabulary.json";

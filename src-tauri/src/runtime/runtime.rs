@@ -97,7 +97,7 @@ impl TranscendiaRuntime {
                     resolution_multiplier,
                     threshold_x,
                     threshold_y,
-                    translation_engine.source_lang.starts_with("jp"),
+                    &translation_engine.source_lang,
                 );
 
                 let extract_time = time.elapsed();

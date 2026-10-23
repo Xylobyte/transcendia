@@ -27,7 +27,7 @@ log = "0.4"
 imageproc = "0.27"
 ocr-rs = "2.4.1"
 regex = "1.13"
-ct2rs = { version = "0.10", features = ["accelerate"] }
+ct2rs = { version = "0.10", package = "ct2rs-platform" }
 tokenizers = "0.23"
 
 [target.'cfg(target_os = "macos")'.dependencies]

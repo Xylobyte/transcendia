@@ -18,6 +18,7 @@
 use crate::models::CTRANSLATE_TOK;
 use crate::runtime::ocr::OcrResult;
 use ct2rs::sys::Translator;
+use ct2rs::{ComputeType, Config, TranslationOptions};
 use log::debug;
 use std::collections::HashMap;
 use tauri::path::BaseDirectory;
@@ -50,7 +51,15 @@ impl TranscendiaTranslations {
         Self {
             translations_history: HashMap::new(),
             tokenizer: Tokenizer::from_file(tok).unwrap(),
-            translator: Translator::new(model, &Default::default()).unwrap(),
+            translator: Translator::new(
+                model,
+                &Config {
+                    compute_type: ComputeType::INT8,
+                    num_threads_per_replica: 8,
+                    ..Default::default()
+                },
+            )
+            .unwrap(),
             source_lang: src_lang.to_string(),
             target_lang: target_lang.to_string(),
         }
@@ -79,7 +88,13 @@ impl TranscendiaTranslations {
         let Ok(results) = self.translator.translate_batch_with_target_prefix(
             &batch_tokens,
             &target_prefix,
-            &Default::default(),
+            &TranslationOptions {
+                beam_size: 1,
+                repetition_penalty: 1.1,
+                no_repeat_ngram_size: 3,
+                max_decoding_length: 128,
+                ..Default::default()
+            },
             None,
         ) else {
             return Vec::new();

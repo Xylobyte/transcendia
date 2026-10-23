@@ -39,6 +39,13 @@ pub struct TranscendiaOcr {
     is_not_special_regex: Regex,
 }
 
+enum Join {
+    Glue,
+    Space,
+    NewLine,
+    Dehyphen,
+}
+
 impl TranscendiaOcr {
     pub fn new(app_handle: &AppHandle) -> Self {
         let det = app_handle
@@ -84,14 +91,13 @@ impl TranscendiaOcr {
         scale_factor: f32,
         box_threshold_x: i32,
         box_threshold_y: i32,
-        is_japanese: bool,
+        source_lang: &str,
     ) -> Vec<OcrResult> {
         let result = self.engine.recognize(&image);
         match result {
             Ok(texts) => {
-                let texts = self.cleanup_and_convert_texts(texts, scale_factor);
-                let blocks =
-                    self.merge_ocr_blocks(texts, is_japanese, box_threshold_x, box_threshold_y);
+                let texts = self.cleanup_and_convert_texts(texts, scale_factor, source_lang);
+                let blocks = self.merge_ocr_blocks(texts, box_threshold_x, box_threshold_y);
                 blocks
             }
             Err(e) => {
@@ -106,32 +112,36 @@ impl TranscendiaOcr {
         &mut self,
         texts: Vec<OcrResult_>,
         scale_factor: f32,
+        source_lang: &str,
     ) -> Vec<OcrResult> {
-        let mut final_texts = Vec::new();
-        for text in texts {
-            let t = text.text.trim();
-            if !self.is_not_special_regex.is_match(t)
-                && t.len() > 1
-                && !t.chars().all(|c| c.is_ascii_digit())
-            {
-                final_texts.push(OcrResult {
+        let source_is_cjk = Self::is_cjk_lang(source_lang);
+
+        texts
+            .into_iter()
+            .filter_map(|text| {
+                let t = text.text.trim();
+                if self.is_not_special_regex.is_match(t)
+                    || !Self::worth_translating(t, source_is_cjk)
+                {
+                    return None;
+                }
+                let rect = &text.bbox.rect;
+                Some(OcrResult {
                     text: t.to_string(),
-                    x: (text.bbox.rect.left() as f32 / scale_factor) as i32,
-                    y: (text.bbox.rect.top() as f32 / scale_factor) as i32,
-                    width: (text.bbox.rect.width() as f32 / scale_factor) as u32,
-                    height: (text.bbox.rect.height() as f32 / scale_factor) as u32,
+                    x: (rect.left() as f32 / scale_factor) as i32,
+                    y: (rect.top() as f32 / scale_factor) as i32,
+                    width: (rect.width() as f32 / scale_factor) as u32,
+                    height: (rect.height() as f32 / scale_factor) as u32,
                     line_count: 1,
-                });
-            }
-        }
-        final_texts
+                })
+            })
+            .collect()
     }
 
     #[inline(always)]
     fn merge_ocr_blocks(
         &mut self,
         mut blocks: Vec<OcrResult>,
-        is_japanese: bool,
         thresh_x: i32,
         thresh_y: i32,
     ) -> Vec<OcrResult> {
@@ -180,29 +190,27 @@ impl TranscendiaOcr {
                     let next_text = next.text.trim();
 
                     if !next_text.is_empty() {
-                        if is_japanese {
-                            last.text.push_str(next_text);
-                        } else if same_line {
-                            if !last.text.is_empty() {
+                        let last_char = last.text.chars().last();
+                        let first_char = next_text.chars().next();
+                        let spaceless = last_char.is_some_and(Self::is_spaceless)
+                            && first_char.is_some_and(Self::is_spaceless);
+
+                        if !spaceless && !last.text.is_empty() {
+                            if same_line {
+                                last.text.push(' ');
+                            } else if last.text.ends_with('-') {
+                                last.text.pop();
+                            } else if matches!(first_char, Some('-' | '•' | '·'))
+                                || (last.text.ends_with('.')
+                                    && first_char.is_some_and(char::is_uppercase))
+                            {
+                                last.text.push('\n');
+                            } else {
                                 last.text.push(' ');
                             }
-                            last.text.push_str(next_text);
-                        } else if last.text.ends_with('-') {
-                            last.text.pop();
-                            last.text.push_str(next_text);
-                        } else if matches!(next_text.chars().next(), Some('-' | '•' | '·'))
-                            || (last.text.ends_with('.')
-                                && next_text
-                                    .chars()
-                                    .next()
-                                    .is_some_and(|c: char| char::is_ascii_uppercase(&c)))
-                        {
-                            last.text.push('\n');
-                            last.text.push_str(next_text);
-                        } else {
-                            last.text.push(' ');
-                            last.text.push_str(next_text);
                         }
+
+                        last.text.push_str(next_text);
                     }
 
                     let merged_right = last_right.max(next_right);
@@ -228,5 +236,57 @@ impl TranscendiaOcr {
         }
 
         merged
+    }
+
+    fn is_spaceless(c: char) -> bool {
+        matches!(c as u32,
+            0x3000..=0x303F   // ponctuation CJK (。、「」…)
+            | 0x3040..=0x30FF // hiragana + katakana
+            | 0x3400..=0x4DBF // CJK extension A
+            | 0x4E00..=0x9FFF // CJK unifiés
+            | 0xF900..=0xFAFF // idéogrammes de compatibilité
+            | 0xFF00..=0xFFEF // formes pleine/demi-chasse (！？（）…)
+            | 0x0E00..=0x0E7F // thaï
+            | 0x0E80..=0x0EFF // lao
+            | 0x1000..=0x109F // birman
+            | 0x1780..=0x17FF // khmer
+        )
+    }
+
+    #[inline(always)]
+    fn worth_translating(s: &str, source_is_cjk: bool) -> bool {
+        let total = s.chars().filter(|c| !c.is_whitespace()).count();
+        if total == 0 {
+            return false;
+        }
+
+        if source_is_cjk {
+            let cjk = s.chars().filter(|&c| Self::is_cjk(c)).count();
+            cjk >= 1 && cjk * 2 >= total
+        } else {
+            let latin = s
+                .chars()
+                .filter(|c| c.is_alphabetic() && !Self::is_cjk(*c))
+                .count();
+            latin >= 3 && latin * 2 >= total
+        }
+    }
+
+    #[inline(always)]
+    fn is_cjk_lang(lang: &str) -> bool {
+        ["_Hans", "_Hant", "_Jpan", "_Hang"]
+            .iter()
+            .any(|s| lang.ends_with(s))
+    }
+
+    fn is_cjk(c: char) -> bool {
+        matches!(c as u32,
+            0x3040..=0x30FF   // hiragana + katakana
+            | 0x3400..=0x4DBF // CJK extension A
+            | 0x4E00..=0x9FFF // CJK unifiés
+            | 0xF900..=0xFAFF // idéogrammes de compatibilité
+            | 0xFF66..=0xFF9F // katakana demi-chasse
+            | 0xAC00..=0xD7AF // hangul
+        )
     }
 }
