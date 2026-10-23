@@ -21,6 +21,7 @@ use crate::errors::TranscendiaError;
 use image::imageops::FilterType;
 use image::DynamicImage;
 use log::error;
+use tray_icon::dpi::{LogicalPosition, LogicalSize};
 use xcap::Monitor;
 
 #[derive(Debug)]
@@ -36,7 +37,6 @@ pub trait TranscendiaMonitor {
 }
 
 impl TranscendiaMonitor for Monitor {
-    #[inline]
     fn get_all() -> Result<Vec<BaseTranscendiaMonitor>> {
         Monitor::all()
             .map(|ms| {
@@ -49,7 +49,7 @@ impl TranscendiaMonitor for Monitor {
             })
             .map_err(|_| TranscendiaError::CannotGetMonitors)
     }
-    #[inline]
+
     fn load(id: u32) -> Self {
         let monitors = Monitor::all().unwrap();
         monitors
@@ -86,4 +86,20 @@ impl TranscendiaMonitor for Monitor {
             }
         }
     }
+}
+
+/// `monitor_id` is an xcap id, not a winit index.
+pub fn monitor_rect(monitor_id: u32) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+    let monitor = Monitor::load(monitor_id);
+    let sf = monitor.scale_factor().unwrap_or(1.0) as f64;
+    (
+        LogicalPosition::new(
+            monitor.x().unwrap_or(0) as f64 * sf,
+            monitor.y().unwrap_or(0) as f64 * sf,
+        ),
+        LogicalSize::new(
+            monitor.width().unwrap_or(800) as f64,
+            monitor.height().unwrap_or(600) as f64,
+        ),
+    )
 }

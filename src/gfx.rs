@@ -18,9 +18,11 @@ impl Gfx {
     pub fn new(window: Window, transparent: bool) -> Self {
         let window = Arc::new(window);
         let ctx = egui::Context::default();
+
         if transparent {
             ctx.all_styles_mut(|s| s.visuals.panel_fill = egui::Color32::TRANSPARENT);
         }
+
         let mut painter = pollster::block_on(egui_wgpu::winit::Painter::new(
             ctx.clone(),
             WgpuConfiguration::default(),
@@ -32,6 +34,7 @@ impl Gfx {
         {
             log::error!("Cannot create surface: {e}");
         }
+
         let state = egui_winit::State::new(
             ctx.clone(),
             ViewportId::ROOT,
@@ -40,6 +43,7 @@ impl Gfx {
             window.theme(),
             painter.max_texture_side(),
         );
+
         Self {
             painter,
             state,
@@ -55,13 +59,11 @@ impl Gfx {
         }
     }
 
-    /// Runs one egui frame and paints it. Returns the actions produced by `run_ui`.
     pub fn redraw<R>(
         &mut self,
         transparent: bool,
-        run_ui: impl FnMut(&mut egui::Ui) -> R,
+        mut run_ui: impl FnMut(&mut egui::Ui) -> R,
     ) -> Option<R> {
-        let mut run_ui = run_ui;
         let mut result = None;
         let raw = self.state.take_egui_input(&self.window);
         let mut full = self.ctx.run_ui(raw, |ui| {

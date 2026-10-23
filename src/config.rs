@@ -15,16 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use crate::paths;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Mutex;
 
 const GLOBAL_CONFIG_FILE: &str = "global_config.json";
-
-pub fn get_config_path() -> PathBuf {
-    crate::paths::config_dir().join(GLOBAL_CONFIG_FILE)
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Region {
@@ -61,7 +58,7 @@ impl Default for TranscendiaConfig {
 
 impl TranscendiaConfig {
     pub fn load() -> Self {
-        Self::load_from(&get_config_path())
+        Self::load_from(&paths::config_dir().join(GLOBAL_CONFIG_FILE))
     }
 
     pub fn load_from(config_path: &Path) -> Self {
@@ -85,10 +82,10 @@ impl TranscendiaConfig {
         config
     }
 
-    #[inline(always)]
     pub fn save(&self) {
         let config = serde_json::to_string(self).expect("Could not stringify config");
-        fs::write(get_config_path(), &config).expect("Could not write config.json");
+        fs::write(paths::config_dir().join(GLOBAL_CONFIG_FILE), &config)
+            .expect("Could not write config.json");
     }
 }
 

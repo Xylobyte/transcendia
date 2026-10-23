@@ -21,7 +21,6 @@ fn load_icon() -> Option<Icon> {
 }
 
 impl Tray {
-    /// Must be created on the main thread, once the event loop is running.
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let info = MenuItem::with_id(
             "info",
@@ -63,6 +62,7 @@ impl Tray {
             log::warn!("Cannot decode tray icon");
         }
         let icon = builder.build()?;
+
         Ok(Self {
             _icon: icon,
             config_item,

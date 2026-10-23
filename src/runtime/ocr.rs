@@ -96,7 +96,6 @@ impl TranscendiaOcr {
         }
     }
 
-    #[inline(always)]
     fn cleanup_and_convert_texts(
         &mut self,
         texts: Vec<OcrResult_>,
@@ -127,7 +126,6 @@ impl TranscendiaOcr {
             .collect()
     }
 
-    #[inline(always)]
     fn merge_ocr_blocks(
         &mut self,
         mut blocks: Vec<OcrResult>,
@@ -242,7 +240,6 @@ impl TranscendiaOcr {
         )
     }
 
-    #[inline(always)]
     fn worth_translating(s: &str, source_is_cjk: bool) -> bool {
         let total = s.chars().filter(|c| !c.is_whitespace()).count();
         if total == 0 {
@@ -261,7 +258,6 @@ impl TranscendiaOcr {
         }
     }
 
-    #[inline(always)]
     fn is_cjk_lang(lang: &str) -> bool {
         ["_Hans", "_Hant", "_Jpan", "_Hang"]
             .iter()

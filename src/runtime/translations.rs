@@ -33,7 +33,6 @@ pub struct TranscendiaTranslations {
 }
 
 impl TranscendiaTranslations {
-    #[inline]
     pub fn new<L: ToString>(models_dir: &Path, src_lang: L, target_lang: L) -> Self {
         let tok = models_dir.join(CTRANSLATE_TOK);
         let model = models_dir.to_path_buf();

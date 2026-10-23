@@ -1,6 +1,6 @@
 use crate::app::AppState;
 use crate::config::Region;
-use crate::ui::{AppAction, WindowKind};
+use crate::ui::windows::{AppAction, WindowKind};
 use egui::{Align2, Color32, CursorIcon, FontId, Pos2, Rect, Stroke, StrokeKind};
 
 const MIN_SIZE: f32 = 50.0;

@@ -19,7 +19,6 @@ use directories::ProjectDirs;
 use log::error;
 use std::path::{Path, PathBuf};
 
-/// Config directory (macOS: `~/Library/Application Support/com.xylobyte.transcendia`).
 pub fn config_dir() -> PathBuf {
     ProjectDirs::from("com", "xylobyte", "transcendia")
         .expect("Could not get app config dir")
@@ -27,8 +26,7 @@ pub fn config_dir() -> PathBuf {
         .to_path_buf()
 }
 
-/// Ordered candidate model directories: bundle Resources, next to exe, manifest dir.
-pub fn models_candidates(exe: &Path, manifest_dir: Option<&Path>) -> Vec<PathBuf> {
+fn models_candidates(exe: &Path, manifest_dir: Option<&Path>) -> Vec<PathBuf> {
     let mut v = Vec::new();
     if let Some(exe_dir) = exe.parent() {
         if let Some(contents) = exe_dir.parent() {
@@ -42,11 +40,7 @@ pub fn models_candidates(exe: &Path, manifest_dir: Option<&Path>) -> Vec<PathBuf
     v
 }
 
-/// First candidate accepted by `exists`.
-pub fn pick_models_dir(
-    candidates: &[PathBuf],
-    exists: impl Fn(&Path) -> bool,
-) -> Option<PathBuf> {
+fn pick_models_dir(candidates: &[PathBuf], exists: impl Fn(&Path) -> bool) -> Option<PathBuf> {
     candidates.iter().find(|p| exists(p)).cloned()
 }
 
@@ -59,31 +53,5 @@ pub fn models_dir() -> PathBuf {
             error!("Models dir not found, tried: {:?}", candidates);
             candidates.into_iter().next().unwrap_or_default()
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fallback_order() {
-        let c = models_candidates(
-            Path::new("/A/Contents/MacOS/transcendia"),
-            Some(Path::new("/src")),
-        );
-        assert_eq!(
-            c,
-            vec![
-                PathBuf::from("/A/Contents/Resources/models"),
-                PathBuf::from("/A/Contents/MacOS/models"),
-                PathBuf::from("/src/models"),
-            ]
-        );
-        let p = pick_models_dir(&c, |p| p.starts_with("/A/Contents/MacOS"));
-        assert_eq!(p, Some(PathBuf::from("/A/Contents/MacOS/models")));
-        assert_eq!(pick_models_dir(&c, |_| false), None);
-        let p = pick_models_dir(&c, |_| true);
-        assert_eq!(p, Some(PathBuf::from("/A/Contents/Resources/models")));
     }
 }

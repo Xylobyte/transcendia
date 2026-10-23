@@ -1,12 +1,13 @@
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::gfx::Gfx;
 use crate::hotkeys::Hotkeys;
-use crate::monitors::TranscendiaMonitor;
-use crate::paths;
+use crate::monitors::monitor_rect;
 use crate::runtime::ocr::OcrResult;
 use crate::runtime::runtime::TranscendiaRuntime;
 use crate::tray::{self, Tray};
-use crate::ui::{self, AppAction, WindowKind};
+use crate::ui::windows;
+use crate::ui::windows::{AppAction, WindowKind};
+use crate::{monitors, paths};
 use global_hotkey::{GlobalHotKeyEvent, HotKeyState};
 use log::{debug, error};
 use std::collections::HashMap;
@@ -14,11 +15,11 @@ use std::sync::Mutex;
 use std::time::Instant;
 use tray_icon::menu::MenuEvent;
 use winit::application::ApplicationHandler;
-use winit::dpi::{LogicalPosition, LogicalSize};
+use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoopProxy};
+use winit::platform::macos::WindowAttributesExtMacOS;
 use winit::window::{WindowAttributes, WindowButtons, WindowId, WindowLevel};
-use xcap::Monitor;
 
 #[derive(Debug)]
 pub enum UserEvent {
@@ -42,22 +43,6 @@ pub struct App {
     tray: Option<Tray>,
     hotkeys: Option<Hotkeys>,
     initialized: bool,
-}
-
-/// `monitor_id` is an xcap id, not a winit index.
-pub fn monitor_rect(monitor_id: u32) -> (LogicalPosition<f64>, LogicalSize<f64>) {
-    let monitor = Monitor::load(monitor_id);
-    let sf = monitor.scale_factor().unwrap_or(1.0) as f64;
-    (
-        LogicalPosition::new(
-            monitor.x().unwrap_or(0) as f64 * sf,
-            monitor.y().unwrap_or(0) as f64 * sf,
-        ),
-        LogicalSize::new(
-            monitor.width().unwrap_or(800) as f64,
-            monitor.height().unwrap_or(600) as f64,
-        ),
-    )
 }
 
 impl App {
@@ -88,12 +73,12 @@ impl App {
     }
 
     fn open_window(&mut self, event_loop: &ActiveEventLoop, kind: WindowKind) {
-        use winit::platform::macos::WindowAttributesExtMacOS;
         let mut attrs: WindowAttributes = WindowAttributes::default()
             .with_window_level(WindowLevel::AlwaysOnTop)
             .with_resizable(false)
             .with_visible(false);
         let monitor_rect = monitor_rect(self.state.config.monitor);
+
         match kind {
             WindowKind::Overlay => {
                 attrs = attrs
@@ -124,6 +109,7 @@ impl App {
                     .with_inner_size(monitor_rect.1);
             }
         }
+
         let window = match event_loop.create_window(attrs) {
             Ok(w) => w,
             Err(e) => {
@@ -131,12 +117,15 @@ impl App {
                 return;
             }
         };
+
         crate::platform_specifics::macos::make_popup_window(&window);
+
         if kind == WindowKind::Overlay {
             if let Err(e) = window.set_cursor_hittest(false) {
                 error!("Cannot set click-through: {e}");
             }
         }
+
         let transparent = kind != WindowKind::Config;
         let gfx = Gfx::new(window, transparent);
         gfx.window.set_visible(true);
@@ -144,13 +133,16 @@ impl App {
             gfx.window.focus_window();
         }
         gfx.window.request_redraw();
+
         self.windows.insert(gfx.window.id(), (kind, gfx));
     }
 
-    fn close_window(&mut self, kind: WindowKind) {
+    fn close_window(&mut self, kind: WindowKind) -> bool {
         if let Some(id) = self.find(kind) {
             self.windows.remove(&id);
+            return true;
         }
+        false
     }
 
     pub fn open_overlay(&mut self, event_loop: &ActiveEventLoop) {
@@ -158,32 +150,35 @@ impl App {
             return;
         }
         self.open_window(event_loop, WindowKind::Overlay);
+
         let proxy = self.proxy.clone();
         self.state.runtime.start(paths::models_dir(), move |texts| {
             let _ = proxy.send_event(UserEvent::NewTexts(texts));
         });
+
         if let Some(t) = &self.tray {
             t.set_overlay_checked(true);
         }
     }
 
-    pub fn close_overlay(&mut self) {
-        if self.find(WindowKind::Overlay).is_some() {
-            self.close_window(WindowKind::Overlay);
+    pub fn close_overlay(&mut self) -> bool {
+        if self.close_window(WindowKind::Overlay) {
             self.state.runtime.stop();
+        } else {
+            return false;
         }
         if let Some(t) = &self.tray {
             t.set_overlay_checked(false);
         }
+        true
     }
 
     fn toggle_overlay(&mut self, event_loop: &ActiveEventLoop) {
         if self.find(WindowKind::Select).is_some() {
             return;
         }
-        if self.find(WindowKind::Overlay).is_some() {
-            self.close_overlay();
-        } else {
+
+        if !self.close_overlay() {
             self.open_overlay(event_loop);
         }
     }
@@ -219,10 +214,10 @@ impl App {
     }
 
     fn close_select(&mut self, event_loop: &ActiveEventLoop) {
-        if self.find(WindowKind::Select).is_none() {
+        if !self.close_window(WindowKind::Select) {
             return;
-        }
-        self.close_window(WindowKind::Select);
+        };
+
         if let Some(h) = &mut self.hotkeys {
             h.unregister_finish();
         }
@@ -245,7 +240,7 @@ impl App {
         self.state.config = config;
         if monitor_changed {
             if let Some(id) = self.find(WindowKind::Overlay) {
-                let (pos, size) = monitor_rect(self.state.config.monitor);
+                let (pos, size) = monitors::monitor_rect(self.state.config.monitor);
                 let w = &self.windows[&id].1.window;
                 w.set_outer_position(pos);
                 let _ = w.request_inner_size(size);
@@ -276,7 +271,9 @@ impl App {
             match action {
                 AppAction::CloseWindow(WindowKind::Config) => self.close_config(),
                 AppAction::CloseWindow(WindowKind::Select) => self.close_select(event_loop),
-                AppAction::CloseWindow(WindowKind::Overlay) => self.close_overlay(),
+                AppAction::CloseWindow(WindowKind::Overlay) => {
+                    self.close_overlay();
+                }
                 AppAction::OpenSelect => self.open_select(event_loop),
                 AppAction::FinishSelectRegion => self.finish_select_region(event_loop),
                 AppAction::ApplyConfig {
@@ -342,21 +339,24 @@ impl ApplicationHandler<UserEvent> for App {
         let Some((kind, gfx)) = self.windows.get_mut(&id) else {
             return;
         };
-        let kind = *kind;
+
         match event {
             WindowEvent::CloseRequested => {
                 match kind {
                     WindowKind::Config => self.close_config(),
                     WindowKind::Select => self.close_select(event_loop),
-                    WindowKind::Overlay => self.close_overlay(),
+                    WindowKind::Overlay => {
+                        self.close_overlay();
+                    }
                 }
                 return;
             }
             WindowEvent::Resized(size) => gfx.resize(size.width, size.height),
             WindowEvent::RedrawRequested => {
                 let state = &mut self.state;
-                let actions =
-                    gfx.redraw(kind != WindowKind::Config, |ui| ui::draw(kind, ui, state));
+                let actions = gfx.redraw(*kind != WindowKind::Config, |ui| {
+                    windows::draw(*kind, ui, state)
+                });
                 if let Some(actions) = actions {
                     self.handle_actions(event_loop, actions);
                 }
@@ -364,6 +364,7 @@ impl ApplicationHandler<UserEvent> for App {
             }
             _ => {}
         }
+
         let response = gfx.state.on_window_event(&gfx.window, &event);
         if response.repaint {
             gfx.window.request_redraw();

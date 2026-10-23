@@ -35,7 +35,6 @@ pub struct TranscendiaRuntime {
 }
 
 impl TranscendiaRuntime {
-    #[inline]
     pub fn new(config: ConfigState) -> Self {
         Self {
             need_stop: Arc::new(AtomicBool::new(false)),
@@ -52,7 +51,6 @@ impl TranscendiaRuntime {
 
         if self.is_running.load(Ordering::Acquire) {
             self.need_stop.store(false, Ordering::Release);
-            // The worker may have been exiting concurrently: only trust the flag if it is still set.
             if self.is_running.load(Ordering::Acquire) {
                 return;
             }
@@ -124,13 +122,11 @@ impl TranscendiaRuntime {
         });
     }
 
-    #[inline(always)]
     pub fn stop(&self) {
         debug!("Stopping transcendia runtime");
         self.need_stop.store(true, Ordering::Release);
     }
 
-    #[inline(always)]
     pub fn update_config(&self, new_config: TranscendiaConfig) {
         let mut config = self.config.0.lock().unwrap();
         *config = new_config;

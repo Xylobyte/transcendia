@@ -3,7 +3,7 @@ use crate::config::TranscendiaConfig;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::ui::color::{format_color, parse_color};
 use crate::ui::languages::{label_for, LANGUAGES};
-use crate::ui::{AppAction, WindowKind};
+use crate::ui::windows::{AppAction, WindowKind};
 use egui::color_picker::{color_edit_button_srgba, Alpha};
 use egui::{Color32, CornerRadius, Frame, Margin, RichText};
 use std::time::{Duration, Instant};
@@ -126,9 +126,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                         .selected_text(label_for(&config.lang))
                         .show_ui(ui, |ui| {
                             for (value, label) in LANGUAGES {
-                                if ui
-                                    .selectable_label(config.lang == *value, *label)
-                                    .clicked()
+                                if ui.selectable_label(config.lang == *value, *label).clicked()
                                     && config.lang != *value
                                 {
                                     config.lang = value.to_string();
