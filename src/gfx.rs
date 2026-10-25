@@ -1,3 +1,20 @@
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 use egui::ViewportId;
 use egui_wgpu::{RendererOptions, WgpuConfiguration};
 use std::num::NonZeroU32;
@@ -69,8 +86,10 @@ impl Gfx {
         let mut full = self.ctx.run_ui(raw, |ui| {
             result = Some(run_ui(ui));
         });
+
         self.state
             .handle_platform_output(&self.window, full.platform_output);
+
         let prims = self.ctx.tessellate(full.shapes, full.pixels_per_point);
         let clear = if transparent {
             [0.0; 4]
@@ -86,6 +105,7 @@ impl Gfx {
             Vec::new(),
             &self.window,
         );
+
         let delay = full
             .viewport_output
             .get(&ViewportId::ROOT)
@@ -96,6 +116,7 @@ impl Gfx {
         } else {
             Instant::now().checked_add(delay)
         };
+
         result
     }
 }

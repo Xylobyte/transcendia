@@ -1,3 +1,20 @@
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 use crate::app::AppState;
 use crate::config::TranscendiaConfig;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
@@ -15,7 +32,6 @@ const PRIMARY: Color32 = Color32::from_rgb(0x3c, 0x99, 0xff);
 const MUTED: Color32 = Color32::from_rgb(174, 174, 174);
 const DEBOUNCE: Duration = Duration::from_secs(1);
 
-/// Per-window UI state, kept in egui memory between frames.
 #[derive(Clone)]
 struct ConfigUi {
     monitors: Vec<(u32, String)>,
@@ -25,7 +41,7 @@ struct ConfigUi {
 }
 
 fn load_monitors() -> Vec<(u32, String)> {
-    <Monitor as TranscendiaMonitor>::get_all()
+    Monitor::get_all()
         .unwrap_or_default()
         .into_iter()
         .map(|BaseTranscendiaMonitor { name, id }| {

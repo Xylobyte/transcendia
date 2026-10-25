@@ -79,7 +79,24 @@ impl TranscendiaConfig {
             fs::remove_file(config_path).expect("Could not reset the config.json");
             Self::load_from(config_path)
         });
-        config
+        config.sanitized()
+    }
+
+    /// Replaces colors not in the `#RRGGBB[AA]` format (e.g. old CSS colors) with defaults.
+    fn sanitized(mut self) -> Self {
+        let valid = |c: &str| {
+            c.strip_prefix('#').is_some_and(|h| {
+                matches!(h.len(), 6 | 8) && h.chars().all(|ch| ch.is_ascii_hexdigit())
+            })
+        };
+        let default = Self::default();
+        if !valid(&self.text_color) {
+            self.text_color = default.text_color;
+        }
+        if !valid(&self.text_shadow_color) {
+            self.text_shadow_color = default.text_shadow_color;
+        }
+        self
     }
 
     pub fn save(&self) {

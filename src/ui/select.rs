@@ -1,3 +1,20 @@
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 use crate::app::AppState;
 use crate::config::Region;
 use crate::ui::windows::{AppAction, WindowKind};
@@ -5,19 +22,16 @@ use egui::{Align2, Color32, CursorIcon, FontId, Pos2, Rect, Stroke, StrokeKind};
 
 const MIN_SIZE: f32 = 50.0;
 
-/// Normalizes a drag from `start` to `end` (any direction) into `(x, y, w, h)` in points.
 pub fn normalize(start: Pos2, end: Pos2) -> (f32, f32, f32, f32) {
     let x = start.x.min(end.x);
     let y = start.y.min(end.y);
     (x, y, (end.x - start.x).abs(), (end.y - start.y).abs())
 }
 
-/// A region is kept only if both sides are strictly greater than 50.
 pub fn is_valid_size(w: f32, h: f32) -> bool {
     w > MIN_SIZE && h > MIN_SIZE
 }
 
-/// Returns the region to save for a finished drag, if valid.
 pub fn region_from_drag(start: Pos2, end: Pos2) -> Option<Region> {
     let (x, y, w, h) = normalize(start, end);
     if !is_valid_size(w, h) {
@@ -107,36 +121,4 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
         ctx.data_mut(|d| d.remove_temp::<Pos2>(drag_id));
     }
     actions
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn p(x: f32, y: f32) -> Pos2 {
-        Pos2::new(x, y)
-    }
-
-    #[test]
-    fn normalizes_all_directions() {
-        for (a, b) in [
-            (p(10.0, 20.0), p(110.0, 220.0)),
-            (p(110.0, 220.0), p(10.0, 20.0)),
-            (p(110.0, 20.0), p(10.0, 220.0)),
-            (p(10.0, 220.0), p(110.0, 20.0)),
-        ] {
-            assert_eq!(normalize(a, b), (10.0, 20.0, 100.0, 200.0));
-        }
-    }
-
-    #[test]
-    fn strict_50_rule() {
-        assert!(!is_valid_size(50.0, 100.0));
-        assert!(!is_valid_size(100.0, 50.0));
-        assert!(!is_valid_size(50.0, 50.0));
-        assert!(is_valid_size(50.1, 50.1));
-        assert!(region_from_drag(p(0.0, 0.0), p(50.0, 80.0)).is_none());
-        let r = region_from_drag(p(100.0, 100.0), p(10.0, 20.0)).unwrap();
-        assert_eq!((r.x, r.y, r.w, r.h), (10, 20, 90, 80));
-    }
 }

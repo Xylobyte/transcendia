@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/// (value, label) pairs, ported from `legacy-ui/src/ConfigWindow/languages.ts`.
 pub const LANGUAGES: &[(&str, &str)] = &[
     ("en", "English"),
     ("fr", "French"),

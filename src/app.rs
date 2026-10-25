@@ -1,3 +1,20 @@
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 use crate::config::{ConfigState, TranscendiaConfig};
 use crate::gfx::Gfx;
 use crate::hotkeys::Hotkeys;
@@ -7,7 +24,7 @@ use crate::runtime::runtime::TranscendiaRuntime;
 use crate::tray::{self, Tray};
 use crate::ui::windows;
 use crate::ui::windows::{AppAction, WindowKind};
-use crate::{monitors, paths};
+use crate::{monitors, paths, platform_specifics};
 use global_hotkey::{GlobalHotKeyEvent, HotKeyState};
 use log::{debug, error};
 use std::collections::HashMap;
@@ -118,7 +135,7 @@ impl App {
             }
         };
 
-        crate::platform_specifics::macos::make_popup_window(&window);
+        platform_specifics::macos::make_popup_window(&window);
 
         if kind == WindowKind::Overlay {
             if let Err(e) = window.set_cursor_hittest(false) {
@@ -313,6 +330,7 @@ impl ApplicationHandler<UserEvent> for App {
                 if e.state != HotKeyState::Pressed {
                     return;
                 }
+
                 if let Some(h) = &self.hotkeys {
                     if e.id == h.toggle.id() {
                         self.toggle_overlay(event_loop);
@@ -322,7 +340,6 @@ impl ApplicationHandler<UserEvent> for App {
                 }
             }
             UserEvent::NewTexts(texts) => {
-                debug!("NewTexts: {} items", texts.len());
                 let now = Instant::now();
                 let elapsed = now.duration_since(self.state.last_update).as_secs_f32();
                 if elapsed > 0.0 {
@@ -353,9 +370,8 @@ impl ApplicationHandler<UserEvent> for App {
             }
             WindowEvent::Resized(size) => gfx.resize(size.width, size.height),
             WindowEvent::RedrawRequested => {
-                let state = &mut self.state;
                 let actions = gfx.redraw(*kind != WindowKind::Config, |ui| {
-                    windows::draw(*kind, ui, state)
+                    windows::draw(*kind, ui, &mut self.state)
                 });
                 if let Some(actions) = actions {
                     self.handle_actions(event_loop, actions);

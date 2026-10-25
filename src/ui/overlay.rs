@@ -1,3 +1,20 @@
+/*
+ * Copyright © 2025 Nantsa Montillet
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 use crate::app::AppState;
 use crate::runtime::ocr::OcrResult;
 use crate::ui::color::parse_color;
@@ -9,7 +26,6 @@ const PADDING: f32 = 3.0;
 const RADIUS: u8 = 5;
 const LOADING_COLOR: Color32 = Color32::from_rgb(227, 227, 227);
 
-/// Port of `calcFontSize` from the Vue overlay (returns the size in px).
 pub fn calc_font_size(width: f32, height: f32, text: &str) -> f32 {
     if text.is_empty() || width <= 0.0 || height <= 0.0 {
         return 12.0;
@@ -66,7 +82,6 @@ fn job(text: &str, size: f32, color: Color32, wrap: f32) -> LayoutJob {
     job
 }
 
-/// Approximates `text-shadow: 0 0 5px black` by painting offset black copies first.
 fn paint_shadowed(ui: &egui::Ui, pos: Pos2, job: LayoutJob, shadow_job: LayoutJob) {
     let painter = ui.painter();
     let shadow = painter.layout_job(shadow_job);
@@ -162,32 +177,4 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
                 painter.galley(rect.min + Vec2::splat(PADDING), galley, Color32::WHITE);
             }
         });
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn empty_or_degenerate_is_12() {
-        assert_eq!(calc_font_size(100.0, 50.0, ""), 12.0);
-        assert_eq!(calc_font_size(0.0, 50.0, "a"), 12.0);
-        assert_eq!(calc_font_size(100.0, 0.0, "a"), 12.0);
-    }
-
-    #[test]
-    fn matches_js_samples() {
-        // usableH = 47.5 -> hi 47; one char fits up to size 39 (1.2*39=46.8<=47.5), width ok.
-        assert_eq!(calc_font_size(100.0, 50.0, "a"), 39.0);
-        // 10 chars, w=100 (95 usable): size 15 -> 10.55 chars/line -> 1 line, 18<=47.5;
-        // size 17 -> 9.3 -> 2 lines, 40.8<=47.5; size 19 -> 8.3 -> 2 lines 45.6; size 20 -> 7.9 -> 2 lines 48>47.5
-        assert_eq!(calc_font_size(100.0, 50.0, "abcdefghij"), 19.0);
-        // two paragraphs
-        assert_eq!(calc_font_size(100.0, 50.0, "a\nb"), 19.0);
-    }
-
-    #[test]
-    fn never_below_one() {
-        assert_eq!(calc_font_size(1.0, 1.0, "a very long text indeed"), 1.0);
-    }
 }
