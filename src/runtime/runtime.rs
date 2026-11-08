@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::config::{ConfigState, TranscendiaConfig};
+use crate::config::SharedConfig;
 use crate::monitors::TranscendiaMonitor;
 use crate::platform_specifics::macos;
 use crate::runtime::ocr::OcrResult;
@@ -31,15 +31,15 @@ use xcap::Monitor;
 pub struct TranscendiaRuntime {
     need_stop: Arc<AtomicBool>,
     is_running: Arc<AtomicBool>,
-    config: Arc<ConfigState>,
+    config: SharedConfig,
 }
 
 impl TranscendiaRuntime {
-    pub fn new(config: ConfigState) -> Self {
+    pub fn new(config: SharedConfig) -> Self {
         Self {
             need_stop: Arc::new(AtomicBool::new(false)),
             is_running: Arc::new(AtomicBool::new(false)),
-            config: Arc::new(config),
+            config,
         }
     }
 
@@ -64,7 +64,7 @@ impl TranscendiaRuntime {
         std::thread::spawn(move || {
             macos::request_screen_record_permissions();
 
-            let mut monitor_id = config.0.lock().unwrap().monitor;
+            let mut monitor_id = config.lock().unwrap().monitor;
             let mut monitor = Monitor::load(monitor_id);
             let mut ocr_engine = TranscendiaOcr::new(&models_dir);
             let mut translation_engine =
@@ -77,14 +77,13 @@ impl TranscendiaRuntime {
                     break;
                 }
 
-                let m_lock = config.0.lock().unwrap();
+                let m_lock = config.lock().unwrap();
                 if m_lock.monitor != monitor_id {
                     monitor_id = m_lock.monitor;
                     monitor = Monitor::load(monitor_id);
                 }
-                let region = m_lock.region.clone();
+                let region = m_lock.region;
                 let resolution_multiplier = m_lock.resolution_multiplier;
-                // translation_engine.lang = m_lock.lang.clone();
                 drop(m_lock);
 
                 let mut time = Instant::now();
@@ -127,8 +126,4 @@ impl TranscendiaRuntime {
         self.need_stop.store(true, Ordering::Release);
     }
 
-    pub fn update_config(&self, new_config: TranscendiaConfig) {
-        let mut config = self.config.0.lock().unwrap();
-        *config = new_config;
-    }
 }

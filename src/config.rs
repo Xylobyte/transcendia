@@ -19,11 +19,11 @@ use crate::paths;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 const GLOBAL_CONFIG_FILE: &str = "global_config.json";
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct Region {
     pub x: u32,
     pub y: u32,
@@ -106,4 +106,4 @@ impl TranscendiaConfig {
     }
 }
 
-pub struct ConfigState(pub Mutex<TranscendiaConfig>);
+pub type SharedConfig = Arc<Mutex<TranscendiaConfig>>;

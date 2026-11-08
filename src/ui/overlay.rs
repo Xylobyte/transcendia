@@ -122,13 +122,17 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
     egui::CentralPanel::default()
         .frame(egui::Frame::NONE)
         .show(ui, |ui| {
-            let config = &state.config;
-            let text_color = parse_color(&config.text_color, Color32::WHITE);
-            let origin = config
-                .region
-                .as_ref()
-                .map(|r| Vec2::new(r.x as f32, r.y as f32))
-                .unwrap_or(Vec2::ZERO);
+            let (text_color, origin, show_fps) = {
+                let config = state.config.lock().unwrap();
+                (
+                    parse_color(&config.text_color, Color32::WHITE),
+                    config
+                        .region
+                        .map(|r| Vec2::new(r.x as f32, r.y as f32))
+                        .unwrap_or(Vec2::ZERO),
+                    config.show_fps,
+                )
+            };
 
             for t in &state.texts {
                 draw_box(ui, t, origin, text_color);
@@ -136,14 +140,13 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
 
             if state.texts.is_empty() {
                 let center = ui.max_rect().center();
-                let font = FontId::proportional(50.0);
                 let painter = ui.painter();
                 for (dx, dy) in [(-2.0, 0.0), (2.0, 0.0), (0.0, -2.0), (0.0, 2.0)] {
                     painter.text(
                         center + Vec2::new(dx, dy),
                         Align2::CENTER_CENTER,
                         "Loading...",
-                        font.clone(),
+                        FontId::proportional(50.0),
                         shadow_color(),
                     );
                 }
@@ -151,12 +154,12 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
                     center,
                     Align2::CENTER_CENTER,
                     "Loading...",
-                    font,
+                    FontId::proportional(50.0),
                     LOADING_COLOR,
                 );
             }
 
-            if config.show_fps {
+            if show_fps {
                 let painter = ui.painter();
                 let galley = painter.layout_no_wrap(
                     format!("{:.2} tps", state.tps),

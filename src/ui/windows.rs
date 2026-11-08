@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::app::AppState;
-use crate::config::TranscendiaConfig;
 use crate::ui::{config, overlay, select};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -31,11 +30,7 @@ pub enum AppAction {
     CloseWindow(WindowKind),
     OpenSelect,
     FinishSelectRegion,
-    ApplyConfig {
-        config: TranscendiaConfig,
-        reload_runtime: bool,
-        monitor_changed: bool,
-    },
+    ConfigChanged { monitor_changed: bool },
     Quit,
 }
 

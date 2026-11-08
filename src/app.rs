@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::config::{ConfigState, TranscendiaConfig};
+use crate::config::{SharedConfig, TranscendiaConfig};
 use crate::gfx::Gfx;
 use crate::hotkeys::Hotkeys;
 use crate::monitors::monitor_rect;
@@ -28,7 +28,7 @@ use crate::{monitors, paths, platform_specifics};
 use global_hotkey::{GlobalHotKeyEvent, HotKeyState};
 use log::{debug, error};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tray_icon::menu::MenuEvent;
 use winit::application::ApplicationHandler;
@@ -46,7 +46,7 @@ pub enum UserEvent {
 }
 
 pub struct AppState {
-    pub config: TranscendiaConfig,
+    pub config: SharedConfig,
     pub texts: Vec<OcrResult>,
     pub tps: f32,
     pub last_update: Instant,
@@ -64,8 +64,9 @@ pub struct App {
 
 impl App {
     pub fn new(proxy: EventLoopProxy<UserEvent>) -> Self {
-        let config = TranscendiaConfig::load();
-        let runtime = TranscendiaRuntime::new(ConfigState(Mutex::new(config.clone())));
+        let config = Arc::new(Mutex::new(TranscendiaConfig::load()));
+        let runtime = TranscendiaRuntime::new(Arc::clone(&config));
+
         Self {
             proxy,
             state: AppState {
@@ -94,7 +95,8 @@ impl App {
             .with_window_level(WindowLevel::AlwaysOnTop)
             .with_resizable(false)
             .with_visible(false);
-        let monitor_rect = monitor_rect(self.state.config.monitor);
+        let monitor = self.state.config.lock().unwrap().monitor;
+        let monitor_rect = monitor_rect(monitor);
 
         match kind {
             WindowKind::Overlay => {
@@ -243,28 +245,21 @@ impl App {
     }
 
     fn finish_select_region(&mut self, event_loop: &ActiveEventLoop) {
-        self.state.runtime.update_config(self.state.config.clone());
         self.close_select(event_loop);
     }
 
-    fn apply_config(
-        &mut self,
-        config: TranscendiaConfig,
-        reload_runtime: bool,
-        monitor_changed: bool,
-    ) {
+    fn apply_config(&mut self, monitor_changed: bool) {
+        let config = self.state.config.lock().unwrap();
         config.save();
-        self.state.config = config;
+        let monitor = config.monitor;
+        drop(config);
         if monitor_changed {
             if let Some(id) = self.find(WindowKind::Overlay) {
-                let (pos, size) = monitors::monitor_rect(self.state.config.monitor);
+                let (pos, size) = monitors::monitor_rect(monitor);
                 let w = &self.windows[&id].1.window;
                 w.set_outer_position(pos);
                 let _ = w.request_inner_size(size);
             }
-        }
-        if reload_runtime {
-            self.state.runtime.update_config(self.state.config.clone());
         }
         self.request_redraw(WindowKind::Overlay);
     }
@@ -293,11 +288,9 @@ impl App {
                 }
                 AppAction::OpenSelect => self.open_select(event_loop),
                 AppAction::FinishSelectRegion => self.finish_select_region(event_loop),
-                AppAction::ApplyConfig {
-                    config,
-                    reload_runtime,
-                    monitor_changed,
-                } => self.apply_config(config, reload_runtime, monitor_changed),
+                AppAction::ConfigChanged { monitor_changed } => {
+                    self.apply_config(monitor_changed)
+                }
                 AppAction::Quit => self.quit(event_loop),
             }
         }

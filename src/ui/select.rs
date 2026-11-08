@@ -105,11 +105,8 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
         if released {
             ctx.data_mut(|d| d.remove_temp::<Pos2>(drag_id));
             if let Some(region) = region_from_drag(s, e) {
-                let mut config = state.config.clone();
-                config.region = Some(region);
-                actions.push(AppAction::ApplyConfig {
-                    config,
-                    reload_runtime: true,
+                state.config.lock().unwrap().region = Some(region);
+                actions.push(AppAction::ConfigChanged {
                     monitor_changed: false,
                 });
                 actions.push(AppAction::FinishSelectRegion);

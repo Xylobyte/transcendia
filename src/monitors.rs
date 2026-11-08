@@ -51,12 +51,15 @@ impl TranscendiaMonitor for Monitor {
     }
 
     fn load(id: u32) -> Self {
-        let monitors = Monitor::all().unwrap();
-        monitors
+        let mut monitors = Monitor::all().unwrap();
+        let index = monitors
             .iter()
-            .find(|m| m.id().expect("Can't get monitor id") == id)
-            .unwrap_or(monitors.get(0).expect("Cannot find any monitor"))
-            .clone()
+            .position(|m| m.id().ok() == Some(id))
+            .unwrap_or_else(|| {
+                monitors.get(0).expect("Cannot find any monitor");
+                0
+            });
+        monitors.swap_remove(index)
     }
 
     fn capture_and_crop(

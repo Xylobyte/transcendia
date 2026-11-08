@@ -16,13 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::app::AppState;
-use crate::config::TranscendiaConfig;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::ui::color::{format_color, parse_color};
 use crate::ui::languages::{label_for, LANGUAGES};
 use crate::ui::windows::{AppAction, WindowKind};
 use egui::color_picker::{color_edit_button_srgba, Alpha};
 use egui::{Color32, CornerRadius, Frame, Margin, RichText};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use xcap::Monitor;
 
@@ -34,13 +34,13 @@ const DEBOUNCE: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
 struct ConfigUi {
-    monitors: Vec<(u32, String)>,
+    monitors: Arc<[(u32, String)]>,
     multiplier: f32,
     pending_since: Option<Instant>,
     styled: bool,
 }
 
-fn load_monitors() -> Vec<(u32, String)> {
+fn load_monitors() -> Arc<[(u32, String)]> {
     Monitor::get_all()
         .unwrap_or_default()
         .into_iter()
@@ -52,7 +52,8 @@ fn load_monitors() -> Vec<(u32, String)> {
             };
             (id, name)
         })
-        .collect()
+        .collect::<Vec<_>>()
+        .into()
 }
 
 fn apply_style(ctx: &egui::Context) {
@@ -100,26 +101,18 @@ fn row(ui: &mut egui::Ui, title: &str, add: impl FnOnce(&mut egui::Ui)) {
     });
 }
 
-fn apply(
-    actions: &mut Vec<AppAction>,
-    config: &TranscendiaConfig,
-    reload_runtime: bool,
-    monitor_changed: bool,
-) {
-    actions.push(AppAction::ApplyConfig {
-        config: config.clone(),
-        reload_runtime,
-        monitor_changed,
-    });
+fn apply(actions: &mut Vec<AppAction>, monitor_changed: bool) {
+    actions.push(AppAction::ConfigChanged { monitor_changed });
 }
 
 pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
     let mut actions = Vec::new();
     let id = ui.scope_id().with("config_ui");
+    let mut config = state.config.lock().unwrap();
     let mut cui: ConfigUi = ui.data_mut(|d| {
         d.get_temp::<ConfigUi>(id).unwrap_or_else(|| ConfigUi {
             monitors: load_monitors(),
-            multiplier: state.config.resolution_multiplier,
+            multiplier: config.resolution_multiplier,
             pending_since: None,
             styled: false,
         })
@@ -128,8 +121,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
         apply_style(ui.ctx());
         cui.styled = true;
     }
-    let mut config = state.config.clone();
-
     egui::CentralPanel::default()
         .frame(Frame::new().fill(BG).inner_margin(Margin::same(10)))
         .show(ui, |ui| {
@@ -146,7 +137,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                                     && config.lang != *value
                                 {
                                     config.lang = value.to_string();
-                                    apply(&mut actions, &config, true, false);
+                                    apply(&mut actions, false);
                                 }
                             }
                         });
@@ -162,18 +153,17 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                         .monitors
                         .iter()
                         .find(|(i, _)| *i == current)
-                        .map(|(_, n)| n.clone())
-                        .unwrap_or_else(|| "Monitor unnamed".to_string());
+                        .map_or("Monitor unnamed", |(_, n)| n.as_str());
                     row(ui, "Monitor", |ui| {
                         egui::ComboBox::from_id_salt("monitor")
                             .selected_text(current_name)
                             .show_ui(ui, |ui| {
-                                for (mid, name) in &cui.monitors {
+                                for (mid, name) in cui.monitors.iter() {
                                     if ui.selectable_label(current == *mid, name).clicked()
                                         && current != *mid
                                     {
                                         config.monitor = *mid;
-                                        apply(&mut actions, &config, true, true);
+                                        apply(&mut actions, true);
                                     }
                                 }
                             });
@@ -188,12 +178,12 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                             actions.push(AppAction::OpenSelect);
                         } else {
                             config.region = None;
-                            apply(&mut actions, &config, true, false);
+                            apply(&mut actions, false);
                         }
                     }
                 });
 
-                if let Some(r) = config.region.clone() {
+                if let Some(r) = &config.region {
                     card(ui, |ui| {
                         ui.horizontal(|ui| {
                             ui.label(RichText::new("Screen region").color(MUTED));
@@ -218,7 +208,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                     let mut c = parse_color(&config.text_color, Color32::WHITE);
                     if color_edit_button_srgba(ui, &mut c, Alpha::OnlyBlend).changed() {
                         config.text_color = format_color(c);
-                        apply(&mut actions, &config, false, false);
+                        apply(&mut actions, false);
                     }
                 });
 
@@ -226,13 +216,13 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                     let mut c = parse_color(&config.text_shadow_color, Color32::BLACK);
                     if color_edit_button_srgba(ui, &mut c, Alpha::Opaque).changed() {
                         config.text_shadow_color = format_color(c);
-                        apply(&mut actions, &config, false, false);
+                        apply(&mut actions, false);
                     }
                 });
 
                 row(ui, "Show translation speed in tps", |ui| {
                     if ui.checkbox(&mut config.show_fps, "").changed() {
-                        apply(&mut actions, &config, false, false);
+                        apply(&mut actions, false);
                     }
                 });
 
@@ -267,7 +257,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
         if elapsed >= DEBOUNCE {
             cui.pending_since = None;
             config.resolution_multiplier = (cui.multiplier * 10.0).round() / 10.0;
-            apply(&mut actions, &config, true, false);
+            apply(&mut actions, false);
         } else {
             ui.ctx().request_repaint_after(DEBOUNCE - elapsed);
         }

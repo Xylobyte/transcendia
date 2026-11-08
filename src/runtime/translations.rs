@@ -60,19 +60,24 @@ impl TranscendiaTranslations {
             return Vec::new();
         }
 
-        let mut batch_tokens = Vec::with_capacity(texts_len);
-        for text in texts.clone() {
-            let Ok(encoding) = self.tokenizer.encode(text.text, false) else {
+        let mut encodings = Vec::with_capacity(texts_len);
+        for text in &texts {
+            let Ok(encoding) = self.tokenizer.encode(text.text.as_str(), false) else {
                 return Vec::new();
             };
+            encodings.push(encoding);
+        }
+
+        let mut batch_tokens = Vec::with_capacity(texts_len);
+        for encoding in &encodings {
             let mut tokens = Vec::with_capacity(encoding.get_tokens().len() + 2);
-            tokens.push(self.source_lang.clone());
-            tokens.extend_from_slice(encoding.get_tokens());
-            tokens.push("</s>".to_string());
+            tokens.push(self.source_lang.as_str());
+            tokens.extend(encoding.get_tokens().iter().map(String::as_str));
+            tokens.push("</s>");
             batch_tokens.push(tokens);
         }
 
-        let target_prefix = vec![vec![self.target_lang.clone()]; texts_len];
+        let target_prefix = vec![vec![self.target_lang.as_str()]; texts_len];
 
         let Ok(results) = self.translator.translate_batch_with_target_prefix(
             &batch_tokens,
