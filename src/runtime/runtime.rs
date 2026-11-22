@@ -77,14 +77,14 @@ impl TranscendiaRuntime {
                     break;
                 }
 
-                let m_lock = config.lock().unwrap();
-                if m_lock.monitor != monitor_id {
-                    monitor_id = m_lock.monitor;
+                let config_lock = config.lock().unwrap();
+                if config_lock.monitor != monitor_id {
+                    monitor_id = config_lock.monitor;
                     monitor = Monitor::load(monitor_id);
                 }
-                let region = m_lock.region;
-                let resolution_multiplier = m_lock.resolution_multiplier;
-                drop(m_lock);
+                let region = config_lock.region;
+                let resolution_multiplier = config_lock.resolution_multiplier;
+                drop(config_lock);
 
                 let mut time = Instant::now();
 
@@ -125,5 +125,4 @@ impl TranscendiaRuntime {
         debug!("Stopping transcendia runtime");
         self.need_stop.store(true, Ordering::Release);
     }
-
 }

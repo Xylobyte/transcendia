@@ -18,13 +18,13 @@
 use crate::app::AppState;
 use crate::runtime::ocr::OcrResult;
 use crate::ui::color::parse_color;
+use crate::ui::theme::LOADING_COLOR;
 use egui::epaint::text::{LayoutJob, TextFormat};
 use egui::{Align, Align2, Color32, FontId, Pos2, Rect, Stroke, StrokeKind, Vec2};
 
 const BOX_BG: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 178);
 const PADDING: f32 = 3.0;
 const RADIUS: u8 = 5;
-const LOADING_COLOR: Color32 = Color32::from_rgb(227, 227, 227);
 
 pub fn calc_font_size(width: f32, height: f32, text: &str) -> f32 {
     if text.is_empty() || width <= 0.0 || height <= 0.0 {

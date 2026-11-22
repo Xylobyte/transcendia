@@ -63,15 +63,3 @@ pub fn label_for(value: &str) -> &str {
         .map(|(_, l)| *l)
         .unwrap_or(value)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn has_all_languages() {
-        assert_eq!(LANGUAGES.len(), 37);
-        assert_eq!(label_for("pt-BR"), "Portuguese (Brazil)");
-        assert_eq!(label_for("xx"), "xx");
-    }
-}

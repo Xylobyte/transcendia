@@ -19,6 +19,7 @@ use crate::app::AppState;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::ui::color::{format_color, parse_color};
 use crate::ui::languages::{label_for, LANGUAGES};
+use crate::ui::theme::{BG, CARD, MUTED, PRIMARY};
 use crate::ui::windows::{AppAction, WindowKind};
 use egui::color_picker::{color_edit_button_srgba, Alpha};
 use egui::{Color32, CornerRadius, Frame, Margin, RichText};
@@ -26,10 +27,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use xcap::Monitor;
 
-const BG: Color32 = Color32::from_rgb(0x20, 0x20, 0x20);
-const CARD: Color32 = Color32::from_rgb(0x19, 0x19, 0x19);
-const PRIMARY: Color32 = Color32::from_rgb(0x3c, 0x99, 0xff);
-const MUTED: Color32 = Color32::from_rgb(174, 174, 174);
 const DEBOUNCE: Duration = Duration::from_secs(1);
 
 #[derive(Clone)]
