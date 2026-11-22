@@ -14,7 +14,10 @@
     },
     "shell": {
         "init_hook": [
-            "rustup default stable"
+            "export PATH=\"$CARGO_HOME/bin:$PATH\"",
+            "rustup default stable",
+            "if ! command -v cargo-packager >/dev/null 2>&1; then cargo install cargo-packager --locked; fi",
+            "if ! command -v cargo-tauri >/dev/null 2>&1; then cargo install tauri-cli --version '^2' --locked; fi"
         ]
     }
 }

@@ -108,7 +108,7 @@ impl App {
                     .with_accepts_first_mouse(true)
                     .with_content_protected(true)
                     .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MAXIMIZE)
-                    .with_inner_size(LogicalSize::new(400.0, 540.0));
+                    .with_inner_size(LogicalSize::new(400.0, 520.0));
             }
             WindowKind::Select => {
                 attrs = attrs

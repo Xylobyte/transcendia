@@ -19,7 +19,7 @@ use crate::app::AppState;
 use crate::monitors::{BaseTranscendiaMonitor, TranscendiaMonitor};
 use crate::ui::color::{format_color, parse_color};
 use crate::ui::languages::{label_for, LANGUAGES};
-use crate::ui::theme::{BG, CARD, MUTED, PRIMARY};
+use crate::ui::theme::{BG, CARD, PRIMARY, TEXT_COLOR};
 use crate::ui::windows::{AppAction, WindowKind};
 use egui::color_picker::{color_edit_button_srgba, Alpha};
 use egui::{Color32, CornerRadius, Frame, Margin, RichText};
@@ -92,7 +92,7 @@ fn card(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
 fn row(ui: &mut egui::Ui, title: &str, add: impl FnOnce(&mut egui::Ui)) {
     card(ui, |ui| {
         ui.horizontal(|ui| {
-            ui.label(RichText::new(title).color(MUTED));
+            ui.label(RichText::new(title).color(TEXT_COLOR));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), add);
         });
     });
@@ -123,7 +123,6 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
         .show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.spacing_mut().item_spacing.y = 10.0;
-                ui.heading("Configuration");
 
                 row(ui, "Target language", |ui| {
                     egui::ComboBox::from_id_salt("lang")
@@ -182,7 +181,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                 if let Some(r) = &config.region {
                     card(ui, |ui| {
                         ui.horizontal(|ui| {
-                            ui.label(RichText::new("Screen region").color(MUTED));
+                            ui.label(RichText::new("Screen region").color(TEXT_COLOR));
                             ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
                                 |ui| {
@@ -195,7 +194,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                         ui.horizontal(|ui| {
                             for (k, v) in [("X", r.x), ("Y", r.y), ("Width", r.w), ("Height", r.h)]
                             {
-                                ui.label(RichText::new(format!("{k} : {v}")).color(MUTED));
+                                ui.label(RichText::new(format!("{k} : {v}")).color(TEXT_COLOR));
                             }
                         });
                     });
@@ -225,7 +224,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                 card(ui, |ui| {
                     ui.label(
                         RichText::new(format!("Resolution multiplier ({}x)", cui.multiplier))
-                            .color(MUTED),
+                            .color(TEXT_COLOR),
                     );
                     ui.spacing_mut().slider_width = ui.available_width() - 60.0;
                     let r = ui.add(

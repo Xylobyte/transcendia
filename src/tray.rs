@@ -30,7 +30,7 @@ pub struct Tray {
 }
 
 fn load_icon() -> Option<Icon> {
-    let img = image::load_from_memory(include_bytes!("../icons/32x32.png"))
+    let img = image::load_from_memory(include_bytes!("../icons/Logo_BW.png"))
         .ok()?
         .to_rgba8();
     let (w, h) = img.dimensions();
