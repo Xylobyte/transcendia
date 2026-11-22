@@ -171,11 +171,10 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                 row(ui, "Translate the entire screen", |ui| {
                     if ui.checkbox(&mut full, "").changed() {
                         if full {
-                            // checking: Vue opens Select instead of changing state
-                            actions.push(AppAction::OpenSelect);
-                        } else {
                             config.region = None;
                             apply(&mut actions, false);
+                        } else {
+                            actions.push(AppAction::OpenSelect);
                         }
                     }
                 });
@@ -239,7 +238,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                     }
                 });
 
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui| {
                     let close = egui::Button::new(RichText::new("Close").color(Color32::WHITE))
                         .fill(PRIMARY);
                     if ui.add(close).clicked() {

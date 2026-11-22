@@ -108,7 +108,7 @@ impl App {
                     .with_accepts_first_mouse(true)
                     .with_content_protected(true)
                     .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MAXIMIZE)
-                    .with_inner_size(LogicalSize::new(400.0, 650.0));
+                    .with_inner_size(LogicalSize::new(400.0, 540.0));
             }
             WindowKind::Select => {
                 attrs = attrs
@@ -214,6 +214,7 @@ impl App {
     }
 
     fn open_select(&mut self, event_loop: &ActiveEventLoop) {
+        debug!("Open select");
         if self.find(WindowKind::Select).is_some() {
             return;
         }
