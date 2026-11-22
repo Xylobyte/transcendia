@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AgentCommitMessageProject"><![CDATA[{
+  "mode": "CUSTOM",
+  "instruction": "Generate a Git commit message for the given stashed or staged changes, strictly following the Conventional Commits specification (v1.0.0).\n\nGuidelines:\n- Language: English.\n- Format: <type>[optional scope]: <description>\n- Use a short, imperative, present-tense description (e.g., \"add\", \"fix\", \"change\", not \"added\" or \"adds\").\n- Do not capitalize the first letter of the description.\n- No period at the end of the commit line.\n- Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert.\n- Include a scope in parentheses if the changes are localized to a specific module or component.\n- Keep the first line under 72 characters.\n- If there is a breaking change, append '!' after the type/scope (e.g., \"feat(api)!: remove deprecated endpoint\") or explain it in a footer.\n- Output ONLY the raw commit message, without markdown backticks or commentary."
+}]]></component>
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
   </component>

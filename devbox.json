@@ -1,0 +1,20 @@
+{
+    "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.22.0/.schema/devbox.schema.json",
+    "packages": [
+        "rustup@latest",
+        "libiconv@latest",
+        "cmake@latest",
+        "gnumake@latest",
+        "pkg-config@latest"
+    ],
+    "env": {
+        "RUSTUP_HOME": "$HOME/.rustup",
+        "CARGO_HOME": "$HOME/.cargo",
+        "RUST_LOG": "debug"
+    },
+    "shell": {
+        "init_hook": [
+            "rustup default stable"
+        ]
+    }
+}

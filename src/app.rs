@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::config::{SharedConfig, TranscendiaConfig};
+use crate::events::UserEvent;
 use crate::gfx::Gfx;
 use crate::hotkeys::Hotkeys;
 use crate::monitors::monitor_rect;
@@ -25,25 +26,17 @@ use crate::tray::{self, Tray};
 use crate::ui::windows;
 use crate::ui::windows::{AppAction, WindowKind};
 use crate::{monitors, paths, platform_specifics};
-use global_hotkey::{GlobalHotKeyEvent, HotKeyState};
+use global_hotkey::HotKeyState;
 use log::{debug, error};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
-use tray_icon::menu::MenuEvent;
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoopProxy};
 use winit::platform::macos::WindowAttributesExtMacOS;
 use winit::window::{WindowAttributes, WindowButtons, WindowId, WindowLevel};
-
-#[derive(Debug)]
-pub enum UserEvent {
-    Menu(MenuEvent),
-    Hotkey(GlobalHotKeyEvent),
-    NewTexts(Vec<OcrResult>),
-}
 
 pub struct AppState {
     pub config: SharedConfig,
@@ -288,9 +281,7 @@ impl App {
                 }
                 AppAction::OpenSelect => self.open_select(event_loop),
                 AppAction::FinishSelectRegion => self.finish_select_region(event_loop),
-                AppAction::ConfigChanged { monitor_changed } => {
-                    self.apply_config(monitor_changed)
-                }
+                AppAction::ConfigChanged { monitor_changed } => self.apply_config(monitor_changed),
                 AppAction::Quit => self.quit(event_loop),
             }
         }

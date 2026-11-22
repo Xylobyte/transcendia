@@ -19,6 +19,7 @@
 mod app;
 mod config;
 mod errors;
+pub mod events;
 mod gfx;
 mod hotkeys;
 mod models;
@@ -29,7 +30,8 @@ mod runtime;
 mod tray;
 mod ui;
 
-use app::{App, UserEvent};
+use app::App;
+use events::UserEvent;
 use global_hotkey::GlobalHotKeyEvent;
 use single_instance::SingleInstance;
 use tray_icon::menu::MenuEvent;
