@@ -216,7 +216,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
                     }
                 });
 
-                row(ui, "Show translation speed in tps", |ui| {
+                row(ui, "Show translations per second (tps)", |ui| {
                     if ui.checkbox(&mut config.show_fps, "").changed() {
                         apply(&mut actions, false);
                     }
