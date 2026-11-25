@@ -42,7 +42,7 @@ impl TranscendiaMonitor for Monitor {
             .map(|ms| {
                 ms.into_iter()
                     .map(|m| BaseTranscendiaMonitor {
-                        name: m.name().unwrap(),
+                        name: m.friendly_name().unwrap(),
                         id: m.id().unwrap(),
                     })
                     .collect()

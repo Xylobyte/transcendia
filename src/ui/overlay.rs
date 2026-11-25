@@ -22,7 +22,6 @@ use crate::ui::theme::LOADING_COLOR;
 use egui::epaint::text::{LayoutJob, TextFormat};
 use egui::{Align, Align2, Color32, FontId, Pos2, Rect, Stroke, StrokeKind, Vec2};
 
-const BOX_BG: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 178);
 const PADDING: f32 = 3.0;
 const RADIUS: u8 = 5;
 
@@ -96,12 +95,12 @@ fn shadow_color() -> Color32 {
     Color32::from_rgba_unmultiplied(0, 0, 0, 140)
 }
 
-fn draw_box(ui: &egui::Ui, t: &OcrResult, origin: Vec2, text_color: Color32) {
+fn draw_box(ui: &egui::Ui, t: &OcrResult, origin: Vec2, text_color: Color32, bg_color: Color32) {
     let rect = Rect::from_min_size(
         Pos2::new(t.x as f32 + origin.x, t.y as f32 + origin.y),
         Vec2::new(t.width as f32, t.height as f32),
     );
-    ui.painter().rect_filled(rect, RADIUS, BOX_BG);
+    ui.painter().rect_filled(rect, RADIUS, bg_color);
     let size = calc_font_size(t.width as f32, t.height as f32, &t.text);
     let wrap = (rect.width() - 2.0 * PADDING).max(1.0);
     let galley = ui
@@ -122,10 +121,11 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
     egui::CentralPanel::default()
         .frame(egui::Frame::NONE)
         .show(ui, |ui| {
-            let (text_color, origin, show_fps) = {
+            let (text_color, bg_color, origin, show_fps) = {
                 let config = state.config.lock().unwrap();
                 (
                     parse_color(&config.text_color, Color32::WHITE),
+                    parse_color(&config.text_shadow_color, Color32::TRANSPARENT),
                     config
                         .region
                         .map(|r| Vec2::new(r.x as f32, r.y as f32))
@@ -135,7 +135,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) {
             };
 
             for t in &state.texts {
-                draw_box(ui, t, origin, text_color);
+                draw_box(ui, t, origin, text_color, bg_color);
             }
 
             if state.texts.is_empty() {

@@ -211,7 +211,7 @@ pub fn draw(ui: &mut egui::Ui, state: &mut AppState) -> Vec<AppAction> {
 
                 row(ui, "Text background color", |ui| {
                     let mut c = parse_color(&config.text_shadow_color, Color32::BLACK);
-                    if color_edit_button_srgba(ui, &mut c, Alpha::Opaque).changed() {
+                    if color_edit_button_srgba(ui, &mut c, Alpha::BlendOrAdditive).changed() {
                         config.text_shadow_color = format_color(c);
                         apply(&mut actions, false);
                     }
