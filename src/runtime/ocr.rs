@@ -37,13 +37,6 @@ pub struct TranscendiaOcr {
     is_not_special_regex: Regex,
 }
 
-enum Join {
-    Glue,
-    Space,
-    NewLine,
-    Dehyphen,
-}
-
 impl TranscendiaOcr {
     pub fn new(models_dir: &Path) -> Self {
         let det = models_dir.join(OCR_DET_FILE);

@@ -18,10 +18,7 @@
 
 #[derive(Debug)]
 pub enum TranscendiaError {
-    CannotLoadConfig,
-    CannotSaveConfig,
     CannotGetMonitors,
-    WindowOpenError,
 }
 
 pub type Result<T> = std::result::Result<T, TranscendiaError>;

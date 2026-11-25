@@ -17,8 +17,8 @@
  */
 use egui::Color32;
 
-pub const BG: Color32 = Color32::from_rgb(0x17, 0x11, 0x26);
-pub const CARD: Color32 = Color32::from_rgb(0x1B, 0x14, 0x33);
-pub const PRIMARY: Color32 = Color32::from_rgb(0x17, 0x83, 0x91);
-pub const TEXT_COLOR: Color32 = Color32::from_rgb(0xFF, 0xFF, 0xFF);
+pub const BG: Color32 = Color32::from_rgb(0x21, 0x21, 0x21);
+pub const CARD: Color32 = Color32::from_rgb(0x3C, 0x3C, 0x3C);
+pub const PRIMARY: Color32 = Color32::from_rgb(0x73, 0x3F, 0xA0);
+pub const CONFIG_TEXT_COLOR: Color32 = Color32::from_rgb(0xFF, 0xFF, 0xFF);
 pub const LOADING_COLOR: Color32 = Color32::from_rgb(227, 227, 227);
