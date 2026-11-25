@@ -10,7 +10,7 @@
     "env": {
         "RUSTUP_HOME": "$HOME/.rustup",
         "CARGO_HOME": "$HOME/.cargo",
-        "RUST_LOG": "debug"
+        "RUST_LOG": "warn,transcendia=debug"
     },
     "shell": {
         "init_hook": [
