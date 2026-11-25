@@ -17,8 +17,8 @@
  */
 use crate::models::CTRANSLATE_TOK;
 use crate::runtime::ocr::OcrResult;
-use ct2rs::sys::Translator;
 use ct2rs::{ComputeType, Config, TranslationOptions};
+use ct2rs_sys::Translator;
 use log::debug;
 use std::collections::HashMap;
 use std::path::Path;

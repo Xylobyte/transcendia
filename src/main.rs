@@ -34,6 +34,7 @@ use app::App;
 use events::UserEvent;
 use global_hotkey::GlobalHotKeyEvent;
 use single_instance::SingleInstance;
+use std::sync::Arc;
 use tray_icon::menu::MenuEvent;
 use winit::event_loop::EventLoop;
 use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
@@ -55,9 +56,9 @@ fn main() {
     let proxy = event_loop.create_proxy();
 
     let p = proxy.clone();
-    MenuEvent::set_event_handler(Some(move |e| {
+    MenuEvent::set_event_handler(Some(Arc::new(move |e| {
         let _ = p.send_event(UserEvent::Menu(e));
-    }));
+    })));
     let p = proxy.clone();
     GlobalHotKeyEvent::set_event_handler(Some(move |e| {
         let _ = p.send_event(UserEvent::Hotkey(e));

@@ -26,6 +26,7 @@ log = "0.4"
 ocr-rs = "2.4"
 regex = "1.13"
 ct2rs = { version = "0.11", package = "ct2rs-platform" }
+ct2rs-sys = "0.11"
 tokenizers = "0.23"
 
 [target.'cfg(target_os = "macos")'.dependencies]
