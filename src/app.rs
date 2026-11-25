@@ -272,6 +272,12 @@ impl App {
         event_loop.exit();
     }
 
+    fn open_github(&self) {
+        if let Err(_) = open::that("https://github.com/Xylobyte/transcendia") {
+            error!("Cannot open GitHub page");
+        }
+    }
+
     fn handle_actions(&mut self, event_loop: &ActiveEventLoop, actions: Vec<AppAction>) {
         for action in actions {
             match action {
@@ -308,6 +314,7 @@ impl ApplicationHandler<UserEvent> for App {
             UserEvent::Menu(e) => match e.id.as_ref() {
                 tray::ID_CONFIG => self.open_config(event_loop),
                 tray::ID_SHOW_OVERLAY => self.toggle_overlay(event_loop),
+                tray::ID_OPEN_GITHUB => self.open_github(),
                 tray::ID_QUIT => self.quit(event_loop),
                 other => debug!("Menu item {other:?} not handled"),
             },

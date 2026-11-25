@@ -21,6 +21,7 @@ use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
 pub const ID_CONFIG: &str = "config";
 pub const ID_SHOW_OVERLAY: &str = "show_overlay";
+pub const ID_OPEN_GITHUB: &str = "open_github";
 pub const ID_QUIT: &str = "quit";
 
 pub struct Tray {
@@ -56,6 +57,7 @@ impl Tray {
                 Code::KeyT,
             )),
         );
+        let open_github = MenuItem::with_id(ID_OPEN_GITHUB, "View project on GitHub", true, None);
         let quit = MenuItem::with_id(ID_QUIT, "Quit Transcendia", true, None);
 
         let menu = Menu::new();
@@ -65,6 +67,7 @@ impl Tray {
             &config_item,
             &show_overlay,
             &PredefinedMenuItem::separator(),
+            &open_github,
             &quit,
         ])?;
 
