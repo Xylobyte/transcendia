@@ -37,7 +37,6 @@ use single_instance::SingleInstance;
 use std::sync::Arc;
 use tray_icon::menu::MenuEvent;
 use winit::event_loop::EventLoop;
-use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 
 fn main() {
     env_logger::init();
@@ -49,10 +48,10 @@ fn main() {
         return;
     }
 
-    let event_loop = EventLoop::<UserEvent>::with_user_event()
-        .with_activation_policy(ActivationPolicy::Accessory)
-        .build()
-        .expect("Cannot create event loop");
+    let mut event_loop = EventLoop::<UserEvent>::with_user_event();
+    platform_specifics::macos::with_activation_policy(&mut event_loop);
+    let event_loop = event_loop.build().expect("Cannot create event loop");
+
     let proxy = event_loop.create_proxy();
 
     let p = proxy.clone();

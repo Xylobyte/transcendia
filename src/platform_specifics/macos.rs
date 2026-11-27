@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use crate::events::UserEvent;
 use log::error;
+use winit::event_loop::{EventLoop, EventLoopBuilder};
 use winit::window::WindowAttributes;
 
 /// Must be called on the main thread.
@@ -72,4 +74,13 @@ pub fn no_shadow_and_first_mouse(attrs: WindowAttributes, first_mouse: bool) -> 
     }
     #[cfg(not(target_os = "macos"))]
     attrs
+}
+
+pub fn with_activation_policy(event_loop: &mut EventLoopBuilder<UserEvent>) {
+    #[cfg(target_os = "macos")]
+    {
+        use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
+
+        event_loop.with_activation_policy(ActivationPolicy::Accessory);
+    }
 }

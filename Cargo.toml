@@ -34,7 +34,6 @@ raw-window-handle = "0.6"
 objc2 = { version = "0.6", default-features = false }
 objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow", "NSView", "NSResponder", "NSGraphics"] }
 objc2-core-graphics = { version = "0.3", default-features = false, features = ["CGWindow"] }
-objc2-vision = { version = "0.3", default-features = false }
 
 [target.'cfg(all(target_os = "windows", not(target_arch = "aarch64")))'.dependencies]
 ct2rs = { version = "0.11", package = "ct2rs-platform" }
