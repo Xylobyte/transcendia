@@ -24,18 +24,23 @@ env_logger = "0.11"
 log = "0.4"
 ocr-rs = "2.4"
 regex = "1.13"
-ct2rs = { version = "0.11", package = "ct2rs-platform" }
 ct2rs-sys = "0.11"
 tokenizers = "0.23"
 open = "5.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+ct2rs = { version = "0.11", package = "ct2rs-platform" }
 raw-window-handle = "0.6"
 objc2 = { version = "0.6", default-features = false }
 objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow", "NSView", "NSResponder", "NSGraphics"] }
 objc2-core-graphics = { version = "0.3", default-features = false, features = ["CGWindow"] }
 objc2-vision = { version = "0.3", default-features = false }
 
+[target.'cfg(all(target_os = "windows", not(target_arch = "aarch64")))'.dependencies]
+ct2rs = { version = "0.11", package = "ct2rs-platform" }
+
+[target.'cfg(all(target_os = "windows", target_arch = "aarch64"))'.dependencies]
+ct2rs = { version = "0.11" }
 
 [profile.dev]
 incremental = true
