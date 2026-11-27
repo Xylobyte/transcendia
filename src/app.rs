@@ -35,7 +35,6 @@ use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoopProxy};
-use winit::platform::macos::WindowAttributesExtMacOS;
 use winit::window::{WindowAttributes, WindowButtons, WindowId, WindowLevel};
 
 pub struct AppState {
@@ -97,15 +96,15 @@ impl App {
                     .with_title("Transcendia - Overlay")
                     .with_transparent(true)
                     .with_decorations(false)
-                    .with_has_shadow(false)
                     .with_content_protected(true)
                     .with_position(monitor_rect.0)
                     .with_inner_size(monitor_rect.1);
+
+                attrs = platform_specifics::macos::no_shadow_and_first_mouse(attrs, false);
             }
             WindowKind::Config => {
                 attrs = attrs
                     .with_title("Transcendia - Configuration")
-                    .with_accepts_first_mouse(true)
                     .with_content_protected(true)
                     .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MAXIMIZE)
                     .with_inner_size(LogicalSize::new(400.0, 520.0));
@@ -115,10 +114,10 @@ impl App {
                     .with_title("Transcendia - Select a region")
                     .with_transparent(true)
                     .with_decorations(false)
-                    .with_has_shadow(false)
-                    .with_accepts_first_mouse(true)
                     .with_position(monitor_rect.0)
                     .with_inner_size(monitor_rect.1);
+
+                attrs = platform_specifics::macos::no_shadow_and_first_mouse(attrs, true);
             }
         }
 

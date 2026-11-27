@@ -15,9 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#[cfg(target_os = "macos")]
 use log::error;
 use objc2_app_kit::{NSPopUpMenuWindowLevel, NSView, NSWindowCollectionBehavior};
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use winit::platform::macos::WindowAttributesExtMacOS;
+use winit::window::WindowAttributes;
 
 /// Must be called on the main thread.
 pub fn make_popup_window(window: &winit::window::Window) {
@@ -50,4 +53,10 @@ pub fn request_screen_record_permissions() {
         error!("No permission for screen capture !");
         CGRequestScreenCaptureAccess();
     }
+}
+
+pub fn no_shadow_and_first_mouse(attrs: WindowAttributes, first_mouse: bool) -> WindowAttributes {
+    attrs
+        .with_has_shadow(false)
+        .with_accepts_first_mouse(first_mouse)
 }
