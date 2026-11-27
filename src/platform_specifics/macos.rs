@@ -15,48 +15,61 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-#[cfg(target_os = "macos")]
 use log::error;
-use objc2_app_kit::{NSPopUpMenuWindowLevel, NSView, NSWindowCollectionBehavior};
-use raw_window_handle::{HasWindowHandle, RawWindowHandle};
-use winit::platform::macos::WindowAttributesExtMacOS;
 use winit::window::WindowAttributes;
 
 /// Must be called on the main thread.
 pub fn make_popup_window(window: &winit::window::Window) {
-    let Ok(handle) = window.window_handle() else {
-        error!("No window handle");
-        return;
-    };
-    let RawWindowHandle::AppKit(h) = handle.as_raw() else {
-        error!("Not an AppKit window handle");
-        return;
-    };
-    let view = h.ns_view.as_ptr() as *const NSView;
-    if view.is_null() {
-        error!("Invalid view pointer");
-        return;
-    }
-    unsafe {
-        let Some(ns_win) = (*view).window() else {
-            error!("View has no window");
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_app_kit::{NSPopUpMenuWindowLevel, NSView, NSWindowCollectionBehavior};
+        use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+        let Ok(handle) = window.window_handle() else {
+            error!("No window handle");
             return;
         };
-        ns_win.setLevel(NSPopUpMenuWindowLevel);
-        ns_win.setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
+        let RawWindowHandle::AppKit(h) = handle.as_raw() else {
+            error!("Not an AppKit window handle");
+            return;
+        };
+        let view = h.ns_view.as_ptr() as *const NSView;
+        if view.is_null() {
+            error!("Invalid view pointer");
+            return;
+        }
+        unsafe {
+            let Some(ns_win) = (*view).window() else {
+                error!("View has no window");
+                return;
+            };
+            ns_win.setLevel(NSPopUpMenuWindowLevel);
+            ns_win.setCollectionBehavior(NSWindowCollectionBehavior::CanJoinAllSpaces);
+        }
     }
 }
 
 pub fn request_screen_record_permissions() {
-    use objc2_core_graphics::{CGPreflightScreenCaptureAccess, CGRequestScreenCaptureAccess};
-    if !CGPreflightScreenCaptureAccess() {
-        error!("No permission for screen capture !");
-        CGRequestScreenCaptureAccess();
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_core_graphics::{CGPreflightScreenCaptureAccess, CGRequestScreenCaptureAccess};
+
+        if !CGPreflightScreenCaptureAccess() {
+            error!("No permission for screen capture !");
+            CGRequestScreenCaptureAccess();
+        }
     }
 }
 
 pub fn no_shadow_and_first_mouse(attrs: WindowAttributes, first_mouse: bool) -> WindowAttributes {
+    #[cfg(target_os = "macos")]
+    {
+        use winit::platform::macos::WindowAttributesExtMacOS;
+
+        attrs
+            .with_has_shadow(false)
+            .with_accepts_first_mouse(first_mouse)
+    }
+    #[cfg(not(target_os = "macos"))]
     attrs
-        .with_has_shadow(false)
-        .with_accepts_first_mouse(first_mouse)
 }
