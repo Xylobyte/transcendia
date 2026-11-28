@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use crate::platform_specifics::toggle_modifiers;
 use global_hotkey::hotkey::{Code, HotKey, Modifiers};
 use global_hotkey::GlobalHotKeyManager;
 use log::error;
@@ -32,10 +33,10 @@ impl Hotkeys {
         let manager = GlobalHotKeyManager::new()
             .map_err(|e| error!("Cannot create hotkey manager: {e}"))
             .ok()?;
-        let toggle = HotKey::new(Some(Modifiers::META | Modifiers::SHIFT), Code::KeyT);
+        let toggle = HotKey::new(Some(toggle_modifiers()), Code::KeyT);
         let finish = HotKey::new(Some(Modifiers::CONTROL), Code::KeyX);
         if let Err(e) = manager.register(toggle) {
-            error!("Cannot register Cmd+Shift+T: {e}");
+            error!("Cannot register toggle shortcut: {e}");
         }
 
         Some(Self {
@@ -50,7 +51,7 @@ impl Hotkeys {
         if !self.finish_registered {
             match self.manager.register(self.finish) {
                 Ok(()) => self.finish_registered = true,
-                Err(e) => error!("Cannot register Ctrl+X: {e}"),
+                Err(e) => error!("Cannot register finish shortcut: {e}"),
             }
         }
     }

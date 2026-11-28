@@ -17,3 +17,9 @@
  */
 
 pub mod macos;
+pub mod windows;
+
+#[cfg(target_os = "macos")]
+pub use macos::toggle_modifiers;
+#[cfg(target_os = "windows")]
+pub use windows::toggle_modifiers;

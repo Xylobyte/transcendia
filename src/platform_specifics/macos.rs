@@ -16,8 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::events::UserEvent;
+use global_hotkey::hotkey::Modifiers;
 use log::error;
-use winit::event_loop::{EventLoop, EventLoopBuilder};
+use winit::event_loop::EventLoopBuilder;
 use winit::window::WindowAttributes;
 
 /// Must be called on the main thread.
@@ -83,4 +84,8 @@ pub fn with_activation_policy(event_loop: &mut EventLoopBuilder<UserEvent>) {
 
         event_loop.with_activation_policy(ActivationPolicy::Accessory);
     }
+}
+
+pub fn toggle_modifiers() -> Modifiers {
+    Modifiers::CONTROL | Modifiers::SHIFT
 }
