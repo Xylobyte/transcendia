@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use crate::platform_specifics::toggle_modifiers;
 use tray_icon::menu::accelerator::{Accelerator, Code, Modifiers};
 use tray_icon::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
@@ -52,10 +53,7 @@ impl Tray {
             "Show overlay",
             true,
             true,
-            Some(Accelerator::new(
-                Modifiers::META | Modifiers::SHIFT,
-                Code::KeyT,
-            )),
+            Some(Accelerator::new(toggle_modifiers(), Code::KeyT)),
         );
         let open_github = MenuItem::with_id(ID_OPEN_GITHUB, "View project on GitHub", true, None);
         let quit = MenuItem::with_id(ID_QUIT, "Quit Transcendia", true, None);
